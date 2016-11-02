@@ -7,6 +7,7 @@
 
 # CHANGE THESE TO BE CORRECT!
 # Variables to set (put as command line arguments)
+# For SamXu2
 BASE_DIR="$HOME/uo/research/graphalytics"
 HADOOP_HOME="$HOME/uo/research/graphalytics/hadoop-2.7.3"
 # For Mac
@@ -24,37 +25,35 @@ trap "exit 1" INT
 # So we can bail if something goes wrong
 export TOP_PID=$$ 
 
-init_vars()
-{
-	osname=$(uname)
-	if [ "$JAVA_HOME" = "" -a "$osname" = "Linux" ]; then
-		export JAVA_HOME=$(update-java-alternatives -l | awk '{print $3}')
-	elif [ -z "$JAVA_HOME" -a "$osname" = "Darwin" ]; then
-		export JAVA_HOME=$(/usr/libexec/java_home)
-	elif [ -z $"JAVA_HOME" ]; then
-		echo "Please set the environment variable JAVA_HOME. This is the directory where jdk is installed."
-		kill -s TERM $TOP_PID
-	fi
-	if [ "$HADOOP_HOME" = "" -o "$BASE_DIR" = "" ]; then
-		echo "You need to set HADOOP_HOME and BASE_DIR before this will work"
-		exit 1
-	fi
-	if [ "$osname" = Darwin ]; then
-		NUM_CORES=$(sysctl -n hw.ncpu)
-		NUM_THREADS=$NUM_CORES
-		MEM_KB=$(($(vm_stat | grep "Pages free:" | awk '{print $3}' | tr -d .) * $(vm_stat | head -n 1 | grep -E -o [0-9]+) / 1024 ))
-		NUM_SOCKETS=1 # Is this always true?
-		NUM_NODES=1
-	else
-		NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
-		NUM_THREADS=$NUM_CORES # Intel already counts 2x for hyperthreaded cores
-		MEM_KB=$(cat /proc/meminfo | grep MemAvailable | awk '{print $2}')
-		#NUM_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l)
-		NUM_NODES=1
-	fi
-	GA_DIR="$BASE_DIR/ldbc_graphalytics"
-	DATASET_DIR=$BASE_DIR/datasets
-}
+osname=$(uname)
+if [ "$JAVA_HOME" = "" -a "$osname" = "Linux" ]; then
+	export JAVA_HOME=$(update-java-alternatives -l | awk '{print $3}')
+elif [ -z "$JAVA_HOME" -a "$osname" = "Darwin" ]; then
+	export JAVA_HOME=$(/usr/libexec/java_home)
+elif [ -z $"JAVA_HOME" ]; then
+	echo "Please set the environment variable JAVA_HOME. This is the directory where jdk is installed."
+	kill -s TERM $TOP_PID
+fi
+if [ "$HADOOP_HOME" = "" -o "$BASE_DIR" = "" ]; then
+	echo "You need to set HADOOP_HOME and BASE_DIR before this will work"
+	exit 1
+fi
+if [ "$osname" = Darwin ]; then
+	NUM_CORES=$(sysctl -n hw.ncpu)
+	NUM_THREADS=$NUM_CORES
+	MEM_KB=$(($(vm_stat | grep "Pages free:" | awk '{print $3}' | tr -d .) * $(vm_stat | head -n 1 | grep -E -o [0-9]+) / 1024 ))
+	NUM_SOCKETS=1 # Is this always true?
+	NUM_NODES=1
+else
+	NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
+	NUM_THREADS=$NUM_CORES # Intel already counts 2x for hyperthreaded cores
+	MEM_KB=$(cat /proc/meminfo | grep MemAvailable | awk '{print $2}')
+	#NUM_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l)
+	NUM_NODES=1
+fi
+GA_DIR="$BASE_DIR/ldbc_graphalytics"
+DATASET_DIR=$BASE_DIR/datasets
+
 
 install_graphalytics()
 {
@@ -260,10 +259,11 @@ install_OpenG()
 	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
 
 	PKGDIR="$OPENG_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
+	# Configure OpenG
 	CONFIG=$(printf "openg.home = $GRAPHBIG_DIR\nopeng.intermediate-dir = $GRAPHBIG_DIR/intermediate\nopeng.output-dir = $GRAPHBIG_DIR/output\nopeng.num-worker-threads=$NUM_THREADS")
-	# XXX: Is installed in the directory that is untarred, not the base one.
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "$CONFIG" > $PKGDIR/config/$platform.properties
+	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 
 }
 
@@ -287,7 +287,6 @@ run_benchmark()
 
 ### MAIN ###
 ### Make sure correct packages are installed
-init_vars
 install_graphalytics
 check_hadoop_dependencies
 start_hadoop
@@ -299,5 +298,5 @@ install_OpenG
 run_benchmark
 
 ### Run the GraphX benchmark
-install_GraphX
-run_benchmark
+#install_GraphX
+#run_benchmark
