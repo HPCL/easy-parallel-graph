@@ -7,21 +7,22 @@
 
 # CHANGE THESE TO BE CORRECT!
 # Variables to set (put as command line arguments)
-#BASE_DIR=""
-#export JAVA_HOME=""
-#HADOOP_HOME=""
+BASE_DIR="$HOME/uo/research/graphalytics"
+HADOOP_HOME="$HOME/uo/research/graphalytics/hadoop-2.7.3"
 # For Mac
 #BASE_DIR=$HOME/Documents/uo/research/graphalytics
 #HADOOP_HOME="$HOME/bin/hadoop"
 # For Arya
-BASE_DIR="$HOME/graphalytics"
-HADOOP_HOME="$HOME/hadoop-2.7.3"
+#BASE_DIR="$HOME/graphalytics"
+#HADOOP_HOME="$HOME/hadoop-2.7.3"
 
 ### Set up some variables and script options
 # So ! doesn't expand in the shell
 set +o histexpand
 # So Ctrl-C works
 trap "exit 1" INT
+# So we can bail if something goes wrong
+export TOP_PID=$$ 
 
 init_vars()
 {
@@ -32,13 +33,7 @@ init_vars()
 		export JAVA_HOME=$(/usr/libexec/java_home)
 	elif [ -z $"JAVA_HOME" ]; then
 		echo "Please set the environment variable JAVA_HOME. This is the directory where jdk is installed."
-		javac -version
-		if [ $? -ne 0 ]; then
-			echo "Please install jdk 1.6+. JDK 1.8 can be found at"
-			echo 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html'
-			exit 1
-		fi
-		exit 1
+		kill -s TERM $TOP_PID
 	fi
 	if [ "$HADOOP_HOME" = "" -o "$BASE_DIR" = "" ]; then
 		echo "You need to set HADOOP_HOME and BASE_DIR before this will work"
@@ -88,27 +83,25 @@ install_graphalytics()
 check_hadoop_dependencies()
 {
 	incomplete=false
-	if [ "$osname" = Darwin ]; then
-		installcmd="brew install"
-	elif [ "$osname" = Linux ]; then
-		installcmd="sudo apt-get install"
-	else # Not supported---the user has to figure it out.
-		installcmd="echo Please install"
+	javac -version
+	if [ $? -ne 0 ]; then
+		echo "Please install jdk 1.6+. JDK 1.8 can be found at"
+		echo 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html'
+		echo 'On Debian-based systems, sudo apt-get install default-jdk works'
+		incomplete=true
 	fi
+
 	mvn --version
 	if [ $? -eq 127 ]; then # Command not found
-		echo "Installing maven"
-		$installcmd maven
-		if [ "$installcmd" = "echo Please install" ]; then
-			incomplete=true
-		fi
+		echo "Please install maven"
+		incomplete=true
 	else
 		echo "I'm assuming you have maven version 3.0 or later."
 	fi
 
 	if [ $incomplete = true ]; then
 		echo "Hadoop dependencies not satisfied."
-		exit 1
+		kill -s TERM $TOP_PID
 	fi
 }
 
@@ -125,9 +118,6 @@ start_hadoop()
 	$HADOOP_HOME/bin/hdfs dfsadmin -report
 	if [ $? -ne 0 ]; then
 		echo "Hadoop is not running."
-		# TODO: Have these input
-		#export JAVA_HOME="/usr/share/java"
-		#HADOOP_HOME="/usr/local/hadoop"
 #		read -n 1 -r -p 'Are you trying to start Hadoop in pseudo-distributed (single node)? [Y/n]'
 #		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			# Stuff for installing hadoop. it's assumed you already have it installed.
@@ -140,14 +130,16 @@ start_hadoop()
 		# Check if you can ssh into yourself
 		ssh -oPreferredAuthentications=publickey localhost exit
 		if [ $? -ne 0 ]; then
-			echo "You must enable passwordless ssh into localhost:"
+			echo "Problem executing `ssh localhost`. This may be one of several things:"
+			echo -e "You must enable passwordless ssh into localhost:\n"
 			echo "ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa"
-			echo "And give it an empty password, then type"
-			echo "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
+			echo -e "\nAnd give it an empty password, then type\n"
+			echo 'cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys'
 			echo "chmod 0600 ~/.ssh/authorized_keys"
-			echo "Remote login may be turned off in settings. You may also need to add"
-			echo "PubkeyAuthentication = yes in /etc/ssh_config"
-			exit 1
+			echo -e"\nRemote login may be turned off in settings. You may also need to add"
+			echo "PubkeyAuthentication = yes in /etc/ssh_config (the setting is off by default on Mac)"
+			echo "You must also have an ssh client and an ssh server running on your machine."
+			kill TERM $TOP_PID
 		fi
 		echo "Editing configuration for pseudo-distributed mode if none exists"
 		# Like sed -i, but better. Only replace configs which are empty.
@@ -164,10 +156,10 @@ start_hadoop()
 		# Start name node daemon and data node daemon
 		$HADOOP_HOME/sbin/start-dfs.sh
 		echo "You can check the status of your file system at http://localhost:50070/"
-		$HADOOP_HOME/bin/hdfs dfs -mkdir /user
-		$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER
-		$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER/graphalytics
 	fi
+	$HADOOP_HOME/bin/hdfs dfs -mkdir /user
+	$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER
+	$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER/graphalytics
 }
 
 # Starts the yarn tasks. Assumes the configuration files are set up
@@ -181,21 +173,8 @@ start_yarn()
 	fi
 	
 	if [ $? -ne 0 ]; then
-		echo "You must edit $HADOOP_HOME/etc/hadoop/mapred-site.xml"
-		printf '<configuration>
-     <property>
-         <name>mapreduce.framework.name</name>
-         <value>yarn</value>
-     </property>
- </configuration>'
-
- 		echo "And $HADOOP_HOME/etc/hadoop/yarn-site.xml"
-		printf '<configuration>
-    <property>
-        <name>yarn.nodemanager.aux-services</name>
-        <value>mapreduce_shuffle</value>
-    </property>
-</configuration>'
+		perl -0777 -i.original -pe 's?<configuration>\s*</configuration>?<configuration>\n\t<property>\n\t\t<name>mapreduce.framework.name</name>\n\t\t<value>yarn</value>\n\t</property>\n</configuration>?' "$HADOOP_HOME/etc/hadoop/mapred-site.xml"
+		perl -0777 -i.original -pe 's?<configuration>\s*</configuration>?<configuration>\n\t<property>\n\t\t<name>yarn.nodemanager.aux-services</name>\n\t\t<value>mapreduce_shuffle</value>\n\t</property>\n</configuration>?' "$HADOOP_HOME/etc/hadoop/yarn-site.xml"
 		exit 1
 	fi
 }
@@ -207,21 +186,10 @@ install_GraphX()
 	OLDWD=$(pwd)
 	cd "$BASE_DIR"
 	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name graphalytics-platforms-graphx) ]; then
-		#git clone 'https://github.com/tudelft-atlarge/graphalytics-platforms-graphx.git'
-		# Temporarily until they merge my repo
-		git clone 'https://github.com/sampollard/graphalytics-platforms-graphx'
+		#git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphx.git
+		# XXX: Temporary fix until it's merged into main branch
+		git clone https://github.com/sampollard/graphalytics-platforms-graphx
 	fi
-	# XXX: Temporary fix until it's merged into main branch
-	# Source: http://www.daodecode.com/blog/2014/10/27/scala-maven-plugin-and-multiple-versions-of-scala-libraries-detected/
-	# Add <scala.binary.version>2.10</scala.binary.version>
-	# to
-	# graphalytics-platforms-graphx-granula/pom.xml
-	# graphalytics-platforms-graphx-platform/pom.xml
-	# graphalytics-platforms-graphx-std/pom.xml
-	# And then add <scalaCompatVersion>${scala.binary.version}</scalaCompatVersion>
-	# to
-	# graphalytics-platforms-graphx-platform/pom.xml
-	# right after the <scalaVersion> tag.
 	GRAPHX_DIR="$BASE_DIR/graphalytics-platforms-graphx"
 	cd "$GRAPHX_DIR"
 	mvn install
@@ -248,7 +216,7 @@ install_GraphX()
 		# Will ONLY work one level of symlink. For a full recursive solution, see
 		# stackoverflow.com/questions/7665/how-to-resolve-symbolic-links-in-a-shell-script
 	fi
-	$HADOOP_HOME/bin/hadoop fs -copyFromLocal $PKGDIR hdfs:///user/spollard/graphalytics/$platform
+	$HADOOP_HOME/bin/hadoop fs -copyFromLocal $PKGDIR "hdfs:///user/$USER/graphalytics/$platform"
 
 	cd "$OLDWD"
 }
@@ -262,26 +230,30 @@ install_OpenG()
 	cd "$BASE_DIR"
 	GRAPHBIG_DIR="$BASE_DIR/graphBIG"
 	export OPENG_HOME="$GRAPHBIG_DIR"
+	if [ "$osname" != "Linux" ]; then
+		GRAPHBIG_OPTS="PFM=0"
+	else
+		GRAPHBIG_OPTS=""
+	fi
 	if [ ! $(find . -type d -name graphBIG) ]; then
 		echo "Downloading and building the GraphBIG repository"
 		git clone 'https://github.com/graphbig/graphBIG.git'
 		cd "$GRAPHBIG_DIR"
 		git checkout graphalytics
-		make clean all
+		make clean
+		make "$GRAPHBIG_OPTS" all
 	fi
 	cd "$BASE_DIR"
 
 	OPENG_DIR=$BASE_DIR/graphalytics-platforms-openg
 	if [ ! $(find . -type d -name graphalytics-platforms-openg) ]; then
 		# Get the package configured and built
-		git clone 'https://github.com/tudelft-atlarge/graphalytics-platforms-openg.git'	
-		cd "$OPENG_DIR" # You have to be in this dir for it to work
-		mvn install
-		PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name *.tar.gz))
-		tar -xf "$PKGNAME"
+		git clone 'https://github.com/tudelft-atlarge/graphalytics-platforms-openg.git'
 	fi
-	cd "$OPENG_DIR"
-	mvn install
+	cd "$OPENG_DIR" # You have to be in this dir for it to work
+	mvn package
+	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name *.tar.gz))
+	tar -xf "$PKGNAME"
 	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name *.tar.gz))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
 	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
@@ -289,6 +261,8 @@ install_OpenG()
 
 	PKGDIR="$OPENG_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 	CONFIG=$(printf "openg.home = $GRAPHBIG_DIR\nopeng.intermediate-dir = $GRAPHBIG_DIR/intermediate\nopeng.output-dir = $GRAPHBIG_DIR/output\nopeng.num-worker-threads=$NUM_THREADS")
+	# XXX: Is installed in the directory that is untarred, not the base one.
+	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "$CONFIG" > $PKGDIR/config/$platform.properties
 
 }
@@ -322,8 +296,8 @@ start_yarn
 
 ### Run the OpenG benchmark
 install_OpenG
-#run_benchmark
+run_benchmark
 
 ### Run the GraphX benchmark
 install_GraphX
-#run_benchmark
+run_benchmark
