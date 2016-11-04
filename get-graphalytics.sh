@@ -197,7 +197,7 @@ install_GraphX()
 	fi
 	GRAPHX_DIR="$BASE_DIR/graphalytics-platforms-graphx"
 	cd "$GRAPHX_DIR"
-	mvn package
+	mvn package > /dev/null
 
 	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
@@ -220,7 +220,7 @@ install_GraphX()
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "graphx.job.num-executors = $NUM_WORKERS" > "$PKGDIR/config/graphx.properties"
 	# echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"
-	echo "graphx.job.executor-memory = 4g" >> "$PKGDIR/config/graphx.properties"
+	echo "graphx.job.executor-memory = 6g" >> "$PKGDIR/config/graphx.properties"
 	echo "graphx.job.executor-cores = $CORES_PER_WORKER" >> "$PKGDIR/config/graphx.properties"
 	echo "hadoop.home= $HADOOP_HOME" >> $PKGDIR/config/graphx.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
