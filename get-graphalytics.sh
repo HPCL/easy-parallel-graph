@@ -8,14 +8,14 @@
 # CHANGE THESE TO BE CORRECT!
 # Variables to set (put as command line arguments)
 # For SamXu2
-BASE_DIR="$HOME/uo/research/graphalytics"
-HADOOP_HOME="$HOME/uo/research/graphalytics/hadoop-2.7.3"
+#BASE_DIR="$HOME/uo/research/graphalytics"
+#HADOOP_HOME="$HOME/uo/research/graphalytics/hadoop-2.7.3"
 # For Mac
 #BASE_DIR=$HOME/Documents/uo/research/graphalytics
 #HADOOP_HOME="$HOME/bin/hadoop"
 # For Arya
-#BASE_DIR="$HOME/graphalytics"
-#HADOOP_HOME="$HOME/hadoop-2.7.3"
+BASE_DIR="$HOME/graphalytics"
+HADOOP_HOME="$HOME/hadoop-2.7.3"
 
 ### Set up some variables and script options
 # So ! doesn't expand in the shell
@@ -155,10 +155,16 @@ start_hadoop()
 		# Start name node daemon and data node daemon
 		$HADOOP_HOME/sbin/start-dfs.sh
 		echo "You can check the status of your file system at http://localhost:50070/"
+	else
+		echo "Please make sure there is at least one namenode and datanode running"
+		jps # TODO: Check the output of this
 	fi
-	$HADOOP_HOME/bin/hdfs dfs -mkdir /user
-	$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER
-	$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER/graphalytics
+	$HADOOP_HOME/bin/hadoop fs -test -d "/user/$USER/graphalytics"
+	if [ $? -ne 0 ]; then
+		$HADOOP_HOME/bin/hdfs dfs -mkdir /user
+		$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER
+		$HADOOP_HOME/bin/hdfs dfs -mkdir /user/$USER/graphalytics
+	fi
 }
 
 # Starts the yarn tasks. Assumes the configuration files are set up
@@ -170,10 +176,10 @@ start_yarn()
 	else
 		echo "YARN is running. You can check its status at http://localhost:8088/"
 	fi
-	
+	# If the configuration files aren't set up, overwrite them with a default
 	if [ $? -ne 0 ]; then
 		perl -0777 -i.original -pe 's?<configuration>\s*</configuration>?<configuration>\n\t<property>\n\t\t<name>mapreduce.framework.name</name>\n\t\t<value>yarn</value>\n\t</property>\n</configuration>?' "$HADOOP_HOME/etc/hadoop/mapred-site.xml"
-		perl -0777 -i.original -pe 's?<configuration>\s*</configuration>?<configuration>\n\t<property>\n\t\t<name>yarn.nodemanager.aux-services</name>\n\t\t<value>mapreduce_shuffle</value>\n\t</property>\n</configuration>?' "$HADOOP_HOME/etc/hadoop/yarn-site.xml"
+		perl -0777 -i.original -pe 's?<configuration>\s*(<!--.*-->)*\s*</configuration>?<configuration>\n\t<property>\n\t\t<name>yarn.nodemanager.aux-services</name>\n\t\t<value>mapreduce_shuffle</value>\n\t</property>\n</configuration>?' "$HADOOP_HOME/etc/hadoop/yarn-site.xml"
 		exit 1
 	fi
 }
@@ -191,7 +197,7 @@ install_GraphX()
 	fi
 	GRAPHX_DIR="$BASE_DIR/graphalytics-platforms-graphx"
 	cd "$GRAPHX_DIR"
-	mvn install
+	mvn package
 
 	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
@@ -199,15 +205,26 @@ install_GraphX()
 	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
 	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
 	tar -xf "$PKGNAME"
-
 	PKGDIR="$GRAPHX_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 
 	# Configure GraphX
+	# Spark runs out of memory if 9 cores are used per worker (I think worker = container here?)
+	# NOTE: There are a lot of issues when running graphalytics. You have to get the right balance
+	# of memory and vcores per container. I don't know quite how to configure that.
+	NUM_WORKERS=$(($NUM_CORES / 4))
+	CORES_PER_WORKER=$(($NUM_CORES / $NUM_WORKERS ))
+	EXEC_MEMORY_KB=$(echo "$MEM_KB * 4 / ($NUM_WORKERS * 5)" | bc)
+	if [ "$EXEC_MEMORY_KB" -gt 7548928 ]; then # Yarn doesn't allow more than 0.9*8GB per executor
+		EXEC_MEMORY_KB=7048928
+	fi
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
-	echo "graphx.job.num-executors = $NUM_NODES" > "$PKGDIR/config/graphx.properties"
-	echo "graphx.job.executor-memory = ${MEM_KB}k" >> "$PKGDIR/config/graphx.properties"
-	echo "graphx.job.executor-cores = $NUM_CORES" >> "$PKGDIR/config/graphx.properties"
+	echo "graphx.job.num-executors = $NUM_WORKERS" > "$PKGDIR/config/graphx.properties"
+	# echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"
+	echo "graphx.job.executor-memory = 4g" >> "$PKGDIR/config/graphx.properties"
+	echo "graphx.job.executor-cores = $CORES_PER_WORKER" >> "$PKGDIR/config/graphx.properties"
 	echo "hadoop.home= $HADOOP_HOME" >> $PKGDIR/config/graphx.properties
+	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
+
 	# Don't need to specify filesystem authority, but it is the default: localhost:9000
 	echo "$osname" | grep -q '.*BSD'
 	if [ $? -eq 0 -o "$osname" = "Darwin" ]; then
@@ -215,7 +232,6 @@ install_GraphX()
 		# Will ONLY work one level of symlink. For a full recursive solution, see
 		# stackoverflow.com/questions/7665/how-to-resolve-symbolic-links-in-a-shell-script
 	fi
-	$HADOOP_HOME/bin/hadoop fs -copyFromLocal $PKGDIR "hdfs:///user/$USER/graphalytics/$platform"
 
 	cd "$OLDWD"
 }
@@ -234,7 +250,7 @@ install_OpenG()
 	else
 		GRAPHBIG_OPTS=""
 	fi
-	if [ ! $(find . -type d -name graphBIG) ]; then
+	if [ ! -d graphBIG ]; then
 		echo "Downloading and building the GraphBIG repository"
 		git clone 'https://github.com/graphbig/graphBIG.git'
 		cd "$GRAPHBIG_DIR"
@@ -245,7 +261,7 @@ install_OpenG()
 	cd "$BASE_DIR"
 
 	OPENG_DIR=$BASE_DIR/graphalytics-platforms-openg
-	if [ ! $(find . -type d -name graphalytics-platforms-openg) ]; then
+	if [ ! -d  graphalytics-platforms-openg ]; then
 		# Get the package configured and built
 		git clone 'https://github.com/tudelft-atlarge/graphalytics-platforms-openg.git'
 	fi
@@ -294,9 +310,10 @@ start_yarn
 #download_datasets
 
 ### Run the OpenG benchmark
-install_OpenG
-run_benchmark
+#install_OpenG
+#run_benchmark
 
 ### Run the GraphX benchmark
-#install_GraphX
-#run_benchmark
+install_GraphX
+run_benchmark
+
