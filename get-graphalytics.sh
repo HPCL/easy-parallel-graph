@@ -57,6 +57,7 @@ DATASET_DIR=$BASE_DIR/datasets
 
 install_graphalytics()
 {
+	cd "$BASE_DIR"
 	if [ ! $(find $BASE_DIR -type d -name ldbc_graphalytics) ]; then
 		echo "Cloning and mvn-ing graphalytics into $GA_DIR... "
 		cd "$BASE_DIR"
@@ -149,8 +150,8 @@ start_hadoop()
 		echo "Editing hadoop-env.sh to ensure JAVA_HOME is set. It is recommended you export JAVA_HOME in the global /etc/profile"
 		perl -0777 -i.original -pe "s?export JAVA_HOME.*\n?export JAVA_HOME=$JAVA_HOME\n?" $HADOOP_HOME/etc/hadoop/hadoop-env.sh
 		### Start Hadoop
-		# Format the filesystem		
-		$HADOOP_HOME/bin/hdfs namenode -format
+		# Format the filesystem
+		#$HADOOP_HOME/bin/hdfs namenode -format # XXX: Only need to do this once
 		#$HADOOP_HOME/bin/hdfs secondarynamenode -format
 		# Start name node daemon and data node daemon
 		$HADOOP_HOME/sbin/start-dfs.sh
@@ -211,16 +212,15 @@ install_GraphX()
 	# Spark runs out of memory if 9 cores are used per worker (I think worker = container here?)
 	# NOTE: There are a lot of issues when running graphalytics. You have to get the right balance
 	# of memory and vcores per container. I don't know quite how to configure that.
-	NUM_WORKERS=$(($NUM_CORES / 4))
+	NUM_WORKERS=$(($NUM_CORES / 2))
 	CORES_PER_WORKER=$(($NUM_CORES / $NUM_WORKERS ))
-	EXEC_MEMORY_KB=$(echo "$MEM_KB * 4 / ($NUM_WORKERS * 5)" | bc)
-	if [ "$EXEC_MEMORY_KB" -gt 7548928 ]; then # Yarn doesn't allow more than 0.9*8GB per executor
-		EXEC_MEMORY_KB=7048928
+	EXEC_MEMORY_KB=$(echo "$MEM_KB * 4 / ($NUM_WORKERS * 5)" | bc) # Save 20% of memory for others :)
+	if [ "$EXEC_MEMORY_KB" -gt 7448928 ]; then # Yarn doesn't allow more than 8GB per executor but has overhead
+		EXEC_MEMORY_KB=7448928
 	fi
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "graphx.job.num-executors = $NUM_WORKERS" > "$PKGDIR/config/graphx.properties"
-	# echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"
-	echo "graphx.job.executor-memory = 6g" >> "$PKGDIR/config/graphx.properties"
+	echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"
 	echo "graphx.job.executor-cores = $CORES_PER_WORKER" >> "$PKGDIR/config/graphx.properties"
 	echo "hadoop.home= $HADOOP_HOME" >> $PKGDIR/config/graphx.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
@@ -280,12 +280,43 @@ install_OpenG()
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "$CONFIG" > $PKGDIR/config/$platform.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
+}
 
+install_PowerGraph()
+{
+	cd $BASEDIR
+	echo "Checking if you have google-perftools installed..."
+	# XXX: ONLY WORKS FOR DEBIAN BASED SYSTEMS
+	dpkg -s google-perftools > /dev/null
+	if [ $? -ne 0 ]; then
+		echo "Please install google perftools"
+		kill -s TERM $TOP_PID
+	fi
+
+	if [ ! $(find $BASE_DIR -type d -name PowerGraph) ]; then
+		git clone https://github.com/jegonzal/PowerGraph.git
+		cd PowerGraph
+		./configure
+		cd release/toolkits/graph_algorithms
+		make
+		# Make everything using at most 8 processes.
+		# make -j $(if [ "$NUM_CORES" -lt 8 ]; then echo 8; else echo $NUM_CORES; fi)
+	else
+		echo "Found PowerGraph directory. I'm assuming you have everything built in there."
+	fi
+}
+
+install_Giraph()
+{
+	cd "$BASE_DIR"
+	wget http://www-us.apache.org/dist/zookeeper/zookeeper-3.4.9/zookeeper-3.4.9.tar.gz
+	tar -xf zookeeper-3.4.9.tar.gz
 }
 
 # Downloads em all
 download_datasets()
 {
+	cd "$BASE_DIR"
 	# The full dataset is at http://atlarge.ewi.tudelft.nl/graphalytics/zip/dota-league.zip for example.
 	wget -r -l 1 --no-clobber http://atlarge.ewi.tudelft.nl/graphalytics/data/ $DATASET_DIR
 	# Get the reference solutions
