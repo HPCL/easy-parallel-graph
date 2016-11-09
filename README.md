@@ -3,15 +3,16 @@ This script gathers, installs, and runs various benchmarks from Graphalytics.
 
 ## Dependencies
 ### This Script
-1. Perl
-2. Bash
-4. Yarn
-5. If running on one node: ability to ssh into localhost without a password
-6. Apache maven 3.0.0 or later
-7. Git
-8. wget
+1. Bash
+2. Perl
+3. Yarn
+4. Apache maven 3.0.0 or later
+5. Git
+6. wget
+7. Two variables: ```HADOOP_HOME``` (where hadoop is installed) and ```BASE_DIR``` (where you want graphalytics to put everything).
 
 ### Graphalytics
+1. Apache maven 3.0.0 or later
 
 ### GraphBIG/OpenG
 1. gcc/g++ with c++0x support (>4.3)
@@ -22,4 +23,6 @@ This script gathers, installs, and runs various benchmarks from Graphalytics.
 ### GraphX
 1. Hadoop binary saved in some directory OR Hadoop already running
 2. Java JDK 1.6 or newer
+3. If running on one node for hadoop: ability to ssh into localhost without a password
 
+### PowerGraph

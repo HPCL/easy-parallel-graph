@@ -192,19 +192,18 @@ install_GraphX()
 	OLDWD=$(pwd)
 	cd "$BASE_DIR"
 	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name graphalytics-platforms-graphx) ]; then
-		#git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphx.git
+		git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphx.git
 		# XXX: Temporary fix until it's merged into main branch
-		git clone https://github.com/sampollard/graphalytics-platforms-graphx
+		# git clone https://github.com/sampollard/graphalytics-platforms-graphx
 	fi
 	GRAPHX_DIR="$BASE_DIR/graphalytics-platforms-graphx"
 	cd "$GRAPHX_DIR"
-	mvn package > /dev/null
+	mvn package
 
 	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
 	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
 	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
-	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
 	tar -xf "$PKGNAME"
 	PKGDIR="$GRAPHX_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 
@@ -212,16 +211,18 @@ install_GraphX()
 	# Spark runs out of memory if 9 cores are used per worker (I think worker = container here?)
 	# NOTE: There are a lot of issues when running graphalytics. You have to get the right balance
 	# of memory and vcores per container. I don't know quite how to configure that.
-	NUM_WORKERS=$(($NUM_CORES / 2))
+	NUM_WORKERS=2
 	CORES_PER_WORKER=$(($NUM_CORES / $NUM_WORKERS ))
-	EXEC_MEMORY_KB=$(echo "$MEM_KB * 4 / ($NUM_WORKERS * 5)" | bc) # Save 20% of memory for others :)
-	if [ "$EXEC_MEMORY_KB" -gt 7448928 ]; then # Yarn doesn't allow more than 8GB per executor but has overhead
-		EXEC_MEMORY_KB=7448928
-	fi
+	EXEC_MEMORY_KB=$(echo "$MEM_KB * 4 / ($NUM_WORKERS * 5)" | bc) # Save 20% of memory for others and overhead
+# 	if [ "$EXEC_MEMORY_KB" -gt 7448928 ]; then # Yarn doesn't allow more than 8GB per executor but has overhead
+# 		EXEC_MEMORY_KB=7448928
+# 	fi
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "graphx.job.num-executors = $NUM_WORKERS" > "$PKGDIR/config/graphx.properties"
-	echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"
-	echo "graphx.job.executor-cores = $CORES_PER_WORKER" >> "$PKGDIR/config/graphx.properties"
+	#echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"	
+	echo "graphx.job.executor-memory = 6g" >> "$PKGDIR/config/graphx.properties"
+	#echo "graphx.job.executor-cores = $CORES_PER_WORKER" >> "$PKGDIR/config/graphx.properties"	
+	echo "graphx.job.executor-cores = 2" >> "$PKGDIR/config/graphx.properties"
 	echo "hadoop.home= $HADOOP_HOME" >> $PKGDIR/config/graphx.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 
@@ -269,7 +270,6 @@ install_OpenG()
 	mvn package
 	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name *.tar.gz))
 	tar -xf "$PKGNAME"
-	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name *.tar.gz))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
 	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
 	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
@@ -282,28 +282,82 @@ install_OpenG()
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 }
 
-install_PowerGraph()
+check_for_lib ()
 {
-	cd $BASEDIR
-	echo "Checking if you have google-perftools installed..."
-	# XXX: ONLY WORKS FOR DEBIAN BASED SYSTEMS
-	dpkg -s google-perftools > /dev/null
-	if [ $? -ne 0 ]; then
-		echo "Please install google perftools"
+	if [ -z "$1" ]; then
+		echo "No arguments to check_for_lib"
 		kill -s TERM $TOP_PID
 	fi
+	ldconfig -p | grep -q "$1"
+	return $?
+}
 
+install_PowerGraph()
+{
+	cd $BASE_DIR
+	platform=powergraph
+	echo "Checking dependencies..."
+	export LD_LIBRARY_PATH="$HADOOP_HOME/lib/native"
+	# There are a few dependencies to be satisfied since you're not running inside PowerGraph/apps
+	check_for_lib libtcmalloc
+	if [ $? -ne 0 ]; then
+		echo "Please install libtcmalloc or link to it in your LD_LIBRARY_PATH"
+		exit 1 # kill -s TERM $TOP_PID
+	fi
+
+	check_for_lib libevent
+	if [ $? -ne 0 ]; then
+		echo "Please install libevent or link to it in your LD_LIBRARY_PATH"
+		exit 1 # kill -s TERM $TOP_PID
+	fi	
+	check_for_lib libjson
+	if [ $? -ne 0 ]; then
+		echo "Please install libjson or link to it in your LD_LIBRARY_PATH"
+		exit 1 # kill -s TERM $TOP_PID
+	fi
+	check_for_lib libboost
+	if [ $? -ne 0 ]; then
+		echo "Please install libboost or link to it in your LD_LIBRARY_PATH"
+		exit 1 # kill -s TERM $TOP_PID
+	fi	
+	#check_for_lib libhdfs
+	if [ $? -ne 0 ]; then
+		echo "Please install libhdfs or link to it in your LD_LIBRARY_PATH"
+		exit 1 # kill -s TERM $TOP_PID
+	fi
+	echo "Installing PowerGraph..."
 	if [ ! $(find $BASE_DIR -type d -name PowerGraph) ]; then
-		git clone https://github.com/jegonzal/PowerGraph.git
+		# git clone https://github.com/jegonzal/PowerGraph.git
+		# XXX: Temporarily use my repository until the changes are merged
+		git clone https://github.com/sampollard/PowerGraph.git
 		cd PowerGraph
 		./configure
+		# Make everything (May not need everything) using at most 16 processes.
 		cd release/toolkits/graph_algorithms
-		make
-		# Make everything using at most 8 processes.
-		# make -j $(if [ "$NUM_CORES" -lt 8 ]; then echo 8; else echo $NUM_CORES; fi)
+		make -j $(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
 	else
 		echo "Found PowerGraph directory. I'm assuming you have everything built in there."
 	fi
+	POWERGRAPH_DIR="$BASE_DIR/PowerGraph"	
+
+	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name "graphalytics-platforms-$platform") ]; then
+		git clone "https://github.com/tudelft-atlarge/graphalytics-platforms-$platform.git"
+	fi
+	PLATFORM_DIR="$BASE_DIR/graphalytics-platforms-$platform"
+	cd "$PLATFORM_DIR"
+	# Unlike in GraphX, OpenG, you need to have the configuration in the Platform directory
+	cp -r "$PLATFORM_DIR/config-template" "$PLATFORM_DIR/config"
+	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
+	echo "powergraph.num-threads = $NUM_CORES" >> "$PLATFORM_DIR/config/powergraph.properties"
+	echo "powergraph.command = mpirun -np $NUM_CORES %s %s" >> "$PLATFORM_DIR/config/powergraph.properties"
+
+	mvn package -DskipTests
+    PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
+    VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
+    GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
+    tar -xf "$PKGNAME"
+    PKGDIR="$PLATFORM_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
+	cp -r "$PLATFORM_DIR/config" "$PKGDIR/config"
 }
 
 install_Giraph()
@@ -328,7 +382,7 @@ download_datasets()
 run_benchmark()
 {
 	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
-	. run-benchmark.sh # calls prepare-benchmark.sh
+	./run-benchmark.sh # calls prepare-benchmark.sh
 }
 # For each platform repository package up an executable
 
@@ -345,6 +399,10 @@ start_yarn
 #run_benchmark
 
 ### Run the GraphX benchmark
-install_GraphX
+#install_GraphX
+#run_benchmark
+
+### Run the PowerGraph benchmark
+install_PowerGraph
 run_benchmark
 
