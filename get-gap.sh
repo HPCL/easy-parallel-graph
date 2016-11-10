@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set and check where everything is going to be stored
-BASE_DIR="$HOME/gap"
-DATASET_DIR="$HOME/gap/datasets"
+BASE_DIR="$HOME/uo/research/easy-parallel-graph"
+DATASET_DIR="$HOME/uo/research/datasets"
 if [ -z "$BASE_DIR" ]; then
 	echo "Please set BASE_DIR to be where all the benchmarks and output will be stored."
 	exit 1;
@@ -33,10 +33,6 @@ if [ $(ls -l "$DATASET_DIR" | wc -l) -eq 0 ]; then
 	exit 1
 fi
 
-# Convert datasets into the correct extension for GAP
-# Transform the datasets from CSV (GraphBIG) -> GAP [w]el format
-# GAP [w]el Format: one edge per line, either node1 node2 weight or just node1 node2
-awk -F ',' '{if (NR > 1) print $1 " " $2}' "$DATASET_DIR/Knowledge_Repo/edge.csv" > "$DATASET_DIR/Knowledge_Repo.el"
 
 # Link dataset so the file extension is correct.
 # TODO: Get other datasets converted to the right formats.
@@ -45,10 +41,25 @@ awk -F ',' '{if (NR > 1) print $1 " " $2}' "$DATASET_DIR/Knowledge_Repo/edge.csv
 #wel_ln="$BASE_DIR/tmp_datasets/dota-league.wel"
 #ln "$DATASET_DIR/dota-league.e" "$wel_ln"
 
+# Set the names for the algorithms. Unfortunately, they're not the same in GAP and GraphBIG
+# NOTE: All algorithms must appear in the same order
+GAP_ALGORITHMS=( bfs pr )
+DATASETS=( Knowledge_Repo CA_RoadNet )
+GRAPHBIG_ALGORITHMS=( bfs pagerank )
+ALGORITHM_DIRS=( bench_BFS bench_pageRank ) # Just used for GraphBIG
+
 # Run GAP Benchmark
-echo "Running GAP BFS benchmark and saving the results to $BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt"
 mkdir "$BASE_DIR/output"
-./bfs -f "$DATASET_DIR/Knowledge_Repo.el" > "$BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt"
+for d in "${DATASETS[@]}"; do
+	# Convert datasets into the correct extension for GAP
+	# Transform the datasets from GraphBIG (CSV) -> GAP ([w]el) format
+	# GAP [w]el Format: one edge per line, either node1 node2 weight or just node1 node2
+	awk -F ',' '{if (NR > 1) print $1 " " $2}' "$DATASET_DIR/$d/edge.csv" > "$DATASET_DIR/$d/$d.el"
+	for ALG in "${GAP_ALGORITHMS[@]}"; do
+		echo "Running GAP $ALG benchmark and saving the results to $BASE_DIR/output/${ALG}-GAP-$d.txt"
+		./${ALG} -f "$DATASET_DIR/$d/$d.el" > "$BASE_DIR/output/${ALG}-GAP-$d.txt"
+	done
+done
 # Use the randomly selected source vertices from GAP as the root vertices in GraphBIG
 # so the two tools are actually computing the same thing.
 
@@ -62,12 +73,17 @@ cd graphBIG/benchmark
 make clean all
 
 # Run GraphBIG Benchmark
-echo "Running GraphBIG BFS benchmark and saving the results to $BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt"
-cd bench_BFS
-SOURCES=$(awk '/Source/{print int($2)}' "$BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt")
-rm "$BASE_DIR/output/bfs-graphBIG-Knowledge_Repo.txt"
-for source in $SOURCES; do
-	./bfs --dataset "$DATASET_DIR/Knowledge_Repo" --root "$source" >> "$BASE_DIR/output/bfs-graphBIG-Knowledge_Repo.txt"
+for d in "${DATASETS[@]}"; do
+	for i in $(seq ${#GRAPHBIG_ALGORITHMS[@]}); do
+		ALG=${GRAPHBIG_ALGORITHMS[$(($i-1))]}
+		alg_dir=${ALGORITHM_DIRS[$(($i-1))]}
+		echo "Running GraphBIG $ALG benchmark and saving the results to $BASE_DIR/output/${ALG}-graphBIG-$d.txt"
+		SOURCES=$(awk '/Source/{print int($2)}' "$BASE_DIR/output/${GAP_ALGORITHMS[$(($i-1))]}-GAP-$d.txt")
+		rm -f "$BASE_DIR/output/${ALG}-graphBIG-$d.txt" # Delete old runs
+		for source in $SOURCES; do
+			$alg_dir/${ALG} --dataset "$DATASET_DIR/Knowledge_Repo" --root "$source" >> "$BASE_DIR/output/${ALG}-graphBIG-$d.txt"
+		done
+	done
 done
 
 # Clean up

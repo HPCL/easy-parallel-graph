@@ -244,16 +244,16 @@ install_OpenG()
 		exit 1
 	fi
 	cd "$BASE_DIR"
-	GRAPHBIG_DIR="$BASE_DIR/graphBIG"
+	GRAPHBIG_DIR="$BASE_DIR/graphBIG_GA"
 	export OPENG_HOME="$GRAPHBIG_DIR"
 	if [ "$osname" != "Linux" ]; then
 		GRAPHBIG_OPTS="PFM=0"
 	else
 		GRAPHBIG_OPTS=""
 	fi
-	if [ ! -d graphBIG ]; then
+	if [ ! -d graphBIG_GA ]; then
 		echo "Downloading and building the GraphBIG repository"
-		git clone 'https://github.com/graphbig/graphBIG.git'
+		git clone 'https://github.com/graphbig/graphBIG.git' $GRAPHBIG_DIR
 		cd "$GRAPHBIG_DIR"
 		git checkout graphalytics
 		make clean
