@@ -14,7 +14,7 @@ cd "$BASE_DIR"
 
 # Download and compile GAP Benchmark Suite
 echo "Preparing GAP Benchmark Suite..."
-if [ ! -d gapbs ]; then
+if [ ! -d "$BASE_DIR/gapbs" ]; then
 	git clone "https://github.com/sbeamer/gapbs.git"
 fi
 GAPBS_DIR="$BASE_DIR/gapbs"
@@ -46,6 +46,7 @@ awk -F ',' '{if (NR > 1) print $1 " " $2}' "$DATASET_DIR/Knowledge_Repo/edge.csv
 #ln "$DATASET_DIR/dota-league.e" "$wel_ln"
 
 # Run GAP Benchmark
+echo "Running GAP BFS benchmark and saving the results to $BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt"
 mkdir "$BASE_DIR/output"
 ./bfs -f "$DATASET_DIR/Knowledge_Repo.el" > "$BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt"
 # Use the randomly selected source vertices from GAP as the root vertices in GraphBIG
@@ -54,15 +55,15 @@ mkdir "$BASE_DIR/output"
 # Download and compile GraphBIG Benchmark Suite
 echo "Preparing GraphBIG..."
 cd "$BASE_DIR"
-if [ -d graphBIG ]; then
+if [ ! -d graphBIG ]; then
 	git clone "https://github.com/graphbig/graphBIG.git"
 fi
-cd graphBIG
-cd benchmark
+cd graphBIG/benchmark
 make clean all
 
 # Run GraphBIG Benchmark
-cd ../bench_BFS
+echo "Running GraphBIG BFS benchmark and saving the results to $BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt"
+cd bench_BFS
 SOURCES=$(awk '/Source/{print int($2)}' "$BASE_DIR/output/bfs-GAP-Knowledge_Repo.txt")
 rm "$BASE_DIR/output/bfs-graphBIG-Knowledge_Repo.txt"
 for source in $SOURCES; do
