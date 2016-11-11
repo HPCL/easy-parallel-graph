@@ -1,8 +1,12 @@
 #!/bin/bash
 
 # Set and check where everything is going to be stored
-BASE_DIR="$HOME/uo/research/easy-parallel-graph"
-DATASET_DIR="$HOME/uo/research/datasets"
+# For SamXu2
+#BASE_DIR="$HOME/uo/research/easy-parallel-graph"
+#DATASET_DIR="$HOME/uo/research/datasets"
+# For Arya
+BASE_DIR="$HOME/gap"
+DATASET_DIR="$HOME/gap/datasets"
 if [ -z "$BASE_DIR" ]; then
 	echo "Please set BASE_DIR to be where all the benchmarks and output will be stored."
 	exit 1;
@@ -32,7 +36,6 @@ if [ $(ls -l "$DATASET_DIR" | wc -l) -eq 0 ]; then
 	echo "https://github.com/graphbig/graphBIG/wiki/GraphBIG-Dataset"
 	exit 1
 fi
-
 
 # Link dataset so the file extension is correct.
 # TODO: Get other datasets converted to the right formats.
