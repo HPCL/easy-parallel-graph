@@ -297,7 +297,8 @@ install_PowerGraph()
 	cd $BASE_DIR
 	platform=powergraph
 	echo "Checking dependencies..."
-	export LD_LIBRARY_PATH="$HADOOP_HOME/lib/native"
+	export LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/
+	# For libhdfs, you need to change graphalytics-0.3-powergraph0.1/bin/standard/CMakeFile/main.dir/link.txt to have -lhdfs
 	# There are a few dependencies to be satisfied since you're not running inside PowerGraph/apps
 	check_for_lib libtcmalloc
 	if [ $? -ne 0 ]; then
@@ -320,11 +321,12 @@ install_PowerGraph()
 		echo "Please install libboost or link to it in your LD_LIBRARY_PATH"
 		exit 1 # kill -s TERM $TOP_PID
 	fi	
-	#check_for_lib libhdfs
-	if [ $? -ne 0 ]; then
-		echo "Please install libhdfs or link to it in your LD_LIBRARY_PATH"
-		exit 1 # kill -s TERM $TOP_PID
-	fi
+	# Doesn't seem to recognize libhdfs
+	# check_for_lib libhdfs
+	# if [ $? -ne 0 ]; then
+	# 	echo "Please install libhdfs or link to it in your LD_LIBRARY_PATH"
+	# 	exit 1 # kill -s TERM $TOP_PID
+	# fi
 	echo "Installing PowerGraph..."
 	if [ ! $(find $BASE_DIR -type d -name PowerGraph) ]; then
 		# git clone https://github.com/jegonzal/PowerGraph.git
@@ -333,7 +335,7 @@ install_PowerGraph()
 		cd PowerGraph
 		./configure
 		# Make everything (May not need everything) using at most 16 processes.
-		cd release/toolkits/graph_algorithms
+		cd release/toolkits
 		make -j $(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
 	else
 		echo "Found PowerGraph directory. I'm assuming you have everything built in there."
