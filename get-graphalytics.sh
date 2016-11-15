@@ -11,7 +11,7 @@
 #BASE_DIR="$HOME/uo/research/graphalytics"
 #HADOOP_HOME="$HOME/uo/research/graphalytics/hadoop-2.7.3"
 # For Mac
-#BASE_DIR=$HOME/Documents/uo/research/graphalytics
+#BASE_DIR=$HOME/Documents/uo/research/easy-parallel-graph
 #HADOOP_HOME="$HOME/bin/hadoop"
 # For Arya
 BASE_DIR="$HOME/graphalytics"
@@ -64,17 +64,17 @@ install_graphalytics()
 		git clone https://github.com/ldbc/ldbc_graphalytics.git
 		cd ldbc_graphalytics
 		mvn install
-		cp -r config-template config
-		echo "Changing graphs.root-directory in config to $DATASET_DIR"
-		echo "$osname" | grep -q '.*BSD'
-		if [ $? -eq 0 -o "$osname" = "Darwin" ]; then
-			sed -i '' "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$GA_DIR/config/graphs.properties"
-		else
-			sed -i "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$GA_DIR/config/graphs.properties"
-		fi
 		cd ..
 	else
 		echo "I found an ldbc_graphalytics directory. I assume everything is built in there."
+	fi
+	cp -r config-template config
+	echo "Changing graphs.root-directory in config to $DATASET_DIR"
+	echo "$osname" | grep -q '.*BSD'
+	if [ $? -eq 0 -o "$osname" = "Darwin" ]; then
+		sed -i '' "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$GA_DIR/config/graphs.properties"
+	else
+		sed -i "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$GA_DIR/config/graphs.properties"
 	fi
 }
 
@@ -333,7 +333,7 @@ install_PowerGraph()
 		# XXX: Temporarily use my repository until the changes are merged
 		git clone https://github.com/sampollard/PowerGraph.git
 		cd PowerGraph
-		./configure
+		./configure --no_jvm
 		# Make everything (May not need everything) using at most 16 processes.
 		cd release/toolkits
 		make -j $(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
@@ -348,10 +348,17 @@ install_PowerGraph()
 	PLATFORM_DIR="$BASE_DIR/graphalytics-platforms-$platform"
 	cd "$PLATFORM_DIR"
 	# Unlike in GraphX, OpenG, you need to have the configuration in the Platform directory
-	cp -r "$PLATFORM_DIR/config-template" "$PLATFORM_DIR/config"
+	cp -r "$GA_DIR/config" "$PLATFORM_DIR/config"
 	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
 	echo "powergraph.num-threads = $NUM_CORES" >> "$PLATFORM_DIR/config/powergraph.properties"
-	echo "powergraph.command = mpirun -np $NUM_CORES %s %s" >> "$PLATFORM_DIR/config/powergraph.properties"
+	#echo "powergraph.command = mpirun -np $NUM_CORES %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
+	echo "powergraph.command = %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Shared memory
+	if [ "$NUM_CORES" -gt 64 ]; then
+		echo "Using 64 of $NUM_THREADS available threads due to GraphLab limitations."
+		export GRAPHLAB_THREADS_PER_WORKER=64
+	else
+		export GRAPHLAB_THREADS_PER_WORKER=$NUM_CORES
+	fi
 
 	mvn package -DskipTests
     PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
@@ -380,7 +387,7 @@ download_datasets()
 }
 
 # Runs the benchmark $platform
-# Requirements: $platform, $PKGDIR be defined.
+# Requirements: $PKGDIR be defined.
 run_benchmark()
 {
 	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
@@ -390,10 +397,10 @@ run_benchmark()
 
 ### MAIN ###
 ### Make sure correct packages are installed
+# Do not comment out this function. It changes some configuration files.
 install_graphalytics
-check_hadoop_dependencies
-start_hadoop
-start_yarn
+
+# The rest may be commented out so not all benchmarks are run at once.
 #download_datasets
 
 ### Run the OpenG benchmark
@@ -401,6 +408,9 @@ start_yarn
 #run_benchmark
 
 ### Run the GraphX benchmark
+#check_hadoop_dependencies
+#start_hadoop
+#start_yarn
 #install_GraphX
 #run_benchmark
 
