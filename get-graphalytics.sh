@@ -402,8 +402,8 @@ install_graphalytics
 #download_datasets
 
 ### Run the OpenG benchmark
-#install_OpenG
-#run_benchmark
+install_OpenG
+run_benchmark
 
 ### Run the GraphX benchmark
 #check_hadoop_dependencies
@@ -413,6 +413,6 @@ install_graphalytics
 #run_benchmark
 
 ### Run the PowerGraph benchmark
-install_PowerGraph
-run_benchmark
+#install_PowerGraph
+#run_benchmark
 
