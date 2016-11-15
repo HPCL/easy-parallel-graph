@@ -347,18 +347,18 @@ install_PowerGraph()
 	fi
 	PLATFORM_DIR="$BASE_DIR/graphalytics-platforms-$platform"
 	cd "$PLATFORM_DIR"
-	# Unlike in GraphX, OpenG, you need to have the configuration in the Platform directory
-	cp -r "$GA_DIR/config" "$PLATFORM_DIR/config"
-	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
-	echo "powergraph.num-threads = $NUM_CORES" >> "$PLATFORM_DIR/config/powergraph.properties"
-	#echo "powergraph.command = mpirun -np $NUM_CORES %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
-	echo "powergraph.command = %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Shared memory
 	if [ "$NUM_CORES" -gt 64 ]; then
 		echo "Using 64 of $NUM_THREADS available threads due to GraphLab limitations."
 		export GRAPHLAB_THREADS_PER_WORKER=64
 	else
 		export GRAPHLAB_THREADS_PER_WORKER=$NUM_CORES
 	fi
+	# Unlike in GraphX, OpenG, you need to have the configuration in the Platform directory
+	cp -r "$GA_DIR/config" "$PLATFORM_DIR/config"
+	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
+	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PLATFORM_DIR/config/powergraph.properties"
+	#echo "powergraph.command = mpirun -np $NUM_CORES %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
+	echo "powergraph.command = %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Shared memory
 
 	mvn package -DskipTests
     PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
