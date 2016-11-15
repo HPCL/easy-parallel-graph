@@ -1,7 +1,8 @@
-# Making Graph Benchmarking Easy
+# Simplifying Parallel Graph Processing
 This script gathers, installs, and runs various benchmarks from Graphalytics.
 
 ## Dependencies
+A dependency will occur here no more than once. For example, GraphBIG requires maven but doesn't list it.
 ### This Script
 1. Bash
 2. Perl
@@ -26,3 +27,4 @@ This script gathers, installs, and runs various benchmarks from Graphalytics.
 3. If running on one node for hadoop: ability to ssh into localhost without a password
 
 ### PowerGraph
+
