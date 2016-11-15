@@ -8,8 +8,8 @@
 # CHANGE THESE TO BE CORRECT!
 # Variables to set (put as command line arguments)
 # For SamXu2
-#BASE_DIR="$HOME/uo/research/graphalytics"
-#HADOOP_HOME="$HOME/uo/research/graphalytics/hadoop-2.7.3"
+#BASE_DIR="$HOME/uo/research/easy-parallel-graph"
+#HADOOP_HOME="$HOME/uo/research/easy-parallel-graph/hadoop-2.7.3"
 # For Mac
 #BASE_DIR=$HOME/Documents/uo/research/easy-parallel-graph
 #HADOOP_HOME="$HOME/bin/hadoop"
