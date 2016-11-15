@@ -20,15 +20,15 @@ HADOOP_HOME="$HOME/hadoop-2.7.3"
 ### Set up some variables and script options
 # So ! doesn't expand in the shell
 set +o histexpand
-# So Ctrl-C works
+# So Ctrl-C works and subroutines can exit the whole script.
 trap "exit 1" INT
-# So we can bail if something goes wrong
 export TOP_PID=$$ 
+MAX_THREADS=64 # This is a PowerGraph limitation.
 
-osname=$(uname)
-if [ "$JAVA_HOME" = "" -a "$osname" = "Linux" ]; then
+OSNAME=$(uname)
+if [ "$JAVA_HOME" = "" -a "$OSNAME" = "Linux" ]; then
 	export JAVA_HOME=$(update-java-alternatives -l | awk '{print $3}')
-elif [ -z "$JAVA_HOME" -a "$osname" = "Darwin" ]; then
+elif [ -z "$JAVA_HOME" -a "$OSNAME" = "Darwin" ]; then
 	export JAVA_HOME=$(/usr/libexec/java_home)
 elif [ -z $"JAVA_HOME" ]; then
 	echo "Please set the environment variable JAVA_HOME. This is the directory where jdk is installed."
@@ -38,19 +38,18 @@ if [ "$HADOOP_HOME" = "" -o "$BASE_DIR" = "" ]; then
 	echo "You need to set HADOOP_HOME and BASE_DIR before this will work"
 	exit 1
 fi
-if [ "$osname" = Darwin ]; then
-	NUM_CORES=$(sysctl -n hw.ncpu)
-	NUM_THREADS=$NUM_CORES
+if [ "$OSNAME" = Darwin ]; then
+	NUM_CORES=$(sysctl -n hw.ncpu) # The number of virtual cores (2x for hyperthreading is counted)
 	MEM_KB=$(($(vm_stat | grep "Pages free:" | awk '{print $3}' | tr -d .) * $(vm_stat | head -n 1 | grep -E -o [0-9]+) / 1024 ))
-	NUM_SOCKETS=1 # Is this always true?
+	#NUM_SOCKETS=1 # Is this always true on Mac?
 	NUM_NODES=1
 else
-	NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
-	NUM_THREADS=$NUM_CORES # Intel already counts 2x for hyperthreaded cores
+	NUM_CORES=$(grep -c ^processor /proc/cpuinfo) # The number of virtual cores (2x for hyperthreading is counted)
 	MEM_KB=$(cat /proc/meminfo | grep MemAvailable | awk '{print $2}')
-	#NUM_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l)
+	#NUM_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l) # Irrelevant for the current setup.
 	NUM_NODES=1
 fi
+NUM_THREADS=$(if [ "$NUM_CORES" -lt $MAX_THREADS ]; then echo $NUM_CORES; else echo $MAX_THREADS; fi)
 GA_DIR="$BASE_DIR/ldbc_graphalytics"
 DATASET_DIR=$BASE_DIR/datasets
 
@@ -70,8 +69,8 @@ install_graphalytics()
 	fi
 	cp -r config-template config
 	echo "Changing graphs.root-directory in config to $DATASET_DIR"
-	echo "$osname" | grep -q '.*BSD'
-	if [ $? -eq 0 -o "$osname" = "Darwin" ]; then
+	echo "$OSNAME" | grep -q '.*BSD'
+	if [ $? -eq 0 -o "$OSNAME" = "Darwin" ]; then
 		sed -i '' "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$GA_DIR/config/graphs.properties"
 	else
 		sed -i "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$GA_DIR/config/graphs.properties"
@@ -208,6 +207,7 @@ install_GraphX()
 	PKGDIR="$GRAPHX_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 
 	# Configure GraphX
+	# TODO: Fix this
 	# Spark runs out of memory if 9 cores are used per worker (I think worker = container here?)
 	# NOTE: There are a lot of issues when running graphalytics. You have to get the right balance
 	# of memory and vcores per container. I don't know quite how to configure that.
@@ -227,8 +227,8 @@ install_GraphX()
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 
 	# Don't need to specify filesystem authority, but it is the default: localhost:9000
-	echo "$osname" | grep -q '.*BSD'
-	if [ $? -eq 0 -o "$osname" = "Darwin" ]; then
+	echo "$OSNAME" | grep -q '.*BSD'
+	if [ $? -eq 0 -o "$OSNAME" = "Darwin" ]; then
 		sed -i '' 's/readlink -f/stat -f/' "$PKGDIR/run-benchmark.sh"
 		# Will ONLY work one level of symlink. For a full recursive solution, see
 		# stackoverflow.com/questions/7665/how-to-resolve-symbolic-links-in-a-shell-script
@@ -239,14 +239,14 @@ install_GraphX()
 
 install_OpenG()
 {
-	if [ "$osname" != "Linux" ]; then
+	if [ "$OSNAME" != "Linux" ]; then
 		echo "GraphBIG only works on Linux."
 		exit 1
 	fi
 	cd "$BASE_DIR"
 	GRAPHBIG_DIR="$BASE_DIR/graphBIG_GA"
 	export OPENG_HOME="$GRAPHBIG_DIR"
-	if [ "$osname" != "Linux" ]; then
+	if [ "$OSNAME" != "Linux" ]; then
 		GRAPHBIG_OPTS="PFM=0"
 	else
 		GRAPHBIG_OPTS=""
@@ -276,13 +276,16 @@ install_OpenG()
 
 	PKGDIR="$OPENG_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 	# Configure OpenG
+ 	if [ "$NUM_CORES" -gt "$NUM_THREADS" ]; then
+ 		echo "Using $NUM_THREADS threads on $NUM_CORES available cores to maintain an even comparison with PowerGraph."
+ 	fi
 	CONFIG=$(printf "openg.home = $GRAPHBIG_DIR\nopeng.intermediate-dir = $GRAPHBIG_DIR/intermediate\nopeng.output-dir = $GRAPHBIG_DIR/output\nopeng.num-worker-threads=$NUM_THREADS")
 	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
 	echo "$CONFIG" > $PKGDIR/config/$platform.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 }
 
-check_for_lib ()
+check_for_lib()
 {
 	if [ -z "$1" ]; then
 		echo "No arguments to check_for_lib"
@@ -347,15 +350,15 @@ install_PowerGraph()
 	fi
 	PLATFORM_DIR="$BASE_DIR/graphalytics-platforms-$platform"
 	cd "$PLATFORM_DIR"
- 	if [ "$NUM_CORES" -gt 64 ]; then
- 		echo "Using 64 of $NUM_THREADS available threads due to GraphLab limitations."
+ 	if [ "$NUM_CORES" -gt "$MAX_THREADS" ]; then
+ 		echo "Using $MAX_THREADS threads on $NUM_CORES available cores due to PowerGraph limitations."
  		export GRAPHLAB_THREADS_PER_WORKER=64
  	else
- 		export GRAPHLAB_THREADS_PER_WORKER=$NUM_CORES
+ 		export GRAPHLAB_THREADS_PER_WORKER=$NUM_THREADS
  	fi
 	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
 	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PLATFORM_DIR/config/powergraph.properties"
-	#echo "powergraph.command = mpirun -np $NUM_CORES %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
+	#echo "powergraph.command = mpirun -np $NUM_THREADS %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
 	echo "powergraph.command = %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Shared memory
 
 	mvn package -DskipTests
@@ -413,6 +416,6 @@ run_benchmark
 #run_benchmark
 
 ### Run the PowerGraph benchmark
-#install_PowerGraph
-#run_benchmark
+install_PowerGraph
+run_benchmark
 
