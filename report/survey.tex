@@ -61,14 +61,14 @@ Algorithmic Considerations & \\ \hline
 
 Performance in millions of traversed edges per second (MTEPS)
 
-\begin{tabular}{l|r|r}
+\begin{tabular}{l|r|r|}
  & PowerGraph & OpenG \\ \hline
 BFS & $87.4$ & $341$ \\ \hline
 SSSP & $1.09$ & $3.08$ \\ \hline
 \end{tabular}
 
 \section{Graph Processing Taxonomy}
-This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}.
+This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
 \begin{savenotes}
 	\begin{table}[htb]
 		\centering
@@ -81,11 +81,16 @@ This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}.
 			columns/Type/.style={string type},
 			columns/HPC/.style={string type},
 			columns/Parallelism/.style={string type},
-			columns/Arch./.style={string type},
-			columns/Free/.style={string type},
+			columns/Target/.style={string type},
+			columns/FOSS/.style={string type},
 			columns/Source/.style={string type},
 			columns/Notes/.style={
-				preproc cell content/.style={@cell content=\footnote{##1}}
+				preproc cell content/.style={@cell content=
+					\ifx&##1&% Only make a footnote if the cell is nonempty
+						##1
+					\else
+						\footnote{##1}
+					\fi}
 			},
 		]{platforms.csv}
 	\end{table}
