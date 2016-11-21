@@ -67,7 +67,7 @@ install_graphalytics()
 	else
 		echo "I found an ldbc_graphalytics directory. I assume everything is built in there."
 	fi
-	cp -r config-template config
+	cp -r ldbc_graphalytics/config-template ldbc_graphalytics/config
 	echo "Changing graphs.root-directory in config to $DATASET_DIR"
 	echo "$OSNAME" | grep -q '.*BSD'
 	if [ $? -eq 0 -o "$OSNAME" = "Darwin" ]; then
@@ -382,17 +382,24 @@ download_datasets()
 {
 	cd "$BASE_DIR"
 	# The full dataset is at http://atlarge.ewi.tudelft.nl/graphalytics/zip/dota-league.zip for example.
-	wget -r -l 1 --no-clobber http://atlarge.ewi.tudelft.nl/graphalytics/data/ $DATASET_DIR
+	wget -r -l 1 --no-clobber --reject 'index.html*' --exclude-directories=icons http://atlarge.ewi.tudelft.nl/graphalytics/data/ $DATASET_DIR
 	# Get the reference solutions
-	wget -r -l 1 --no-clobber http://atlarge.ewi.tudelft.nl/graphalytics/ref/ $DATASET_DIR
+	wget -r -l 1 --no-clobber --reject 'index.html' --exclude-directoryes=icons http://atlarge.ewi.tudelft.nl/graphalytics/ref/ $DATASET_DIR
 }
 
-# Runs the benchmark $platform
-# Requirements: $PKGDIR be defined.
+# Runs and logs the results of running a given $platform.
+# NOTE: This must be done after calling an install_$platform.
+#       That is, ALWAYS call install before run.
 run_benchmark()
 {
 	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
-	./run-benchmark.sh # calls prepare-benchmark.sh
+	mkdir -p "$BASE_DIR/experiments"
+	LOG_FILE="$BASE_DIR/experiments/${platform}-log.txt"
+	./run-benchmark.sh | tee "$LOG_FILE" # calls prepare-benchmark.sh
+	# Parse through logs and move the html outputs to a more convenient location
+	OUTPUT=$(dirname $(awk -F '"' '/Wrote benchmark report/{print $(NF-1)}' "$LOG_FILE"))
+	echo "$PKGDIR/$OUTPUT"
+	mv "$PKGDIR/$OUTPUT" "$BASE_DIR/experiments"
 }
 # For each platform repository package up an executable
 
