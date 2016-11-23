@@ -14,14 +14,14 @@ else
 	CPU_MODEL=$(lscpu | grep "Model name" | awk -F ":" '{print $2}' | sed 's/^[[:space:]]*//')
 	CPU_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l)
 	CPU_CORES=$(grep -c ^processor /proc/cpuinfo) # The number of virtual cores are counted (2x for hyperthreading)
-	CPU_CLOCK=$(printf "%.0f%s" $(lscpu | grep "CPU max MHz" | awk -F ":" '{print $2}' | sed 's/^\s*//') "MHz")
 	RAM_SIZE=$(cat /proc/meminfo | grep MemTotal | awk '{print $2 / 1024 / 1024 "Gib"}')
+	CPU_CLOCK=$(printf "%.0f%s" $(lscpu | grep "CPU max MHz" | awk -F ":" '{print $2}' | sed 's/^\s*//') "MHz")
 fi
 
 # Get data that requires superuser.
 if [ -f "lshw.txt" ]; then
 	RAM_FREQ=$(grep -E -m 1 'clock: [0-9]+.*\(' lshw.txt | awk '{print $2}')
-	GPU_MODEL=$(grep -E -A 11 '\*-display' lshw.txt | grep product | sed 's/^\s*product:\s//')
+	GPU_MODEL=$(grep -E -A 11 '\*-display' lshw.txt | grep product | sed 's/^\s*product:\s//' | tr "\n" " ")
 else
 	echo -e "To get more in-depth hardware info run the command\n"
 	echo -e "sudo lshw > lshw.txt\n"
