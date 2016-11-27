@@ -7,7 +7,6 @@
 \usepackage{pgfplotstable}
 \pgfplotsset{compat=1.12}
 \usepackage{booktabs}
-\usepackage{footnote}
 
 \usepackage{fancyhdr, setspace}
 \renewcommand{\headrulewidth}{0pt}
@@ -23,16 +22,12 @@
 \setlist{parsep=0pt, listparindent=0.5cm}
 
 \begin{document}
-\begin{center}
-{ \huge
-	Simplifying Parallel Graph Processing: \\
+\title{Simplifying Parallel Graph Processing: \\
+	\large Survey of Existing Platforms
 }
-{ \Large
-	Survey of Existing Platforms \\
-}
-Sam Pollard (\href{mailto:spollard@cs.uoregon.edu}{spollard@cs.uoregon.edu}), University of Oregon \\
-\today
-\end{center}
+\author{Samuel Pollard (\href{mailto:spollard@cs.uoregon.edu}{spollard@cs.uoregon.edu})}
+\date{\today}
+\maketitle
 
 This is a survey of existing graph analytics frameworks.
 
@@ -92,18 +87,25 @@ Performance in millions of traversed edges per second (MTEPS)
 
 \section{Graph Processing Taxonomy}
 This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
-\begin{savenotes}
-	\begin{table}
+\begin{table}
+	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
 		\centering
 		% \small
 		\pgfplotstabletypeset[
 			col sep=comma,
 			string type, % Makes the .style={string type} redundant
+			columns={Name,Type,HPC,Parallelism,Target,FOSS,Source,Notes},
 			every head row/.style={after row=\midrule},
 			columns/Name/.style={string type, column type={l|}},
 			columns/Type/.style={string type},
 			columns/HPC/.style={string type},
 			columns/Parallelism/.style={string type},
+%			columns/Comm./.style={%
+%				string type,
+%				postproc cell content/.style={%
+%					@cell content/.add={\footnotesize}
+%				}
+%			},
 			columns/Target/.style={string type},
 			columns/FOSS/.style={string type},
 			columns/Source/.style={string type},
@@ -118,8 +120,9 @@ This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``
 		]{platforms.csv}
 		\caption{Tools used for graph processing}
 		\label{tab:frameworks}
-	\end{table}
-\end{savenotes}
+	\end{minipage}
+\end{table}
+
 
 \section{Conclusion} % Begin with the end in mind...
 We have presented an updated survey of parallel graph processing frameworks supplementary to \cite{Doekemeijer:2015:GPFSurvey}. From this, we have selected a representative subset of frameworks on which performance is analyzed and have stored these results in a database. To facilitate parallel graph processing, hardware information and performance results are automatically populated (as were all the tables in this paper). These performance results are then used to provide simple recommendations of the optimally-performing framework given a particular algorithm and problem size.

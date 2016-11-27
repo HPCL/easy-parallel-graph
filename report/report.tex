@@ -1,0 +1,64 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in, headheight=15pt]{geometry}
+\usepackage{amsmath, amsthm, amsfonts}
+\usepackage{hyperref}
+\usepackage{pgfplotstable, booktabs}
+\pgfplotsset{compat=1.12}
+\usepackage{datetime}
+
+\usepackage{fancyhdr, setspace}
+\renewcommand{\headrulewidth}{0pt}
+\pagestyle{fancy}
+\setlength{\headheight}{15pt} % Removes warnings. Set to 30pt if 2 lines on the header.
+\lhead{}
+\rhead{}
+\usepackage{totcount}
+\regtotcounter{page}
+\cfoot{\ifnum\totvalue{page} > 1 \thepage \else\fi}
+
+\begin{document}
+\title{Parallel Graph Processing Report\vspace{-2em}}
+\author{}
+\date{Generated \today\ at \currenttime}
+\maketitle
+
+This report was automatically generated from \verb|PATH_TO_MAKEFILE| on \verb|HOSTNAME|.
+
+\section{Machine Specifications}
+These data were gathered from \verb|specs.csv|. If these results are not complete enough, try running \verb|get-hwinfo.sh| again and run the command it suggests as root.
+
+% TODO: Make this a pgfplotstable with an automatically generated csv.
+\begin{table}[htb]
+	\centering
+% Keep in mind you can do this at the beginning: string replace={s1}{s2}
+	\pgfplotstabletypeset[
+	header=false,
+	col sep=tab,
+	string type,
+    every head row/.style={output empty row, before row=\bottomrule},
+	columns/0/.style={column type={|r|}},
+	columns/1/.style={column type={l|}},
+	every last row/.style={after row=\toprule},
+	]{specs.csv}
+	\caption{Machine specifications.}
+	\label{tab:specs}
+\end{table}
+
+\section{Performance Results}
+Performance in millions of traversed edges per second (MTEPS)
+
+% TODO: Actually get this to autogenerate.
+\begin{table}[htb]
+	\centering
+	\begin{tabular}{l|r|r|}
+	 & PowerGraph & OpenG \\ \hline
+	BFS & $87.4$ & $341$ \\ \hline
+	SSSP & $1.09$ & $3.08$ \\ \hline
+	\end{tabular}
+	\caption{Performance Results}
+	\label{tab:perf}
+\end{table}
+
+\end{document}

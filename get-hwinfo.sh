@@ -12,6 +12,7 @@ if [ "$OSNAME" = Darwin ]; then
 	CPU_CORES=$(sysctl -n hw.ncpu) # The number of virtual cores (2x for hyperthreading is counted)
 	RAM_SIZE=$(sysctl -n hw.memsize | awk '{print $0 / 1024 / 1024 / 1024 "Gib"}')
 	CPU_CLOCK=$(printf "%.0f %s" $(echo $(sysctl -n hw.cpufrequency_max) "/ 1000000" | bc) "MHz")
+	echo "Running system_profiler and saving to /tmp/profile.txt. This will be deleted afterwards."
 	system_profiler > /tmp/profile.txt
 	RAM_FREQ=$(cat /tmp/profile.txt | grep -A 16 "Memory:$" | grep "Speed" | awk -F ":" '{print $2}' | sed 's/^[[:space:]]*//')
 	GPU_MODEL=$(cat /tmp/profile.txt | grep -A 11 "Graphics/Displays" | grep "Chipset" | awk -F ":" '{print $2}' | sed 's/^[[:space:]]*//')
@@ -22,6 +23,7 @@ else
 	CPU_CORES=$(grep -c ^processor /proc/cpuinfo) # The number of virtual cores are counted (2x for hyperthreading)
 	RAM_SIZE=$(cat /proc/meminfo | grep MemTotal | awk '{print $2 / 1024 / 1024 "Gib"}')
 	CPU_CLOCK=$(printf "%.0f %s" $(lscpu | grep "CPU max MHz" | awk -F ":" '{print $2}' | sed 's/^\s*//') "MHz")
+	CPU_SIMD=$(sysctl -n machdep.cpu.features)
 fi
 
 # Get data that requires superuser.
