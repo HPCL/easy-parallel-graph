@@ -41,18 +41,13 @@ fi
 if [ "$OSNAME" = Darwin ]; then
 	NUM_CORES=$(sysctl -n hw.ncpu) # The number of virtual cores (2x for hyperthreading is counted)
 	MEM_KB=$(($(vm_stat | grep "Pages free:" | awk '{print $3}' | tr -d .) * $(vm_stat | head -n 1 | grep -E -o [0-9]+) / 1024 ))
-	#NUM_SOCKETS=1 # Is this always true on Mac?
-	NUM_NODES=1
 else
 	NUM_CORES=$(grep -c ^processor /proc/cpuinfo) # The number of virtual cores (2x for hyperthreading is counted)
 	MEM_KB=$(cat /proc/meminfo | grep MemAvailable | awk '{print $2}')
-	#NUM_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l) # Irrelevant for the current setup.
-	NUM_NODES=1
 fi
 NUM_THREADS=$(if [ "$NUM_CORES" -lt $MAX_THREADS ]; then echo $NUM_CORES; else echo $MAX_THREADS; fi)
 GA_DIR="$BASE_DIR/ldbc_graphalytics"
 DATASET_DIR=$BASE_DIR/datasets
-
 
 install_graphalytics()
 {
@@ -188,7 +183,6 @@ install_GraphX()
 {
 	# Assumes HDFS and YARN are running.
 	echo "Installing GraphX..."
-	OLDWD=$(pwd)
 	cd "$BASE_DIR"
 	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name graphalytics-platforms-graphx) ]; then
 		git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphx.git
@@ -199,7 +193,7 @@ install_GraphX()
 	cd "$GRAPHX_DIR"
 	mvn package
 
-	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
+	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name '*.tar.gz'))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
 	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
 	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
@@ -227,14 +221,7 @@ install_GraphX()
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 
 	# Don't need to specify filesystem authority, but it is the default: localhost:9000
-	echo "$OSNAME" | grep -q '.*BSD'
-	if [ $? -eq 0 -o "$OSNAME" = "Darwin" ]; then
-		sed -i '' 's/readlink -f/stat -f/' "$PKGDIR/run-benchmark.sh"
-		# Will ONLY work one level of symlink. For a full recursive solution, see
-		# stackoverflow.com/questions/7665/how-to-resolve-symbolic-links-in-a-shell-script
-	fi
-
-	cd "$OLDWD"
+	fix_readlink
 }
 
 install_OpenG()
@@ -268,7 +255,7 @@ install_OpenG()
 	fi
 	cd "$OPENG_DIR" # You have to be in this dir for it to work
 	mvn package
-	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name *.tar.gz))
+	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name '*.tar.gz'))
 	tar -xf "$PKGNAME"
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
 	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
@@ -285,14 +272,36 @@ install_OpenG()
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 }
 
+# Helper functions.
 check_for_lib()
 {
 	if [ -z "$1" ]; then
 		echo "No arguments to check_for_lib"
 		kill -s TERM $TOP_PID
 	fi
-	ldconfig -p | grep -q "$1"
+	if [ "$OSNAME" = "Darwin" ]; then
+		return 0 # XXX: TEMPORARY FIX
+	else
+		ldconfig -p | grep -q "$1"
+	fi
 	return $?
+}
+
+# Fixes run-benchmark.sh to work with BSD-based systems without the -f option.
+fix_readlink()
+{
+	echo "$OSNAME" | grep -q '.*BSD'
+	if [ $? -eq 0 -o "$OSNAME" = "Darwin" ]; then
+		greadlink -f ${BASH_SOURCE[0]}
+		if [ $? -ne 0 ]; then
+			printf "You need the GNU readlink. This can be installed with homebrew with\n\n"
+			echo "brew install coreutils"	
+			kill -s TERM $TOP_PID
+		fi
+		sed -i '' 's/readlink -f/greadlink -f/' "$PKGDIR/run-benchmark.sh"
+		# Will ONLY work one level of symlink. For a full recursive solution, see
+		# stackoverflow.com/questions/7665/how-to-resolve-symbolic-links-in-a-shell-script
+	fi
 }
 
 install_PowerGraph()
@@ -331,19 +340,20 @@ install_PowerGraph()
 	# 	exit 1 # kill -s TERM $TOP_PID
 	# fi
 	echo "Installing PowerGraph..."
-	if [ ! $(find $BASE_DIR -type d -name PowerGraph) ]; then
+	if [ ! $(find "$BASE_DIR" -type d -name PowerGraph) ]; then
 		# git clone https://github.com/jegonzal/PowerGraph.git
 		# XXX: Temporarily use my repository until the changes are merged
 		git clone https://github.com/sampollard/PowerGraph.git
 		cd PowerGraph
 		./configure --no_jvm
 		# Make everything (May not need everything) using at most 16 processes.
-		cd release/toolkits
-		make -j $(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
+		cd release/toolkits/graph_algorithms
+		local NP=$(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
+		make -j $NP
 	else
 		echo "Found PowerGraph directory. I'm assuming you have everything built in there."
 	fi
-	POWERGRAPH_DIR="$BASE_DIR/PowerGraph"	
+	POWERGRAPH_DIR="$BASE_DIR/graphalytics-platforms-powergraph"	
 
 	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name "graphalytics-platforms-$platform") ]; then
 		git clone "https://github.com/tudelft-atlarge/graphalytics-platforms-$platform.git"
@@ -356,18 +366,21 @@ install_PowerGraph()
  	else
  		export GRAPHLAB_THREADS_PER_WORKER=$NUM_THREADS
  	fi
+	cp -r "$PLATFORM_DIR/config-template" "$PLATFORM_DIR/config"
 	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
 	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PLATFORM_DIR/config/powergraph.properties"
 	#echo "powergraph.command = mpirun -np $NUM_THREADS %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
 	echo "powergraph.command = %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Shared memory
 
 	mvn package -DskipTests
-    PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name *.tar.gz))
+    PKGNAME=$(basename $(find $POWERGRAPH_DIR -maxdepth 1 -name '*.tar.gz'))
     VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
     GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
     tar -xf "$PKGNAME"
     PKGDIR="$PLATFORM_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 	cp -r "$PLATFORM_DIR/config" "$PKGDIR/config"
+
+	fix_readlink
 }
 
 install_Giraph()
@@ -412,8 +425,8 @@ install_graphalytics
 #download_datasets
 
 ### Run the OpenG benchmark
-install_OpenG
-run_benchmark
+#install_OpenG
+#run_benchmark
 
 ### Run the GraphX benchmark
 #check_hadoop_dependencies

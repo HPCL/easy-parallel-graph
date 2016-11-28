@@ -32,10 +32,10 @@
 This is a survey of existing graph analytics frameworks.
 
 \section{Machine Specifications}
-Below are the preliminary results by running two benchmarks on the research computer Arya.
+Table~\ref{tab:specs} shows the specifications of the research computer (named Arya).
 
 % TODO: Make this a pgfplotstable with an automatically generated csv.
-\begin{table}[htb]
+\begin{table}[!htb]
 	\centering
 % Arya
 %	\begin{tabular}{l|r}
@@ -57,37 +57,42 @@ Below are the preliminary results by running two benchmarks on the research comp
 	\label{tab:specs}
 \end{table}
 
-\begin{table}[htb]
-	\centering
-	\begin{tabular}{lr}
-		Transport & \\ \hline
-		Network Topology & \\ \hline
-		Local Scheduling & \\ \hline
-		Runtime Feedback & \\ \hline
-		Approach & \\ \hline
-		Algorithmic Considerations & \\ \hline
-	\end{tabular}
-	\caption{Middleware specifications}
-	\label{tab:reportcard}
-\end{table}
+%\begin{table}[htb]
+%	\centering
+%	\begin{tabular}{lr}
+%		Transport & \\ \hline
+%		Network Topology & \\ \hline
+%		Local Scheduling & \\ \hline
+%		Runtime Feedback & \\ \hline
+%		Approach & \\ \hline
+%		Algorithmic Considerations & \\ \hline
+%	\end{tabular}
+%	\caption{Middleware specifications}
+%	\label{tab:reportcard}
+%\end{table}
 
-Performance in millions of traversed edges per second (MTEPS)
+\section{Performance}
+Graphalytics without the use of the Granula plugin produces performance measurement in two forms: runtime in seconds and traversed edges per second.
+
+Table~\ref{tab:perf} lists performance in millions of traversed edges per second (MTEPS) according to the graphalytics output. While this metric is simple to compute it is invariant across algorithms: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
+% TODO: Cite Comer algorithm book for Dijkstra's algorithm runtime.
 
 % TODO: This should be unnecessary once autogeneration is used.
-\begin{table}[htb]
+\begin{table}[!htb]
 	\centering
 	\begin{tabular}{l|r|r|}
 	 & PowerGraph & OpenG \\ \hline
-	BFS & $87.4$ & $341$ \\ \hline
-	SSSP & $1.09$ & $3.08$ \\ \hline
+	BFS & 81.8 & 341 \\ \hline
+	SSSP & 1.64 & 15.0 \\ \hline
+	LCC & 54.6 & 142 \\ \hline
 	\end{tabular}
-	\caption{Performance Results}
+	\caption{Performance Results for the \texttt{dota-league} dataset with 61,670 vertices and 50,870,313 edges. BFS is breadth-first search, SSSP is single-source shortest paths, LCC is local clustering coefficient.}
 	\label{tab:perf}
 \end{table}
 
 \section{Graph Processing Taxonomy}
 This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
-\begin{table}
+\begin{table}[!htb]
 	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
 		\centering
 		% \small
