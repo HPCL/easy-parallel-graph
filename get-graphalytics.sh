@@ -55,9 +55,9 @@ install_graphalytics()
 	if [ ! $(find $BASE_DIR -type d -name ldbc_graphalytics) ]; then
 		echo "Cloning and mvn-ing graphalytics into $GA_DIR... "
 		cd "$BASE_DIR"
-		git clone https://github.com/ldbc/ldbc_graphalytics.git
+		git clone https://github.com/sampollard/ldbc_graphalytics.git
 		cd ldbc_graphalytics
-		mvn install
+		mvn install -Dlicence.skip=true
 		cd ..
 	else
 		echo "I found an ldbc_graphalytics directory. I assume everything is built in there."
@@ -224,6 +224,7 @@ install_GraphX()
 	fix_readlink
 }
 
+# Installs and prepares OpenG, a part of GraphBIG, for execution.
 install_OpenG()
 {
 	if [ "$OSNAME" != "Linux" ]; then
@@ -312,27 +313,11 @@ install_PowerGraph()
 	export LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/
 	# For libhdfs, you need to change graphalytics-0.3-powergraph0.1/bin/standard/CMakeFile/main.dir/link.txt to have -lhdfs
 	# There are a few dependencies to be satisfied since you're not running inside PowerGraph/apps
-	check_for_lib libtcmalloc
-	if [ $? -ne 0 ]; then
-		echo "Please install libtcmalloc or link to it in your LD_LIBRARY_PATH"
-		exit 1 # kill -s TERM $TOP_PID
-	fi
-
-	check_for_lib libevent
-	if [ $? -ne 0 ]; then
-		echo "Please install libevent or link to it in your LD_LIBRARY_PATH"
-		exit 1 # kill -s TERM $TOP_PID
-	fi	
-	check_for_lib libjson
-	if [ $? -ne 0 ]; then
-		echo "Please install libjson or link to it in your LD_LIBRARY_PATH"
-		exit 1 # kill -s TERM $TOP_PID
-	fi
-	check_for_lib libboost
-	if [ $? -ne 0 ]; then
-		echo "Please install libboost or link to it in your LD_LIBRARY_PATH"
-		exit 1 # kill -s TERM $TOP_PID
-	fi	
+	# XXX Seems to work fine for this.
+	# check_for_lib libtcmalloc
+	# check_for_lib libevent
+	# check_for_lib libjson
+	# check_for_lib libboost
 	# Doesn't seem to recognize libhdfs
 	# check_for_lib libhdfs
 	# if [ $? -ne 0 ]; then
@@ -347,38 +332,41 @@ install_PowerGraph()
 		cd PowerGraph
 		./configure --no_jvm
 		# Make everything (May not need everything) using at most 16 processes.
-		cd release/toolkits/graph_algorithms
+		cd release/toolkits # TODO: Determine what exactly needs to be made
 		local NP=$(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
 		make -j $NP
 	else
 		echo "Found PowerGraph directory. I'm assuming you have everything built in there."
 	fi
-	POWERGRAPH_DIR="$BASE_DIR/graphalytics-platforms-powergraph"	
+	POWERGRAPH_DIR="$BASE_DIR/PowerGraph"
 
 	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name "graphalytics-platforms-$platform") ]; then
 		git clone "https://github.com/tudelft-atlarge/graphalytics-platforms-$platform.git"
 	fi
 	PLATFORM_DIR="$BASE_DIR/graphalytics-platforms-$platform"
 	cd "$PLATFORM_DIR"
+	if [ $? -ne 0 ]; then kill -s TERM $TOP_PID; fi
  	if [ "$NUM_CORES" -gt "$MAX_THREADS" ]; then
  		echo "Using $MAX_THREADS threads on $NUM_CORES available cores due to PowerGraph limitations."
  		export GRAPHLAB_THREADS_PER_WORKER=64
  	else
  		export GRAPHLAB_THREADS_PER_WORKER=$NUM_THREADS
  	fi
-	cp -r "$PLATFORM_DIR/config-template" "$PLATFORM_DIR/config"
-	echo "powergraph.home = $POWERGRAPH_DIR" > "$PLATFORM_DIR/config/powergraph.properties"
-	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PLATFORM_DIR/config/powergraph.properties"
-	#echo "powergraph.command = mpirun -np $NUM_THREADS %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Distributed Memory
-	echo "powergraph.command = %s %s" >> "$PLATFORM_DIR/config/powergraph.properties" # Shared memory
 
 	mvn package -DskipTests
-    PKGNAME=$(basename $(find $POWERGRAPH_DIR -maxdepth 1 -name '*.tar.gz'))
+    PKGNAME=$(basename $(find $PLATFORM_DIR -maxdepth 1 -name '*.tar.gz'))
     VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
     GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
     tar -xf "$PKGNAME"
     PKGDIR="$PLATFORM_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
-	cp -r "$PLATFORM_DIR/config" "$PKGDIR/config"
+
+	# Set configuration in the packaged file
+	cp -r "$PKGDIR/config-template/" "$PKGDIR/config"
+	echo "powergraph.home = $POWERGRAPH_DIR" > "$PKGDIR/config/powergraph.properties"
+	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PKGDIR/config/powergraph.properties"
+	#echo "powergraph.disable_mpi = false" >> "$PKGDIR/config/powergraph.properties" # TODO: Insert if > 1 node
+	#echo "powergraph.command = mpirun -np $NUM_THREADS %s %s" >> "$PKGDIR/config/powergraph.properties" # Distributed Memory
+	echo "powergraph.command = %s %s" >> "$PKGDIR/config/powergraph.properties" # Shared memory
 
 	fix_readlink
 }
@@ -424,7 +412,7 @@ install_graphalytics
 # The rest may be commented out so not all benchmarks are run at once.
 #download_datasets
 
-### Run the OpenG benchmark
+### Run the GraphBIG OpenG benchmark
 #install_OpenG
 #run_benchmark
 
