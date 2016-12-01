@@ -414,8 +414,8 @@ install_graphalytics
 #download_datasets
 
 ### Run the GraphBIG OpenG benchmark
-#install_OpenG
-#run_benchmark
+install_OpenG
+run_benchmark
 
 ### Run the GraphX benchmark
 #check_hadoop_dependencies
