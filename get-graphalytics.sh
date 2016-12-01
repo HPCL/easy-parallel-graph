@@ -362,6 +362,7 @@ install_PowerGraph()
 
 	# Set configuration in the packaged file
 	cp -r "$PKGDIR/config-template/" "$PKGDIR/config"
+	cp "$GA_DIR/config/graphs.properties" "$PKGDIR/config"
 	echo "powergraph.home = $POWERGRAPH_DIR" > "$PKGDIR/config/powergraph.properties"
 	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PKGDIR/config/powergraph.properties"
 	#echo "powergraph.disable_mpi = false" >> "$PKGDIR/config/powergraph.properties" # TODO: Insert if > 1 node
