@@ -80,12 +80,23 @@ Table~\ref{tab:perf} lists performance in millions of traversed edges per second
 % TODO: This should be unnecessary once autogeneration is used.
 \begin{table}[!htb]
 	\centering
-	\begin{tabular}{l|r|r|}
-	 & PowerGraph & OpenG \\ \hline
-	BFS & 81.8 & 341 \\ \hline
-	SSSP & 1.64 & 15.0 \\ \hline
-	LCC & 54.6 & 142 \\ \hline
-	\end{tabular}
+%	\begin{tabular}{l|r|r|}
+%	 & PowerGraph & OpenG \\ \hline
+%	BFS & 81.8 & 341 \\ \hline
+%	SSSP & 1.64 & 15.0 \\ \hline
+%	LCC & 54.6 & 142 \\ \hline
+%	\end{tabular}
+
+		\centering
+		\pgfplotstabletypeset[
+			col sep=comma,
+			string type, % Makes the .style={string type} redundant
+			columns={[index]0,openg,powergraph},
+			every head row/.style={after row=\midrule},
+			columns/0/.style={string type, column type={l|}, column name={}},
+			columns/openg/.style={string type, column type={r}},
+			columns/powergraph/.style={string type, column type={r}}
+		]{runtime.csv}
 	\caption{Performance Results for the \texttt{dota-league} dataset with 61,670 vertices and 50,870,313 edges. BFS is breadth-first search, SSSP is single-source shortest paths, LCC is local clustering coefficient.}
 	\label{tab:perf}
 \end{table}
