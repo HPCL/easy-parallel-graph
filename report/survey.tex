@@ -53,7 +53,7 @@ Table~\ref{tab:specs} shows the specifications of the research computer (named A
 	columns/1/.style={column type={l|}},
 	every last row/.style={after row=\toprule},
 	]{specs.csv}
-	\caption{Machine specifications.}
+	\caption{Machine specifications. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. The manufacturer's published maximum clock speeds can be found at \url{http://ark.intel.com}.}
 	\label{tab:specs}
 \end{table}
 
@@ -74,8 +74,10 @@ Table~\ref{tab:specs} shows the specifications of the research computer (named A
 \section{Performance}
 Graphalytics without the use of the Granula plugin produces performance measurement in two forms: runtime in seconds and traversed edges per second.
 
-Table~\ref{tab:perf} lists performance in millions of traversed edges per second (MTEPS) according to the graphalytics output. While this metric is simple to compute it is invariant across algorithms: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
+Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
 % TODO: Cite Comer algorithm book for Dijkstra's algorithm runtime.
+
+In Table~\ref{tab:perf}, BFS is breadth-first search, SSSP is single-source shortest paths, LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components. For the algorithms used, see \cite{Iosup:2016:Graphalyticstech}.
 
 % TODO: This should be unnecessary once autogeneration is used.
 \begin{table}[!htb]
@@ -97,7 +99,7 @@ Table~\ref{tab:perf} lists performance in millions of traversed edges per second
 			columns/openg/.style={string type, column type={r}},
 			columns/powergraph/.style={string type, column type={r}}
 		]{runtime.csv}
-	\caption{Performance Results for the \texttt{dota-league} dataset with 61,670 vertices and 50,870,313 edges. BFS is breadth-first search, SSSP is single-source shortest paths, LCC is local clustering coefficient.}
+	\caption{Performance Results for the \texttt{dota-league} dataset with 61,670 vertices and 50,870,313 edges.}
 	\label{tab:perf}
 \end{table}
 
