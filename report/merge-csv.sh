@@ -6,6 +6,7 @@
 EXPERIMENT_DIR=/home/users/spollard/graphalytics/experiments
 first=1
 outfile=runtime.csv
+N_EXPERIMENTS=0
 if [ -z "$EXPERIMENT_DIR" ]; then
 	echo "Please specify where the output csv files are located."
 	exit 1
@@ -13,11 +14,13 @@ fi
 PLATFORMS="openg powergraph"
 # Compute the mean runtime.
 for p in $PLATFORMS; do
-	P_RUNS=$(find "$EXPERIMENT_DIR" -path */"${p}"-report-*/"$outfile")
+	P_RUNS=$(find "$EXPERIMENT_DIR" -path */"${p}"-report-*/runtime.csv)
 	awk -F ',' '/^,/{if (ARGIND==1) print $0} !/^,/{A[$1] += $2} END{for (alg in A) print alg "," (A[alg] / ARGIND)}' $P_RUNS > "${p}-runtime.csv"
+	N_EXPERIMENTS=$(awk 'BEGIN{print ARGC}' $P_RUNS)
 done
 # Assumes everything is in the same directory named "openg-runtime.csv" etc.
 # Assumes there is only one dataset---named $dataset1.
+echo "Writing"
 for f in *-runtime.csv; do
 	if [ "$first" -eq 1 ]; then
  		first=0
@@ -26,7 +29,8 @@ for f in *-runtime.csv; do
  		cat "$f" | sed "s/$dataset1/$experiment1/" > $outfile
  	else
  		experimentn=${f%-runtime.csv}
- 		cat "$f" | cut -d ',' -f 2- | sed "s/$dataset1/$experimentn/" | lam runtime.csv -s, -
+		cat "$f" | cut -d ',' -f 2- | sed "s/$dataset1/$experimentn/" | paste -d, runtime.csv - | tee "$outfile"
  	fi
 done
+echo "to $outfile using dataset $dataset1 over the course of $N_EXPERIMENTS runs"
 
