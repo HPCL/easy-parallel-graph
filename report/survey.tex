@@ -1,35 +1,72 @@
-\documentclass[11pt]{article}
+\documentclass{sig-alternate}
+%\documentclass[11pt]{article}
+%\usepackage[margin=1in, headheight=15pt]{geometry} % No geometry with sig-alternate
+%\usepackage{fancyhdr, setspace}
+%\renewcommand{\headrulewidth}{0pt}
+%\pagestyle{fancy}
+%\setlength{\headheight}{15pt} % Removes warnings. Set to 30pt if 2 lines on the header.
+%\lhead{}
+%\rhead{}
+%\usepackage{totcount}
+%\regtotcounter{page}
+%\cfoot{\ifnum\totvalue{page} > 1 \thepage \else\fi}
+%\usepackage{amsmath, amsthm, amsfonts}
+
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[margin=1in, headheight=15pt]{geometry}
-\usepackage{amsmath, amsthm, amsfonts}
 \usepackage{hyperref}
 \usepackage{pgfplotstable}
 \pgfplotsset{compat=1.12}
 \usepackage{booktabs}
 
-\usepackage{fancyhdr, setspace}
-\renewcommand{\headrulewidth}{0pt}
-\pagestyle{fancy}
-\setlength{\headheight}{15pt} % Removes warnings. Set to 30pt if 2 lines on the header.
-\lhead{}
-\rhead{}
-\usepackage{totcount}
-\regtotcounter{page}
-\cfoot{\ifnum\totvalue{page} > 1 \thepage \else\fi}
-
 \usepackage{enumitem}
 \setlist{parsep=0pt, listparindent=0.5cm}
 
 \begin{document}
-\title{Simplifying Parallel Graph Processing: \\
-	\large Survey of Existing Platforms
+%%% ACM title stuff %%%
+\setcopyright{acmcopyright}
+\doi{?}
+\isbn{?}
+%\acmPrice{}
+\conferenceinfo{Load Testing and Benchmarking of Software Systems (LTB)}{2017, L'Aquila, Italy}
+\title{Simplifying Parallel Graph Processing}
+\subtitle{A Survey of Existing Platforms}
+\numberofauthors{2}
+\author{
+\alignauthor
+	Samuel Pollard\\
+	\affaddr{University of Oregon}\\
+	\affaddr{Eugene, OR, USA}\\
+	\email{spollard@cs.uoregon.edu}
+\alignauthor
+	Boyana Norris\\
+	\affaddr{University of Oregon}\\
+	\affaddr{Eugene, OR, USA}\\
+	\email{norris@cs.uoregon.edu}
 }
-\author{Samuel Pollard (\href{mailto:spollard@cs.uoregon.edu}{spollard@cs.uoregon.edu})}
-\date{\today}
+% Generated from http://dl.acm.org/ccs/ccs.cfm
+\begin{CCSXML}
+	<ccs2012>
+	<concept>
+	<concept_id>10011007.10010940.10011003.10011002</concept_id>
+	<concept_desc>Software and its engineering~Software performance</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	</ccs2012>
+\end{CCSXML}
+\ccsdesc[500]{Software and its engineering~Software performance}
+
+%%% Normal title stuff %%%
+%\title{Simplifying Parallel Graph Processing: \\
+%	\large Survey of Existing Platforms
+%}
+%\author{Samuel Pollard (\href{mailto:spollard@cs.uoregon.edu}{spollard@cs.uoregon.edu})}
+%\date{\today}
 \maketitle
 
+\begin{abstract}
 This is a survey of existing graph analytics frameworks.
+\end{abstract}
 
 \section{Machine Specifications}
 Table~\ref{tab:specs} shows the specifications of the research computer (named Arya).
@@ -105,10 +142,10 @@ In Table~\ref{tab:perf}, BFS is breadth-first search, SSSP is single-source shor
 
 \section{Graph Processing Taxonomy}
 This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
-\begin{table}[!htb]
+\begin{table*}[t]
 	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
 		\centering
-		% \small
+		%\small
 		\pgfplotstabletypeset[
 			col sep=comma,
 			string type, % Makes the .style={string type} redundant
@@ -139,14 +176,14 @@ This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``
 		\caption{Tools used for graph processing}
 		\label{tab:frameworks}
 	\end{minipage}
-\end{table}
+\end{table*}
 
 
 \section{Conclusion} % Begin with the end in mind...
 We have presented an updated survey of parallel graph processing frameworks supplementary to \cite{Doekemeijer:2015:GPFSurvey}. From this, we have selected a representative subset of frameworks on which performance is analyzed and have stored these results in a database. To facilitate parallel graph processing, hardware information and performance results are automatically populated (as were all the tables in this paper). These performance results are then used to provide simple recommendations of the optimally-performing framework given a particular algorithm and problem size.
 % We have developed a simple model of hardware and its correlation with performance to predict performance on other architectures
 
-\bibliographystyle{acm}
+%\bibliographystyle{acm}
+\bibliographystyle{abbrv}
 \bibliography{drp}
-
 \end{document}

@@ -26,6 +26,7 @@ else
 	RAM_SIZE=$(cat /proc/meminfo | grep MemTotal | awk '{print $2 / 1024 / 1024 "GB"}')
 	CPU_CLOCK=$(printf "%.0f%s" $(echo $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq) "/ 1000" | bc) "MHz")
 fi
+CPU_MODEL=$(echo $CPU_MODEL | sed 's/CPU[[:space:]]*//') # We assume it's a CPU
 
 # Get data that requires superuser.
 if [ -f "lshw.txt" -a -f "dmidecode.txt" ]; then
