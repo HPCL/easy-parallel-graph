@@ -382,11 +382,12 @@ install_Giraph()
 # Downloads em all
 download_datasets()
 {
-	cd "$BASE_DIR"
+	cd "$DATASET_DIR"
 	# The full dataset is at http://atlarge.ewi.tudelft.nl/graphalytics/zip/dota-league.zip for example.
-	wget -r -l 1 --no-clobber --reject 'index.html*' --exclude-directories=icons http://atlarge.ewi.tudelft.nl/graphalytics/data/ $DATASET_DIR
+	wget -r -l 1 --no-clobber --reject 'index.html*' --exclude-directories=icons http://atlarge.ewi.tudelft.nl/graphalytics/data/
 	# Get the reference solutions
-	wget -r -l 1 --no-clobber --reject 'index.html' --exclude-directoryes=icons http://atlarge.ewi.tudelft.nl/graphalytics/ref/ $DATASET_DIR
+	wget -r -l 1 --no-clobber --reject 'index.html' --exclude-directoryes=icons http://atlarge.ewi.tudelft.nl/graphalytics/ref/
+	cd "$BASE_DIR"
 }
 
 # Runs and logs the results of running a given $platform.
