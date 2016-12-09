@@ -418,6 +418,7 @@ install_OpenG
 run_benchmark
 
 ### Run the GraphX benchmark
+# DOES NOT CURRENTLY WORK
 #check_hadoop_dependencies
 #start_hadoop
 #start_yarn
