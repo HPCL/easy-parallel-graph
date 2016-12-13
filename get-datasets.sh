@@ -56,7 +56,10 @@ echo DIMACS: http://dimacs.rutgers.edu/Challenges/
 echo METIS: http://people.sc.fsu.edu/~jburkardt/data/metis_graph/metis_graph.html
 echo MATRIX MARKET: http://math.nist.gov/MatrixMarket/formats.html
 echo TRIVIAL GRAPH FORMAT "(TGF)" https://en.wikipedia.org/wiki/Trivial_Graph_Format
-# Other types: Whatever graphalytics does (same as TGF but split into 2 files)
-# pbbs: http://www.cs.cmu.edu/~pbbs/benchmarks/graphIO.html
+echo EDGE LIST: https://gephi.org/users/supported-graph-formats/csv-format/
+echo "          Used by:" GAP with a space as the delimeter.
+# GAP [w]el Format: one edge per line, either node1 node2 weight or just node1 node2
+echo PBBS: http://www.cs.cmu.edu/~pbbs/benchmarks/graphIO.html
+echo OTHER: Graphalytics: Same as TGF but saves the vertex list as *.v and the edge list as *.e
 
 cd "$OLDWD"
