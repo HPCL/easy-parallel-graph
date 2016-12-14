@@ -1,4 +1,4 @@
-\documentclass[11pt]{scrartcl}
+\documentclass[11pt]{article}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[margin=1in, headheight=15pt]{geometry}
@@ -6,9 +6,8 @@
 \usepackage{hyperref}
 \usepackage{pgfplotstable, booktabs}
 \pgfplotsset{compat=1.12}
-\usepackage{datetime}
 
-\usepackage{fancyhdr, setspace}
+\usepackage{fancyhdr}
 \renewcommand{\headrulewidth}{0pt}
 \pagestyle{fancy}
 \setlength{\headheight}{15pt} % Removes warnings. Set to 30pt if 2 lines on the header.
@@ -18,13 +17,50 @@
 \regtotcounter{page}
 \cfoot{\ifnum\totvalue{page} > 1 \thepage \else\fi}
 
+\usepackage{enumitem}
+
 \begin{document}
-\title{The State of Graph Processing}
-\subtitle{APIs, Libraries, Platforms, and Programming Languages}
+\title{The State of Graph Processing \\ \large APIs, Libraries, Platforms, and Programming Languages \vspace{-1em}}
 \author{Samuel Pollard}
 \date{\today}
 \maketitle
 
-\section{Introduction}
+\section{APIs and Libraries}
+\begin{itemize}
+	\item \textbf{Pregel.} API; developed by Google; distributed; vertex centric, Bulk-Synchronous Parallel model; inspired many other platforms such as Giraph and GPS; \href{http://dl.acm.org/citation.cfm?id=1807184}{original paper}; 20.
+	
+	\item \textbf{GPS (Graph Processing System).} API; developed by Stanford; distributed; vertex centric, Bulk-Synchronous Parallel model; open source; similar to Pregel but with dynamic graph repartitioning and other enhancements. \href{http://ilpubs.stanford.edu:8090/1039/7/gps_ssdbm.pdf}{original paper}; \href{http://infolab.stanford.edu/gps/}{website}; First appeared 2013; apprears inactive.
+	
+	\item \textbf{GraphX} Library.
+\end{itemize}
+
+\section{Programming Languages}
+
+\section{Benchmarks}
+\begin{itemize}
+	\item \textbf{Graphalytics.} CPU and GPU; Supports GraphMat, GraphX, PowerGraph
+	\item \textbf{GAP (Graph Algorithm Platform).} CPU; shared Memory (OpenMP); Berkeley; last active October 2016 on Github.
+	\item \textbf{GraphBIG.} CPU and GPU; shared Memory and CUDA; last active February 2016.
+	\item \textbf{Lonestar.} CPU and GPU; shared memory and CUDA; part of Galois. First appeared 2011; last update appears to be in 2015.
+\end{itemize}
+\section{Dynamic Graphs}
+TODO: Determine if they are parallel or serial.
+\begin{itemize}
+	\item \textbf{STINGER.} Data structure and library; Georgia Institute of Technology and various national laboratories; streaming model; parallel or serial, distributed or shared; \href{http://cass-mt.pnnl.gov/docs/pubs/pnnlgeorgiatechsandiastinger-u.pdf}{original paper}; \href{http://www.stingergraph.com/}{website}; First appeared 2009; still active on Github.
+	
+	\item \textbf{DynoGraph.} \href{http://sc16.supercomputing.org/sc-archive/tech_poster/poster_files/post214s2-file3.pdf}{original paper}.
+	
+	\item \textbf{GraphJet.} \href{http://www.vldb.org/pvldb/vol9/p1281-sharma.pdf}{original paper}.
+	
+	\item \textbf{GraphStream.} Java library; I'm not sure but it appears to be serial; \href{https://arxiv.org/abs/0803.2093}{original paper}; first active 2007; appears still active;
+\end{itemize}
+
+\section{Visualization}
+There are many graph visualization tools out there, most notably Graphviz (and its associated DOT file format). Likewise, databases such as Neo4j have their own visualization tools. This is concerned only with visualizations which are scalable to a large number of vertices and edges.
+
+\begin{itemize}
+	\item \textbf{Gephi.} \href{https://gephi.org/}{website}
+\end{itemize}
+
 
 \end{document}
