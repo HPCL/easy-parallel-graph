@@ -380,6 +380,7 @@ install_Giraph()
 }
 
 # Downloads em all
+# NOTE: This is finnicky. If you need the datasets, please submit an issue on GitHub.
 download_datasets()
 {
 	cd "$DATASET_DIR"

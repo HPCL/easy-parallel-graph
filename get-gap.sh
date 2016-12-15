@@ -47,9 +47,23 @@ if [ $FOUND -eq 0 ]; then
 	exit 1
 fi
 
-### Run the benchmarks
-# The general loop structure is a doubly-nested for loop
-# looping over each dataset then each algorithm.
+# Transform datasets from Graphalytics format to GraphBIG format
+# (We later transform from GraphBIG to GAP)
+GRAPHALYTICS_DATASETS=( dota-league cit-Patents )
+for d in ${GRAPHALYTICS_DATASETS[@]}; do
+	mkdir -p "$DATASET_DIR/$d"
+	if [ $(awk '{print NF; exit}' "$DATASET_DIR/$d.e") -eq 2 ]; then
+		echo "SRC,DEST" > "$DATASET_DIR/$d/edge.csv"
+	elif [ $(awk '{print NF; exit}' "$DATASET_DIR/$d.e") -eq 3 ]; then
+		echo "SRC,DEST,WEIGHT" > "$DATASET_DIR/$d/edge.csv"
+	else
+		echo "File format not recognized"
+		exit 1
+	fi
+	sed 's/[:space:]+/,/' "$DATASET_DIR/$d.e" >> "$DATASET_DIR/$d/edge.csv"
+	echo "ID" > "$DATASET_DIR/$d/vertex.csv"
+	sed 's/[:space:]+/,/' "$DATASET_DIR/$d.v" >> "$DATASET_DIR/$d/vertex.csv"
+done
 
 # TODO: Get other datasets converted to the right formats.
 # Right now: LDBC Graphalytics datasets are not compatible since the edge numbers skip
@@ -61,6 +75,10 @@ GAP_ALGORITHMS=( bfs pr sssp )
 GRAPHBIG_ALGORITHMS=( bfs pagerank sssp )
 ALGORITHM_DIRS=( bench_BFS bench_pageRank bench_shortestPath ) # Just used for GraphBIG
 
+### Run the benchmarks
+# The general loop structure is a doubly-nested for loop
+# looping over each dataset then each algorithm.
+
 # Run GAP Benchmark
 mkdir "$BASE_DIR/output"
 for d in "${DATASETS[@]}"; do
@@ -68,6 +86,7 @@ for d in "${DATASETS[@]}"; do
 	# Transform the datasets from GraphBIG (CSV) -> GAP ([w]el) format
 	# GAP [w]el Format: one edge per line, either node1 node2 weight or just node1 node2
 	awk -F ',' '{if (NR > 1) print $1 " " $2}' "$DATASET_DIR/$d/edge.csv" > "$DATASET_DIR/$d/$d.el"
+
 	for ALG in "${GAP_ALGORITHMS[@]}"; do
 		echo "Running GAP $ALG benchmark and saving the results to $BASE_DIR/output/${ALG}-GAP-$d.txt"
 		./${ALG} -f "$DATASET_DIR/$d/$d.el" > "$BASE_DIR/output/${ALG}-GAP-$d.txt"
@@ -86,7 +105,7 @@ make clean all
 # Run GraphBIG Benchmark
 for d in "${DATASETS[@]}"; do
 	for i in $(seq ${#GRAPHBIG_ALGORITHMS[@]}); do
-		CAN_ALG=${GAP_ALGORITHMS[$(($i-1))]} # CANononical ALGorithm name
+		CAN_ALG=${GAP_ALGORITHMS[$(($i-1))]} # CANonical ALGorithm name
 		ALG=${GRAPHBIG_ALGORITHMS[$(($i-1))]}
 		alg_dir=${ALGORITHM_DIRS[$(($i-1))]}
 		echo "Running GraphBIG $ALG benchmark and saving the results to $BASE_DIR/output/${CAN_ALG}-graphBIG-$d.txt"
