@@ -3,6 +3,7 @@
 \usepackage{lmodern}
 \usepackage[margin=1in, headheight=15pt]{geometry}
 \usepackage{amsmath, amsthm, amsfonts}
+\usepackage[hyphens]{url}
 \usepackage{hyperref}
 \usepackage{pgfplotstable, booktabs}
 \pgfplotsset{compat=1.12}
@@ -20,39 +21,51 @@
 \usepackage{enumitem}
 
 \begin{document}
-\title{The State of Graph Processing \\ \large APIs, Libraries, Platforms, and Programming Languages \vspace{-1em}}
+\title{The State of Graph Processing \\ \large APIs, Libraries, Benchmarks, and Programming Languages \vspace{-1em}}
 \author{Samuel Pollard}
 \date{\today}
 \maketitle
 
 \section{APIs and Libraries}
 \begin{itemize}
-	\item \textbf{Pregel.} API; developed by Google; distributed; vertex centric, Bulk-Synchronous Parallel model; inspired many other platforms such as Giraph and GPS; \href{http://dl.acm.org/citation.cfm?id=1807184}{original paper}; 20.
-	
+	\item \textbf{Pregel.} API; developed by Google; distributed; vertex centric, Bulk-Synchronous Parallel model; inspired many other platforms such as Giraph and GPS; \href{http://dl.acm.org/citation.cfm?id=1807184}{original paper}; 2010.
+
 	\item \textbf{GPS (Graph Processing System).} API; developed by Stanford; distributed; vertex centric, Bulk-Synchronous Parallel model; open source; similar to Pregel but with dynamic graph repartitioning and other enhancements. \href{http://ilpubs.stanford.edu:8090/1039/7/gps_ssdbm.pdf}{original paper}; \href{http://infolab.stanford.edu/gps/}{website}; First appeared 2013; apprears inactive.
-	
+
 	\item \textbf{GraphX} Library.
+	
+	% OpenCL: http://www.lidi.info.unlp.edu.ar/WorldComp2011-Mirror/PDP3248.pdf - Appears inactive since 2011.
 \end{itemize}
 
 \section{Programming Languages}
+\begin{itemize}
+	\item \textbf{GP (Graph Programs).} Nondeterministic; serial; original paper: \cite{Plump:2009:GPL}; website: \url{https://www.cs.york.ac.uk/plasma/wiki/index.php?title=GP_(Graph_Programs)}; appears to be more theoretical and used for program verification; still active.
+
+	\item \textbf{Gremlin.} functional, data flow; distributed; a way to interact with graph databases; \cite{Rodriguez:2015:Gremlin}; website: \url{http://tinkerpop.apache.org/gremlin.html}.
+\end{itemize}
 
 \section{Benchmarks}
 \begin{itemize}
-	\item \textbf{Graphalytics.} CPU and GPU; Supports GraphMat, GraphX, PowerGraph
-	\item \textbf{GAP (Graph Algorithm Platform).} CPU; shared Memory (OpenMP); Berkeley; last active October 2016 on Github.
+	\item \textbf{Graphalytics.} CPU and GPU; supports GraphMat, PowerGraph, GraphBIG, Giraph, GraphX, Neo4j, and MapReduce; \cite{Capota:2015:Graphalytics}; still active; so far I can only get PowerGraph and GraphBIG running; website: \url{http://graphalytics.ewi.tudelft.nl}.
+
+	\item \textbf{GAP (Graph Algorithm Platform).} CPU; shared Memory (OpenMP); \url{http://gap.cs.berkeley.edu/benchmark.html}; last active October 2016 on Github. \cite{Beamer:2015:GAPBench}
+
 	\item \textbf{GraphBIG.} CPU and GPU; shared Memory and CUDA; last active February 2016.
-	\item \textbf{Lonestar.} CPU and GPU; shared memory and CUDA; part of Galois. First appeared 2011; last update appears to be in 2015.
+
+	\item \textbf{Lonestar.} CPU and GPU; shared memory and CUDA; part of Galois. First appeared 2011; last update appears to be in 2015 though I am in recent (December 2016) contact with someone working on the project.
 \end{itemize}
+
 \section{Dynamic Graphs}
-TODO: Determine if they are parallel or serial.
 \begin{itemize}
 	\item \textbf{STINGER.} Data structure and library; Georgia Institute of Technology and various national laboratories; streaming model; parallel or serial, distributed or shared; \href{http://cass-mt.pnnl.gov/docs/pubs/pnnlgeorgiatechsandiastinger-u.pdf}{original paper}; \href{http://www.stingergraph.com/}{website}; First appeared 2009; still active on Github.
-	
-	\item \textbf{DynoGraph.} \href{http://sc16.supercomputing.org/sc-archive/tech_poster/poster_files/post214s2-file3.pdf}{original paper}.
-	
-	\item \textbf{GraphJet.} \href{http://www.vldb.org/pvldb/vol9/p1281-sharma.pdf}{original paper}.
-	
-	\item \textbf{GraphStream.} Java library; I'm not sure but it appears to be serial; \href{https://arxiv.org/abs/0803.2093}{original paper}; first active 2007; appears still active;
+
+	\item \textbf{GraphJet.} Java library; parallel but single-machine; original purpose was for real time recommendations from Twitter; \url{https://github.com/twitter/GraphJet}; \cite{Sharma:2016:GraphJet}.
+
+	\item \textbf{GraphStream.} Java library; I'm not sure but it appears to be serial; \url{http://graphstream-project.org/}; \cite{Dutot:2007:GraphStream} first active 2007; appears still active.
+
+	\item \textbf{Kineograph.} API; parallel and distributed; \cite{Cheng:2012:Kineograph}; 2012; appears to be inactive but influenced GraphX, GraphChi, and PowerGraph.
+
+	\item \textbf{DynoGraph.} Performance Analysis; \url{https://github.com/sirpoovey/DynoGraph} \cite{Hein:2016:DynoGraph}; connected components, PageRank, BFS; right now just a repo and a poster at SC'16.
 \end{itemize}
 
 \section{Visualization}
@@ -62,5 +75,13 @@ There are many graph visualization tools out there, most notably Graphviz (and i
 	\item \textbf{Gephi.} \href{https://gephi.org/}{website}
 \end{itemize}
 
+
+% Other stuff: Giraph++: http://dl.acm.org/citation.cfm?id=2732238
+% GraphBuilder: http://dl.acm.org/citation.cfm?id=2484429 and https://01.org/graphbuilder/ - Active from 2013--2014
+% Chronos: http://dl.acm.org/citation.cfm?id=2592799
+% X-Stream: http://dl.acm.org/citation.cfm?id=2522740
+
+\bibliographystyle{plain}
+\bibliography{../report/drp}
 
 \end{document}

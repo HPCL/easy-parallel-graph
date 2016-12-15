@@ -107,6 +107,10 @@ for d in "${DATASETS[@]}"; do
 	done
 done
 
+# TODO: Run the PowerGraph benchmark.
+# We do this instead of graphalytics?
+# Graphalytics measures the time of reading the graph.
+
 # Clean up
 cd "$BASE_DIR"
 
