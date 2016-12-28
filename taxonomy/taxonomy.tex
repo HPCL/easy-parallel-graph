@@ -56,16 +56,29 @@
 \end{itemize}
 
 \section{Dynamic Graphs}
+The primary focuses for dynamic graphs encountered thus far are: dynamic updating of the graph objects themselves and the dynamic partitioning and re-partitioning of the graphs across a distributed architecture. The distinction is made clear below:\footnote{These resources are in part retrieved from \url{http://scicomp.stackexchange.com/questions/4722/i-am-looking-for-a-parallel-dynamic-graph-library-in-c}.}
+
+Dynamic Partitioning
 \begin{itemize}
-	\item \textbf{STINGER.} Data structure and library; Georgia Institute of Technology and various national laboratories; streaming model; parallel or serial, distributed or shared; \href{http://cass-mt.pnnl.gov/docs/pubs/pnnlgeorgiatechsandiastinger-u.pdf}{original paper}; \href{http://www.stingergraph.com/}{website}; First appeared 2009; still active on Github.
+	\item \textbf{Zoltan.} \url{http://www.cs.sandia.gov/zoltan/} \cite{Devine:2000:Zoltan}.
+	\item \textbf{PTScotch.} \url{https://www.labri.fr/perso/pelegrin/scotch/} \cite{Chevalier:2008:PTScotch}.
+	\item \textbf{ParMETIS.} \url{http://glaros.dtc.umn.edu/gkhome/metis/parmetis/overview}; \cite{Karypis:1998:ParMETIS}.
+\end{itemize}
+
+Streaming graphs/support for dynamic updating of graphs. Many of these are advertised to social network websites or consumers of large amounts of streaming data (for example, see \url{http://storm-project.net}). The key word here is \emph{analytics}.
+\begin{itemize}
+	\item \textbf{STINGER.} Data structure and library; Georgia Institute of Technology and various national laboratories; streaming model; parallel or serial, distributed or shared; \url{http://cass-mt.pnnl.gov/docs/pubs/pnnlgeorgiatechsandiastinger-u.pdf}; \url{http://www.stingergraph.com/}; First appeared 2009; still active on Github.
 
 	\item \textbf{GraphJet.} Java library; parallel but single-machine; original purpose was for real time recommendations from Twitter; \url{https://github.com/twitter/GraphJet}; \cite{Sharma:2016:GraphJet}.
 
 	\item \textbf{GraphStream.} Java library; I'm not sure but it appears to be serial; \url{http://graphstream-project.org/}; \cite{Dutot:2007:GraphStream} first active 2007; appears still active.
 
 	\item \textbf{Kineograph.} API; parallel and distributed; \cite{Cheng:2012:Kineograph}; 2012; appears to be inactive but influenced GraphX, GraphChi, and PowerGraph.
-
-	\item \textbf{DynoGraph.} Performance Analysis; \url{https://github.com/sirpoovey/DynoGraph} \cite{Hein:2016:DynoGraph}; connected components, PageRank, BFS; right now just a repo and a poster at SC'16.
+	
+	\item \textbf{PHISH.} Streaming graph processing; \url{http://www.sandia.gov/~sjplimp/phish.html}
+	
+	\item \textbf{PGX.} Oracle Project. Supports incremental updates though the dynamic aspect is not forefront.
+	% \item \textbf{DynoGraph.} Performance Analysis; \url{https://github.com/sirpoovey/DynoGraph} \cite{Hein:2016:DynoGraph}; connected components, PageRank, BFS; right now just a repo and a poster at SC'16.
 \end{itemize}
 
 \section{Visualization}
