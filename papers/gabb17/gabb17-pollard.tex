@@ -1,0 +1,148 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.12}
+\usepackage{booktabs}
+
+\usepackage{enumitem}
+\setlist{parsep=0pt, listparindent=0.5cm}
+
+\title{A Comparison of Parallel Graph Processing Platforms}
+\author{
+	\IEEEauthorblockN{Samuel Pollard}
+	\IEEEauthorblockA{Department of Computer and Information Science \\
+		University of Oregon \\
+		Eugene, OR, USA \\
+		Email: spollard@cs.uoregon.edu
+	}
+	\and
+	\IEEEauthorblockN{Boyana Norris}
+	\IEEEauthorblockA{Department of Computer and Information Science \\
+	University of Oregon \\
+	Eugene, OR, USA \\
+	Email: norris@cs.uoregon.edu
+	}
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+This is a survey of existing graph analytics frameworks.
+\end{abstract}
+
+\section{Machine Specifications}
+Table~\ref{tab:specs} shows the specifications of the research computer (named Arya).
+
+% TODO: Make this a pgfplotstable with an automatically generated csv.
+\begin{table}[!htb]
+	\centering
+	% Keep in mind you can do this at the beginning: string replace={s1}{s2}
+	\pgfplotstabletypeset[
+	header=false,
+	col sep=tab,
+	string type,
+    every head row/.style={output empty row, before row=\bottomrule},
+	columns/0/.style={column type={|r|}},
+	columns/1/.style={column type={l|}},
+	every last row/.style={after row=\toprule},
+	]{../report/specs.csv}
+	\caption{Machine specifications. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. The manufacturer's published maximum clock speeds can be found at \url{http://ark.intel.com}.}
+	\label{tab:specs}
+\end{table}
+
+\begin{table}[htb]
+	\centering
+	\begin{tabular}{l|c|c|c}
+			& BFS & SSSP & PR \\ \hline
+		Graph500 & & & \\ \hline
+		PBGL  & & & \\ \hline
+		GAP  & & & \\ \hline
+		GraphBIG  & & & \\ \hline
+		Galois  & & & \\ \hline
+		PowerGraph  & & &
+	\end{tabular}
+	\caption{Performance. Note that implementations of every algorithm are not availabe for every platform.}
+	\label{tab:reportcard}
+\end{table}
+
+\section{Performance}
+Graphalytics without the use of the Granula plugin produces performance measurement in two forms: runtime in seconds and traversed edges per second.
+
+%Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
+% TODO: Cite Comer algorithm book for Dijkstra's algorithm runtime.
+
+In Table~\ref{tab:perf}, BFS is breadth-first search, SSSP is single-source shortest paths, LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components. For the algorithms used, see \cite{Iosup:2016:Graphalyticstech}.
+
+% TODO: This should be unnecessary once autogeneration is used.
+\begin{table}[!htb]
+	\centering
+%	\begin{tabular}{l|r|r|}
+%	 & PowerGraph & OpenG \\ \hline
+%	BFS & 81.8 & 341 \\ \hline
+%	SSSP & 1.64 & 15.0 \\ \hline
+%	LCC & 54.6 & 142 \\ \hline
+%	\end{tabular}
+
+		\centering
+		\pgfplotstabletypeset[
+			col sep=comma,
+			string type, % Makes the .style={string type} redundant
+			columns={[index]0,openg,powergraph},
+			every head row/.style={after row=\midrule},
+			columns/0/.style={string type, column type={l|}, column name={}},
+			columns/openg/.style={string type, column type={r}},
+			columns/powergraph/.style={string type, column type={r}}
+		]{../report/runtime.csv}
+	\caption{Performance Results for the \texttt{dota-league} dataset with 61,670 vertices and 50,870,313 edges.}
+	\label{tab:perf}
+\end{table}
+
+\section{Graph Processing Taxonomy}
+This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
+\begin{table*}[t]
+	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
+		\centering
+		%\small
+		\pgfplotstabletypeset[
+			col sep=comma,
+			string type, % Makes the .style={string type} redundant
+			columns={Name,Type,HPC,Parallelism,Target,FOSS,Source,Notes},
+			every head row/.style={after row=\midrule},
+			columns/Name/.style={string type, column type={l|}},
+			columns/Type/.style={string type},
+			columns/HPC/.style={string type},
+			columns/Parallelism/.style={string type},
+%			columns/Comm./.style={%
+%				string type,
+%				postproc cell content/.style={%
+%					@cell content/.add={\footnotesize}
+%				}
+%			},
+			columns/Target/.style={string type},
+			columns/FOSS/.style={string type},
+			columns/Source/.style={string type},
+			columns/Notes/.style={
+				preproc cell content/.style={@cell content=
+					\ifx&##1&% Only make a footnote if the cell is nonempty
+						##1
+					\else
+						\footnote{##1}
+					\fi}
+			},
+		]{../report/platforms.csv}
+		\caption{Tools used for graph processing}
+		\label{tab:frameworks}
+	\end{minipage}
+\end{table*}
+
+
+\section{Conclusion} % Begin with the end in mind...
+We have presented an updated survey of parallel graph processing frameworks supplementary to \cite{Doekemeijer:2015:GPFSurvey}. From this, we have selected a representative subset of frameworks on which performance is analyzed and have stored these results in a database. To facilitate parallel graph processing, hardware information and performance results are automatically populated (as were all the tables in this paper). These performance results are then used to provide simple recommendations of the optimally-performing framework given a particular algorithm and problem size.
+% We have developed a simple model of hardware and its correlation with performance to predict performance on other architectures
+
+%\bibliographystyle{acm}
+\bibliographystyle{IEEEtran}
+\bibliography{../drp}
+\end{document}
