@@ -32,10 +32,21 @@
 This is a survey of existing graph analytics frameworks.
 \end{abstract}
 
+\section{Introduction}
+
+[Talk about WHY we care about graph processing, and parallel in particular. Talk about what parallel graph processing is.]
+
+Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems \cite{Doekemeijer:2015:GPFSurvey}. These systems operate with a wide range of parallelism paradigms such as GPU [Medusa], shared memory [pretty much everything], a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, distributed memory with MPI [cite], domain-specific languages [Green Marl], as well as novel communication schemes [activemessages, sockets].
+
+Since 2014, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon}, \cite{Perez:2015:Ringo} [name some more]. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' incredibly difficult. There has even been a propagation of so-called ``reference implementations'' which provide implementations of the most common graph algorithms [GAP, GraphBIG]. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
+
+Another issue with the parallel graph processing library designers is the lack of comprehensive comparison. One possible reason for this is the considerable effort of getting each library and package to work, satisfying dependencies, and ensuring the data is in the correct format for each system. Beyond this, each system may have a different method of measuring performance. Thus, one of the contributions of this paper is to provide a ``level playing field'' for each graph processing system. Graphalytics \cite{Capota:2015:Graphalytics} attempts to remedy this but has not seen widespread adoption.
+
+%This paper aims to make that selection process just a little easier.
+
 \section{Machine Specifications}
 Table~\ref{tab:specs} shows the specifications of the research computer (named Arya).
 
-% TODO: Make this a pgfplotstable with an automatically generated csv.
 \begin{table}[!htb]
 	\centering
 	% Keep in mind you can do this at the beginning: string replace={s1}{s2}
@@ -66,6 +77,11 @@ Table~\ref{tab:specs} shows the specifications of the research computer (named A
 	\caption{Performance. Note that implementations of every algorithm are not availabe for every platform.}
 	\label{tab:reportcard}
 \end{table}
+
+\section{Algorithms and Systems}
+The canonical performance leaderboard for paralell graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement requirements and dataset generation. The primary drawback with using reference implementations for the Graph500 is the standard only supports a single algorithm: breadth first search.
+
+This report explores a small sample of the existing graph processing platforms with a focus on the so-called ``reference implementations:'' the Graph500 (from \url{http://www.graph500.org}), GAP \cite{Beamer:2015:GAPBench}, and GraphBIG \cite{Nai:2015:Graphbig}. Parallel Boost Graph Library \cite{Gregor:2005:PBGL} and PowerGraph \cite{Gonzalez:2012:Powergraph} implementations are also provided because of their popularity and the availability of high quality reference implementationsF.
 
 \section{Performance}
 Graphalytics without the use of the Granula plugin produces performance measurement in two forms: runtime in seconds and traversed edges per second.
