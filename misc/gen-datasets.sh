@@ -16,8 +16,9 @@
 # NOTE: These must be set before you run this script
 # It is also assumed these are all built.
 # The building instructions are available in the respective repositories.
-GRAPH500DIR=/home/users/spollard/graph500
-DDIR=/home/users/spollard/graphalytics/all-datasets/gabb17 # Where to save the dataset
+GRAPH500DIR=
+GRAPHMATDIR=
+DDIR= # Where to save the dataset
 
 USAGE="gen-datasets.sh <scale>"
 S=$1
@@ -35,5 +36,14 @@ fi
 mkdir -p "$DDIR/$BASE_FN"
 awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$BASE_FN.el" > "$DDIR/$BASE_FN/edge.csv"
 echo ID > "$DDIR/$BASE_FN/vertex.csv"
-cat "$DDIR/$BASE_FN.el" | tr ' ' '\n' | uniq >> "$DDIR/$BASE_FN/vertex.csv"
+cat "$DDIR/$BASE_FN.el" | tr ' ' '\n' | sort -n | uniq >> "$DDIR/$BASE_FN/vertex.csv"
+
+# GraphMat can be installed using the following commands on arya
+#module load intel/17
+#cd ~/graphalytics/GraphMat
+#make
+# Convert to GraphMat format
+awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$BASE_FN.el" > "$DDIR/$BASE_FN.1el"
+awk '{printf "%d\n", ($1+1)}' "$DDIR/${BASE_FN}-roots.v" > "$DDIR/${BASE_FN}-roots.1v"
+"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 "$DDIR/$BASE_FN.1el" "$DDIR/$BASE_FN.graphmat"
 
