@@ -5,7 +5,16 @@
 # If it's anything other than whitespace delimited, use awk's -F flag to set FS
 # If you want to convert a weighted edge list (<vertex1> <vertex2> <weight>)
 # then set weighted to 1.
+# To convert to 1-indexed, use the following awk command:
+#
+#   awk '{printf "%d %d%s\n", ($1 + 1), ($2 + 1), ($3 == "") ? "" : " " $3}'
+#
+# If  there are duplicate edges, you need to convert via
+#
+#   awk '{if($1<$2){printf "%d %d", $1, $2}else{printf "%d %d", $2, $1}; print ($3=="") ? "" : " " $3}' <file> | sort -n | uniq
+#
 # usage: awk [-v weighted=1] -f el2metis.awk <input_file>
+
 BEGIN {
 	nvert = 0;
 	printf "%% Converted from %s", (weighted?"weighted ":"")

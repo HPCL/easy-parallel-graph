@@ -26,6 +26,7 @@ BASE_FN="kron-$S"
 
 if [ -z "$1" ]; then
 	echo $USAGE
+	echo 'You may also need to set the variables *DIR in gen-datasets.sh'
 	exit 2
 fi
 # Generate graph (Graph500 can only save to its binary format)
@@ -43,7 +44,12 @@ cat "$DDIR/$BASE_FN.el" | tr ' ' '\n' | sort -n | uniq >> "$DDIR/$BASE_FN/vertex
 #cd ~/graphalytics/GraphMat
 #make
 # Convert to GraphMat format
-awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$BASE_FN.el" > "$DDIR/$BASE_FN.1el"
+# GraphMat requires edge weights---Just make them all 1 for the .1wel format
+# TODO: See what happens when you remove selfloops and duplicated edges.
+awk '{printf "%d %d %d\n", ($1+1), ($2+1), 1}' "$DDIR/$BASE_FN.el" > "$DDIR/$BASE_FN.1wel"
 awk '{printf "%d\n", ($1+1)}' "$DDIR/${BASE_FN}-roots.v" > "$DDIR/${BASE_FN}-roots.1v"
-"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 "$DDIR/$BASE_FN.1el" "$DDIR/$BASE_FN.graphmat"
+"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 --nvertices $(cat $DDIR/${BASE_FN}.1wel | wc -l) "$DDIR/$BASE_FN.1wel" "$DDIR/$BASE_FN.graphmat"
+
+# TEST: Convert back to non-binary, see what we get
+# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 0 --outputformat 1 --inputheader 1 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$BASE_FN.graphmat" "$DDIR/$BASE_FN.test.1wel"
 
