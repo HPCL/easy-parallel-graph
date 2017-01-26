@@ -1,7 +1,7 @@
 # For the Mac only, comment out for other architectures
 #LATEXFLAGS = "-output-format=0"
 
-MAIN=gabb17-pollard
+MAIN=gabb17-pollard findref
 
 all: $(MAIN).pdf
 
