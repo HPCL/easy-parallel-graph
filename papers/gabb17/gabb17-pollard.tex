@@ -146,11 +146,11 @@ This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``
 		\pgfplotstabletypeset[
 			col sep=comma,
 			string type, % Makes the .style={string type} redundant
-			columns={Name,Type,HPC,Parallelism,Target,FOSS,Source,Notes},
+			columns={Name,Type,Parallelism,Target,FOSS,Source,Notes},
 			every head row/.style={after row=\midrule},
 			columns/Name/.style={string type, column type={l|}},
 			columns/Type/.style={string type},
-			columns/HPC/.style={string type},
+			% columns/HPC/.style={string type},
 			columns/Parallelism/.style={string type},
 %			columns/Comm./.style={%
 %				string type,

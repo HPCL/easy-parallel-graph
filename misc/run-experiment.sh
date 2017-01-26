@@ -13,14 +13,15 @@
 # Here, edge factor (number of edges per vertex) is the default of 16.
 S= # Scale. 2^S = Number of vertices.
 DDIR= # Dataset directory
-GAPDIR=
-GRAPHBIGDIR=
-GRAPH500DIR=
-GRAPHMATDIR=
+GAPDIR=/home/users/spollard/gap/gapbs
+GRAPHBIGDIR=/home/users/spollard/gap/graphBIG
+GRAPH500DIR=/home/users/spollard/graph500
+GRAPHMATDIR=/home/users/spollard/graphalytics/GraphMat
 
 # PageRank is usually represented as a 32-bit float,
 # so ~6e-8*nvertices is the minimum absolute error detectable
 # We set alpha = 0.15 in the respective source codes.
+# NOTE: GraphMat doesn't seem to compute iterations in the same way.
 MAXITER=20 # Maximum iterations for PageRank
 TOL=0.00000006
 if [ -z $S -o -z "$DDIR" ]; then
@@ -29,33 +30,34 @@ if [ -z $S -o -z "$DDIR" ]; then
 fi
 
 # Load all the modules here
-#module load intel/17
+module load intel/17
 
 # Build notes for arya:
 # GAP:
 # 	git clone https://github.com/sampollard/gapbs.git
 # 	cd gapbs; make
 # GraphBIG: 
-# 	git clone https://github.com/sbeamer/gapbs.git
+# 	git clone https://github.com/HPCL/graphBIG.git
 #   cd graphBIG; make
 # 	cd GraphBIG/benchmark
 # 	make clean all
-# PBGL:
-# 	module load boost/boost_1_62_0_gcc-5
-# 	mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
-# 	export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
 # GraphMat:
 # 	module load intel/17
+# 	git clone https://github.com/HPCL/GraphMat
 # 	cd GraphMat; make 
-# PowerGraph:
+# Graph500:
+# 	git clone https://github.com/sampollard/graph500.git
+#   cd graph500; make
+# PowerGraph: (not used here)
 # 	git clone https://github.com/sampollard/PowerGraph
 # 	cd PowerGraph
 # 	./configure
 #   cd release/toolkits/graph_analytics
 #   make -j4
-# Graph500:
-# 	git clone https://github.com/sampollard/graph500.git
-#   cd graph500; make
+# PBGL: (not used here)
+# 	module load boost/boost_1_62_0_gcc-5
+# 	mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
+# 	export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
 
 # qsub scheduling options
 #PBS -N graph_experiments

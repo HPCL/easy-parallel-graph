@@ -1,3 +1,5 @@
 Name,Type,HPC,Parallelism,Comm.,Target,FOSS,Source,Notes
 PowerGraph,Framework,``yes'',both,TCP-IP+PThreads+HDFS,CPU,yes,\cite{Gonzalez:2012:Powergraph},The current version is a closed-source product by Turi though PowerGraph v2.2 is on Github.
 GraphBIG,Benchmark,``yes'',shared,PThreads|CUDA,CPU|GPU,yes,\cite{Nai:2015:Graphbig},Only works on Linux.
+GAP,Benchmark,``yes'',shared,OpenMP,CPU,yes,\cite{Beamer:2015:GAPBench},
+GraphMat,Framework,``yes'',shared,OpenMP,CPU,no,\cite{Sundaram:2015:GraphMat},Requires the Intel compiler.
