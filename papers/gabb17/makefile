@@ -1,9 +1,9 @@
 # For the Mac only, comment out for other architectures
 #LATEXFLAGS = "-output-format=0"
 
-MAIN=gabb17-pollard findref
+MAIN=gabb17-pollard
 
-all: $(MAIN).pdf
+all: $(MAIN).pdf findref
 
 $(MAIN).pdf: $(wildcard *.tex) $(wildcard *.bib) $(wildcard figures/*.pdf) $(wildcard *.c) makefile
 	pdflatex $(LATEXFLAGS) $(MAIN)
