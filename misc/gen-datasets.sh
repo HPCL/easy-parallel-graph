@@ -1,6 +1,6 @@
 #!/bin/bash
 # Generate an unweighted, undirected Kronecker graph in the file formats for
-# graph500, GraphBIG, and GAP [add other systems when ready]
+# graph500, GraphMat, GraphBIG, and GAP
 # for BFS [add other algorithms when ready]
 # This only needs to be done once per scale.
 # For example, with S=20 the structure will look like
@@ -16,8 +16,8 @@
 # NOTE: These must be set before you run this script
 # It is also assumed these are all built.
 # The building instructions are available in the respective repositories.
-GRAPH500DIR=
-GRAPHMATDIR=
+GRAPH500DIR=$HOME/graph500
+GRAPHMATDIR=$HOME/graphalytics/GraphMat
 DDIR= # Where to save the dataset
 
 USAGE="gen-datasets.sh <scale>"
@@ -39,10 +39,6 @@ awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$BASE_FN.el" > "
 echo ID > "$DDIR/$BASE_FN/vertex.csv"
 cat "$DDIR/$BASE_FN.el" | tr ' ' '\n' | sort -n | uniq >> "$DDIR/$BASE_FN/vertex.csv"
 
-# GraphMat can be installed using the following commands on arya
-#module load intel/17
-#cd ~/graphalytics/GraphMat
-#make
 # Convert to GraphMat format
 # GraphMat requires edge weights---Just make them all 1 for the .1wel format
 # TODO: See what happens when you remove selfloops and duplicated edges.
