@@ -11,18 +11,18 @@
 # It is assumed these are all built and the gen-dataset.sh script has been run.
 # The building instructions are available in the respective repositories.
 # Here, edge factor (number of edges per vertex) is the default of 16.
-S= # Scale. 2^S = Number of vertices.
+S=20 # Scale. 2^S = Number of vertices.
 DDIR= # Dataset directory
-GAPDIR=/home/users/spollard/gap/gapbs
-GRAPHBIGDIR=/home/users/spollard/gap/graphBIG
-GRAPH500DIR=/home/users/spollard/graph500
-GRAPHMATDIR=/home/users/spollard/graphalytics/GraphMat
+GAPDIR=
+GRAPHBIGDIR=
+GRAPH500DIR=
+GRAPHMATDIR=
 
 # PageRank is usually represented as a 32-bit float,
 # so ~6e-8*nvertices is the minimum absolute error detectable
 # We set alpha = 0.15 in the respective source codes.
 # NOTE: GraphMat doesn't seem to compute iterations in the same way.
-MAXITER=20 # Maximum iterations for PageRank
+MAXITER=50 # Maximum iterations for PageRank
 TOL=0.00000006
 if [ -z $S -o -z "$DDIR" ]; then
 	echo 'Please set S and the parameters of the form *DIR in run-experiment.sh'
@@ -108,17 +108,24 @@ done <"$DDIR/kron-${S}-roots.1v"
 
 # Run GAP PageRank
 # error = sum(|newPR - oldPR|)
-"$GAPDIR"/pr -f "$DDIR/kron-${S}.el" -i $MAXITER -t $TOL
+# Note: ROOT is a dummy variable for pagerank; we just ensure the same trials are computed.
+while read ROOT; do
+	"$GAPDIR"/pr -f "$DDIR/kron-${S}.el" -i $MAXITER -t $TOL
+done <"$DDIR/kron-${S}-roots.1v"
 
 # Run GraphBIG PageRank
 # GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-${S}" --maxiter $MAXITER --quad $TOL
+while read ROOT; do
+	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-${S}" --maxiter $MAXITER --quad $TOL
+done <"$DDIR/kron-${S}-roots.1v"
 
 # Run GraphMat PageRank
 # PageRank stops when none of the vertices change
 # GraphMat has been modified so alpha = 0.15
-"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-${S}.graphmat"
+while read ROOT; do
+	"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-${S}.graphmat"
+done <"$DDIR/kron-${S}-roots.1v"
 
 # Run PBGL BFS
 # Run PBGL SSSP
