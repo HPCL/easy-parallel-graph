@@ -11,7 +11,7 @@
 # It is assumed these are all built and the gen-dataset.sh script has been run.
 # The building instructions are available in the respective repositories.
 # Here, edge factor (number of edges per vertex) is the default of 16.
-S=20 # Scale. 2^S = Number of vertices.
+S= # Scale. 2^S = Number of vertices.
 DDIR= # Dataset directory
 GAPDIR=
 GRAPHBIGDIR=
@@ -28,6 +28,11 @@ if [ -z $S -o -z "$DDIR" ]; then
 	echo 'Please set S and the parameters of the form *DIR in run-experiment.sh'
 	exit 2
 fi
+if [ "$1" -lt 1 ]; then
+	echo "usage: run-experiment <num_threads>"
+	exit 2
+fi
+export OMP_NUM_THREADS=$1
 
 # Load all the modules here
 module load intel/17
@@ -74,14 +79,15 @@ module load intel/17
 
 # Run for GAP BFS
 # It would be nice if you could read in a file for the roots
+# Just do one trial to be the same as the rest of the experiments
 while read ROOT; do
-	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-${S}.el"
+	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-${S}.el" -n 1
 done <"$DDIR/kron-${S}-roots.v"
 
 # Run the GraphBIG BFS
 # For this, one needs a vertex.csv file and and an edge.csv.
 while read ROOT; do
-	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT
+	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
 done <"$DDIR/kron-${S}-roots.v"
 
 # Run the GraphMat BFS
@@ -92,12 +98,12 @@ done <"$DDIR/kron-${S}-roots.1v"
 
 # Run the GAP SSSP for each root
 while read ROOT; do
-	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-${S}.el"
+	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-${S}.el" -n 1
 done <"$DDIR/kron-${S}-roots.v"
 
 # Run the GraphBIG SSSP
 while read ROOT; do
-	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-${S}" --root $ROOT
+	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
 done <"$DDIR/kron-${S}-roots.v"
 
 # Run the GraphMat SSSP
@@ -110,15 +116,15 @@ done <"$DDIR/kron-${S}-roots.1v"
 # error = sum(|newPR - oldPR|)
 # Note: ROOT is a dummy variable for pagerank; we just ensure the same trials are computed.
 while read ROOT; do
-	"$GAPDIR"/pr -f "$DDIR/kron-${S}.el" -i $MAXITER -t $TOL
-done <"$DDIR/kron-${S}-roots.1v"
+	"$GAPDIR"/pr -f "$DDIR/kron-${S}.el" -i $MAXITER -t $TOL -n 1
+done <"$DDIR/kron-${S}-roots.v"
 
 # Run GraphBIG PageRank
 # GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 while read ROOT; do
-	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-${S}" --maxiter $MAXITER --quad $TOL
-done <"$DDIR/kron-${S}-roots.1v"
+	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-${S}" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS
+done <"$DDIR/kron-${S}-roots.v"
 
 # Run GraphMat PageRank
 # PageRank stops when none of the vertices change
