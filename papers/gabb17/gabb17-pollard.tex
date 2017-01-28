@@ -43,21 +43,22 @@ Another issue among parallel graph processing systems is the lack of comprehensi
 %has not seen widespread adoption---only eight platforms are supported\footnote{According to \url{https://github.com/tudelft-atlarge}}. [TODO: Say more about why this is justified instead of just using Graphalytics]
 
 \section{Algorithms}
+
 The canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm: breadth first search (BFS).
 
-This report attempts to add similar rigor to other graph algorithms. This is done by borrowing heavily from the Graph500 specification; we use a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19,
-C = 0.19,$ and $D = 1-(A+B+C) = 0.05$. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. Some clarifications are in order: for the first kernel, the time to read the graph from disk is not considered. Furthermore, these data structures need only be created once and BFS is performed on 64 roots. The second kernel creates a tree with distances from the root, but need only label the existing data structure (and not output the entire graph, for example).
+This report attempts to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. Some clarifications are in order: for the first kernel, the time to read the graph from disk is not considered. Furthermore, these data structures need only be created once and BFS is performed on 64 roots.
 
 One straightforward extension is computing the Single-Source Shortest Paths algorithm (SSSP). We use the same graph and the same source vertices as in BFS. We use SSSP and PageRank in this paper because of their simplicity and ubiquity.
 
 \section{The Existing Systems}
-This report explores a small sample of the existing graph processing platforms with a focus on the so-called ``reference implementations:'' the Graph500\footnote{We used version 2.1.4 from \url{http://graph500.org/referencecode}.}, GAP \cite{Beamer:2015:GAPBench}, and GraphBIG \cite{Nai:2015:Graphbig}. GraphMat is also used because it has been cited as the most performant [cite]. Our target is shared memory CPU processing.
+This report explores a small sample of the existing graph processing platforms with a focus on the so-called ``reference implementations:'' the Graph500\footnote{We used version 2.1.4 from \url{http://graph500.org/referencecode}.}, GAP \cite{Beamer:2015:GAPBench}, and GraphBIG \cite{Nai:2015:Graphbig}. GraphMat is also included because it has been cited as the most performant \cite{Sundaram:2015:GraphMat}. Our target is shared memory CPU processing.
 
-Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} %and PowerGraph \cite{Gonzalez:2012:Powergraph} 
-are not considered here because they are a PITA to get working and the authors never responded to my emails.
+% Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} %and PowerGraph \cite{Gonzalez:2012:Powergraph} 
+% are not considered here because they are a PITA to get working and the authors never responded to my emails.
 
-\section{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the research computer (named Arya).
+\section{Experimental Setup}
+\subsection{Machine Specifications}
+Table~\ref{tab:specs} shows the specifications of the research machine.
 
 \begin{table}[!htb]
 	\centering
@@ -75,7 +76,54 @@ Table~\ref{tab:specs} shows the specifications of the research computer (named A
 	\label{tab:specs}
 \end{table}
 
-\section{Performance}
+\subsection{Datasets}
+We use a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$.
+
+\section{Perf. Anal.}
+
+\begin{figure}[!htb]
+	\includegraphics[width=\columnwidth]{/Users/spollard/Desktop/modern-aRt.pdf}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\columnwidth]{graphics/bfs_time.pdf}
+	\vspace{-18pt}
+	\caption{The $y$-axis is logarithmic. [TODO: Replace this with the data with non-zero degree vertices]}
+	\label{fig:bfs-time}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\columnwidth]{graphics/bfs_dsc.pdf}
+	\vspace{-18pt}
+	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
+	\label{fig:bfs-dsc}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\columnwidth]{graphics/sssp_time.pdf}
+	\vspace{-18pt}
+	\caption{The $y$-axis is logarithmic.}
+	\label{fig:sssp-time}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\columnwidth]{graphics/pr_time.pdf}
+	\vspace{-18pt}
+	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point]}
+	\label{fig:pr-time}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\columnwidth]{graphics/pr_iters.pdf}
+	\vspace{-18pt}
+	\caption{The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs unitl none of the vertices' ranks change. [There is only one data point]}
+	\label{fig:pr-iters}
+\end{figure}
 
 %\begin{table}[htb]
 %	\centering
@@ -91,7 +139,6 @@ Table~\ref{tab:specs} shows the specifications of the research computer (named A
 %	\caption{Performance. Note that implementations of every algorithm are not availabe for every platform.}
 %	\label{tab:reportcard}
 %\end{table}
-
 
 %Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
 % TODO: Cite Comer algorithm book for Dijkstra's algorithm runtime.
@@ -125,17 +172,19 @@ In Table~\ref{tab:perf}, BFS is breadth-first search, SSSP is single-source shor
 \begin{table}[!htb]
 	\centering
 	\begin{tabular}{l|c|c|c}
-		System & Load Graph & Make Data Structure & Run BFS \\ \hline
+		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
 		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
 		GraphBIG & 37.22  & N/A    & 0.1528 \\
 		GraphMat & 0.1511 & 1.101  & 0.1031 \\
 		GAP      & 2.351  & 0.1935 & 0.001393 \\
 	\end{tabular}
-	\caption{Times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 64 roots. [TODO: Why does the first root often have degree 0?]}
+	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 64 roots.}
 	\label{tab:fileload}
 \end{table}
 
 [Compare lines of code for implementation]
+
+
 
 \section{Graph Processing Taxonomy}
 This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.

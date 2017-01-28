@@ -5,7 +5,7 @@ MAIN=gabb17-pollard
 
 all: $(MAIN).pdf findref
 
-$(MAIN).pdf: $(wildcard *.tex) $(wildcard *.bib) $(wildcard figures/*.pdf) $(wildcard *.c) makefile
+$(MAIN).pdf: $(wildcard *.tex) $(wildcard *.bib) $(wildcard graphics/*.pdf) $(wildcard *.c) makefile
 	pdflatex $(LATEXFLAGS) $(MAIN)
 	bibtex $(MAIN)
 	pdflatex $(LATEXFLAGS) $(MAIN)
