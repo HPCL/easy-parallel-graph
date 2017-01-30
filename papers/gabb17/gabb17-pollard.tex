@@ -9,9 +9,9 @@
 \usepackage{enumitem}
 \setlist{parsep=0pt, listparindent=0.5cm}
 
-\title{A Comparison of Parallel Graph Processing Platforms}
+\title{A Comparison of Parallel Graph Processing Benchmarks}
 \author{
-	\IEEEauthorblockN{Samuel Pollard}
+	\IEEEauthorblockN{Sam D. Pollard}
 	\IEEEauthorblockA{Department of Computer and Information Science \\
 		University of Oregon \\
 		Eugene, OR, USA \\
@@ -34,35 +34,60 @@ In this paper we analyze the performance of four parallel graph processing syste
 
 \section{Introduction}
 
-Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems \cite{Doekemeijer:2015:GPFSurvey}. These systems operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa}, \cite{Kang:2009:Pegasus}, shared memory [pretty much everything], a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, distributed memory with MPI \cite{Hong:2015:PGX}, domain-specific languages \cite{Hong:2012:GreenMarl}, as well as novel communication schemes \cite{Edmonds:2013:ActiveMessages}.
+Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}. The systems described operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
 
-Since 2014, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon}, \cite{Perez:2015:Ringo} [name some more]. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' daunting. There has even been a propagation of so-called ``reference implementations'' which  implement the most common graph algorithms [cite GAP, GraphBIG, Galois]. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
+Beyond the systems described by Doekemeijer and Varbanescu, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon}, \cite{Perez:2015:Ringo}, distributed memory approaches such as \cite{Hong:2015:PGX}. domain-specific languages \cite{Hong:2012:GreenMarl}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, as well as novel communication schemes \cite{Edmonds:2013:ActiveMessages}. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' daunting.
 
-Another issue among parallel graph processing systems is the lack of comprehensive comparisons. One possible reason for this is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring correctly formatted data the data are nontrivial for most tasks. Beyond this, each system may have a different method of measuring performance. Thus, one of the contributions of this paper is to provide a ``level playing field'' for each graph processing system. Graphalytics \cite{Capota:2015:Graphalytics} attempts to remedy this but
-[state the limitations of graphalytics]
-%has not seen widespread adoption---only eight platforms are supported\footnote{According to \url{https://github.com/tudelft-atlarge}}. [TODO: Say more about why this is justified instead of just using Graphalytics]
+In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
 
-\section{Algorithms}
+Another issue among parallel graph processing systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Beyond this, there are optimizations for each system which are not exploited in a na\"ive implementation. Addressing these issues helps provide an environment in which no graph processing system has an advantage.
 
-The canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm: breadth first search (BFS).
+Graphalytics \cite{Capota:2015:Graphalytics} also attempts to remedy these problems. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must provide Java methods to call the particular implementations and initialization shell scripts to satisfy dependencies and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
 
-This report attempts to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. Some clarifications are in order: for the first kernel, the time to read the graph from disk is not considered. Furthermore, these data structures need only be created once and BFS is performed on 64 roots.
+With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. As with Graphalytics, the initial development effort is high but Granula allows for multiple experiments to be run easily.
 
-One straightforward extension is computing the Single-Source Shortest Paths algorithm (SSSP). We use the same graph and the same source vertices as in BFS. We use SSSP and PageRank in this paper because of their simplicity and ubiquity.
+One drawback of Granula is it requires knowledge of the source code and execution model which is not always available. Furthermore, this requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
 
-\section{The Existing Systems}
-This report explores a small sample of the existing graph processing platforms with a focus on the so-called ``reference implementations:'' the Graph500\footnote{We used version 2.1.4 from \url{http://graph500.org/referencecode}.}, GAP \cite{Beamer:2015:GAPBench}, and GraphBIG \cite{Nai:2015:Graphbig}. GraphMat is also included because it has been cited as the most performant \cite{Sundaram:2015:GraphMat}. Our target is shared memory CPU processing.
-
-% Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} %and PowerGraph \cite{Gonzalez:2012:Powergraph} 
-% are not considered here because they are a PITA to get working and the authors never responded to my emails.
+To address these concerns we analyze the performance of several graph processing benchmarks to facilitate the selection among such systems. Our analysis is done without modification of the existing source code.
 
 \section{Experimental Setup}
-\subsection{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the research machine.
 
-\begin{table}[!htb]
+\subsection{Graph Processing Systems}
+
+This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the fourth is included because it has been cited as highly performant \cite{Sundaram:2015:GraphMat}. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations for all algorithms. The systems are:
+
+\begin{enumerate}
+	\item The Graph500\footnote{We used the most recent version from \url{https://github.com/graph500/graph500}, most similar to release 2.1.4.} \cite{Murphy:2010:Graph500}
+	\item The Graph Algorithm Platform (GAP) Benchmark Suite \cite{Beamer:2015:GAPBench}
+	\item GraphBIG \cite{Nai:2015:Graphbig}
+	\item GraphMat \cite{Sundaram:2015:GraphMat}
+\end{enumerate}
+
+\subsection{Algorithms}
+
+We consider three algorithms:
+
+\begin{enumerate}
+	\item Breadth First Search (BFS)
+	\item Single Source Shortest Paths (SSSP)
+	\item PageRank
+\end{enumerate}
+
+The canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm: breadth first search.
+
+This report aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots.
+
+One straightforward extension to BFS and our second algorithm is the Single-Source Shortest Paths algorithm (SSSP). We use the same graph and the same source vertices as in BFS.
+
+The third algorithm is PageRank. These three algorithms are used because of their popularity; most libraries provide reference implementations. All the experiments performed use the developer-provided implementations because we assume the vendor will provide a more performant implementation than us. While this limits the scope of the experiments it mitigates the bias inherent in any developer's programming skills.
+
+\subsection{Machine Specifications}
+Table~\ref{tab:specs} shows the specifications of the research machine. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.
+
+\begin{table}
 	\centering
 	% Keep in mind you can do this at the beginning: string replace={s1}{s2}
+	% For arya I deleted Max RAM Freq	2133MHz
 	\pgfplotstabletypeset[
 	header=false,
 	col sep=tab,
@@ -72,18 +97,75 @@ Table~\ref{tab:specs} shows the specifications of the research machine.
 	columns/1/.style={column type={l|}},
 	every last row/.style={after row=\toprule},
 	]{../report/specs.csv}
-	\caption{Machine specifications. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.}
+	\caption{The operating system is GNU/Linux version 4.4.0-22.}
 	\label{tab:specs}
 \end{table}
 
 \subsection{Datasets}
-We use a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$.
+We use the Graph500 synthetic graph generator which creates a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$.
 
-\section{Perf. Anal.}
+The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset is sourced from the Game Trace Archive\cite{Guo:2012:GTA} and modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}.
 
-\begin{figure}[!htb]
-	\includegraphics[width=\columnwidth]{/Users/spollard/Desktop/modern-aRt.pdf}
-\end{figure}
+\section{Performance Analysis}
+
+
+In Table~\ref{tab:graphalytics} we show the results from running Graphalytics. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}.
+
+From this we get only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture.
+
+[How to make this a paper worth submitting: add in PowerGraph as a platform and see how it fares using our method compared to Graphalytics. Also run this on different datasets and compare results.]
+
+%\begin{table}[htb]
+%	\centering
+%	\begin{tabular}{l|c|c|c}
+%		& BFS & SSSP & PR \\ \hline
+%		Graph500 & & & \\ \hline
+%		PBGL  & & & \\ \hline
+%		GAP  & & & \\ \hline
+%		GraphBIG  & & & \\ \hline
+%		Galois  & & & \\ \hline
+%		PowerGraph  & & &
+%	\end{tabular}
+%	\caption{Performance. Note that implementations of every algorithm are not availabe for every platform.}
+%	\label{tab:reportcard}
+%\end{table}
+
+%Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
+
+\begin{table}
+%	\begin{tabular}{l|r|r|}
+%	 & PowerGraph & OpenG \\ \hline
+%	BFS & 81.8 & 341 \\ \hline
+%	SSSP & 1.64 & 15.0 \\ \hline
+%	LCC & 54.6 & 142 \\ \hline
+%	\end{tabular}
+		\centering
+		\pgfplotstabletypeset[
+			col sep=comma,
+			string type, % Makes the .style={string type} redundant
+			columns={[index]0,GraphBIG,PowerGraph},
+			every head row/.style={after row=\midrule},
+			columns/0/.style={string type, column type={l|}, column name={}},
+			columns/openg/.style={string type, column type={r}},
+			columns/powergraph/.style={string type, column type={r}}
+		]{../report/runtime.csv}
+	\caption{Performance results are in milliseconds. LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components}
+	\label{tab:graphalytics}
+\end{table}
+
+The following figures are not useful. They were are merely placeholders while further experiments are being run using the correct number of threads and roots. These issues are especially noticeable in GraphBIG.
+\begin{table}[!htb]
+	\centering
+	\begin{tabular}{l|c|c|c}
+		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
+		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
+		GraphBIG & 37.22  & N/A    & 0.1528 \\
+		GraphMat & 0.1511 & 1.101  & 0.1031 \\
+		GAP      & 2.351  & 0.1935 & 0.001393 \\
+	\end{tabular}
+	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
+	\label{tab:fileload}
+\end{table}
 
 \begin{figure}
 	\centering
@@ -121,108 +203,58 @@ We use a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters 
 	\centering
 	\includegraphics[width=0.8\columnwidth]{graphics/pr_iters.pdf}
 	\vspace{-18pt}
-	\caption{The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs unitl none of the vertices' ranks change. [There is only one data point]}
+	\caption{The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs unitl none of the vertices' ranks change.}
 	\label{fig:pr-iters}
 \end{figure}
-
-%\begin{table}[htb]
-%	\centering
-%	\begin{tabular}{l|c|c|c}
-%		& BFS & SSSP & PR \\ \hline
-%		Graph500 & & & \\ \hline
-%		PBGL  & & & \\ \hline
-%		GAP  & & & \\ \hline
-%		GraphBIG  & & & \\ \hline
-%		Galois  & & & \\ \hline
-%		PowerGraph  & & &
-%	\end{tabular}
-%	\caption{Performance. Note that implementations of every algorithm are not availabe for every platform.}
-%	\label{tab:reportcard}
-%\end{table}
-
-%Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
-% TODO: Cite Comer algorithm book for Dijkstra's algorithm runtime.
-
-In Table~\ref{tab:perf}, BFS is breadth-first search, SSSP is single-source shortest paths, LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components. For the algorithms used, see \cite{Iosup:2016:Graphalyticstech}.
-
-% TODO: This should be unnecessary once autogeneration is used.
-\begin{table}[!htb]
-	\centering
-%	\begin{tabular}{l|r|r|}
-%	 & PowerGraph & OpenG \\ \hline
-%	BFS & 81.8 & 341 \\ \hline
-%	SSSP & 1.64 & 15.0 \\ \hline
-%	LCC & 54.6 & 142 \\ \hline
-%	\end{tabular}
-
-		\centering
-		\pgfplotstabletypeset[
-			col sep=comma,
-			string type, % Makes the .style={string type} redundant
-			columns={[index]0,openg,powergraph},
-			every head row/.style={after row=\midrule},
-			columns/0/.style={string type, column type={l|}, column name={}},
-			columns/openg/.style={string type, column type={r}},
-			columns/powergraph/.style={string type, column type={r}}
-		]{../report/runtime.csv}
-	\caption{Performance Results for the \texttt{dota-league} dataset with 61,670 vertices and 50,870,313 edges.}
-	\label{tab:perf}
-\end{table}
-
-\begin{table}[!htb]
-	\centering
-	\begin{tabular}{l|c|c|c}
-		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
-		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
-		GraphBIG & 37.22  & N/A    & 0.1528 \\
-		GraphMat & 0.1511 & 1.101  & 0.1031 \\
-		GAP      & 2.351  & 0.1935 & 0.001393 \\
-	\end{tabular}
-	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 64 roots.}
-	\label{tab:fileload}
-\end{table}
+[Note that for figure Fig.\ref{fig:pr-iters}, mention time per iteration]
 
 [Compare lines of code for implementation]
 
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\columnwidth]{graphics/bfs_ss.pdf}
+	\vspace{-18pt}
+	\caption{The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs unitl none of the vertices' ranks change. [There is only one data point]}
+	\label{fig:bfs-ss}
+\end{figure}
 
-
-\section{Graph Processing Taxonomy}
-This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
-\begin{table*}[t]
-	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
-		\centering
-		%\small
-		\pgfplotstabletypeset[
-			col sep=comma,
-			string type, % Makes the .style={string type} redundant
-			columns={Name,Type,Parallelism,Target,FOSS,Source,Notes},
-			every head row/.style={after row=\midrule},
-			columns/Name/.style={string type, column type={l|}},
-			columns/Type/.style={string type},
-			% columns/HPC/.style={string type},
-			columns/Parallelism/.style={string type},
-%			columns/Comm./.style={%
-%				string type,
-%				postproc cell content/.style={%
-%					@cell content/.add={\footnotesize}
-%				}
+%\section{Graph Processing Taxonomy}
+%This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
+%\begin{table*}[t]
+%	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
+%		\centering
+%		%\small
+%		\pgfplotstabletypeset[
+%			col sep=comma,
+%			string type, % Makes the .style={string type} redundant
+%			columns={Name,Type,Parallelism,Target,FOSS,Source,Notes},
+%			every head row/.style={after row=\midrule},
+%			columns/Name/.style={string type, column type={l|}},
+%			columns/Type/.style={string type},
+%			% columns/HPC/.style={string type},
+%			columns/Parallelism/.style={string type},
+%%			columns/Comm./.style={%
+%%				string type,
+%%				postproc cell content/.style={%
+%%					@cell content/.add={\footnotesize}
+%%				}
+%%			},
+%			columns/Target/.style={string type},
+%			columns/FOSS/.style={string type},
+%			columns/Source/.style={string type},
+%			columns/Notes/.style={
+%				preproc cell content/.style={@cell content=
+%					\ifx&##1&% Only make a footnote if the cell is nonempty
+%						##1
+%					\else
+%						\footnote{##1}
+%					\fi}
 %			},
-			columns/Target/.style={string type},
-			columns/FOSS/.style={string type},
-			columns/Source/.style={string type},
-			columns/Notes/.style={
-				preproc cell content/.style={@cell content=
-					\ifx&##1&% Only make a footnote if the cell is nonempty
-						##1
-					\else
-						\footnote{##1}
-					\fi}
-			},
-		]{../report/platforms.csv}
-		\caption{Tools used for graph processing}
-		\label{tab:frameworks}
-	\end{minipage}
-\end{table*}
+%		]{../report/platforms.csv}
+%		\caption{Tools used for graph processing}
+%		\label{tab:frameworks}
+%	\end{minipage}
+%\end{table*}
 
 
 \section{Conclusion} % Begin with the end in mind...
