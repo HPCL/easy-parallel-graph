@@ -9,10 +9,10 @@ if [ -z "$FN" ]; then
 fi
 
 # Graph500
-echo -n 'Graph500,BFS,graph construction,'
-echo $(grep "construction_time" "$FN" | awk '{print $2}') 
 echo -n 'Graph500,BFS,graph generation,'
 echo $(grep "generation_time" "$FN" | awk '{print $2}')
+echo -n 'Graph500,BFS,Data structure build,'
+echo $(grep "construction_time" "$FN" | awk '{print $2}') 
 awk '/bfs_time\[/{print "Graph500,BFS,Time," $2}' "$FN"
 
 # GraphBIG
@@ -58,7 +58,7 @@ awk -v NRT=$NRT '/Build Time:/{i++; if(i>NRT && i<=2*NRT)print "GAP,SSSP,Data st
 awk -v NRT=$NRT '/Average Time:/{i++; if(i>NRT && i<=2*NRT)print "GAP,SSSP,Time," $3}' "$FN"
 echo -n 'GAP,PageRank,File reading,'
 awk -v NRT=$NRT '/Read Time:/{i++; if(i>2*NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}'
-awk '/Build Time:/{i++; if(i>128)print "GAP,PageRank,Data structure build," $3}' "$FN"
+awk -v NRT=$NRT '/Build Time:/{i++; if(i>2*NRT)print "GAP,PageRank,Data structure build," $3}' "$FN"
 grep -B 2 'Average Time:' "$FN" | awk '/^\s*[0-9]+/{print "GAP,PageRank,Iterations," $1}'
-awk '/Average Time:/{i++; if(i>128)print "GAP,PageRank,Time," $3}' "$FN"
+awk -v NRT=$NRT '/Average Time:/{i++; if(i>2*NRT)print "GAP,PageRank,Time," $3}' "$FN"
 

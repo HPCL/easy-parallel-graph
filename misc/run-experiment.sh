@@ -76,7 +76,11 @@ module load intel/17
 # Run the Graph500 BFS: OpenMP
 # This isn't working, so just regenerate the data
 #omp-csr/omp-csr -s $S -o "$DDIR/kron-${S}.graph500" -r "$DDIR/kron-${S}.roots"
-"$GRAPH500DIR/omp-csr/omp-csr" -s $S 
+if [ "$OMP_NUM_THREADS" -gt 1 ]; then
+	"$GRAPH500DIR/omp-csr/omp-csr" -s $S 
+else
+	"$GRAPH500DIR/seq-csr/seq-csr" -s $S 
+fi
 
 # Run for GAP BFS
 # It would be nice if you could read in a file for the roots
