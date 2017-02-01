@@ -181,13 +181,13 @@ start_yarn()
 
 install_GraphX()
 {
+	echo "GraphX is currently not working."
+	exit 1
 	# Assumes HDFS and YARN are running.
 	echo "Installing GraphX..."
 	cd "$BASE_DIR"
 	if [ ! $(find "$BASE_DIR" -maxdepth 1 -type d -name graphalytics-platforms-graphx) ]; then
 		git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphx.git
-		# XXX: Temporary fix until it's merged into main branch
-		# git clone https://github.com/sampollard/graphalytics-platforms-graphx
 	fi
 	GRAPHX_DIR="$BASE_DIR/graphalytics-platforms-graphx"
 	cd "$GRAPHX_DIR"
@@ -229,16 +229,11 @@ install_OpenG()
 {
 	if [ "$OSNAME" != "Linux" ]; then
 		echo "GraphBIG only works on Linux."
-		exit 1
+		kill -s TERM $TOP_PID
 	fi
 	cd "$BASE_DIR"
 	GRAPHBIG_DIR="$BASE_DIR/graphBIG_GA"
 	export OPENG_HOME="$GRAPHBIG_DIR"
-	if [ "$OSNAME" != "Linux" ]; then
-		GRAPHBIG_OPTS="PFM=0"
-	else
-		GRAPHBIG_OPTS=""
-	fi
 	if [ ! -d graphBIG_GA ]; then
 		echo "Downloading and building the GraphBIG repository"
 		git clone 'https://github.com/graphbig/graphBIG.git' $GRAPHBIG_DIR
@@ -374,13 +369,49 @@ install_PowerGraph()
 
 install_Giraph()
 {
+	echo "Giraph is currently unimplemented"
+	exit 1
 	cd "$BASE_DIR"
 	wget http://www-us.apache.org/dist/zookeeper/zookeeper-3.4.9/zookeeper-3.4.9.tar.gz
 	tar -xf zookeeper-3.4.9.tar.gz
 }
 
+install_GraphMat()
+{
+	echo "Installing GraphMat..."
+	cd "$BASE_DIR"
+	# Check for icpc
+	icpc --version
+	if [ $? -ne 0 ]
+		echo "You must have a working intel compiler to continue"
+		exit 1
+	fi
+	# If you are not a member of HPCL please use
+	# https://github.com/narayanan2004/GraphMat instead
+	git clone https://github.com/HPCL/GraphMat.git
+	cd GraphMat
+	make
+	cd ..
+	GRAPHMAT_DIR="$BASE_DIR/graphalytics-platforms-graphmat"
+	git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphmat.git
+	cd "$GRAPHMAT_DIR"
+	mvn package
+	PKGNAME=$(basename $(find $GRAPHMAT_DIR -maxdepth 1 -name '*.tar.gz'))
+	tar -xf "$PKGNAME"
+	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
+	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
+	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
+	PKGDIR="$GRAPHMAT_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
+	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
+	cp -r config-template config	
+	CONFIG=$(printf "$platform.home = $BASE_DIR/GraphMat\n$platform.intermediate-dir = $GRAPHMAT_DIR/intermediate\nopeng.output-dir = $GRAPHMAT_DIR/output\n$platform.num-threads = $NUM_THREADS\n$platform.command.convert = %%s %%s\n$platform.command.run = KMP_AFFINITY=scatter numactl -i all %%s %%s\n")
+	echo "$CONFIG" > config/$platform.properties
+	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
+	# Still causing some issues. I suspect it's because of the file conversion...
+}
+
 # Downloads em all
-# NOTE: This is finnicky. If you need the datasets, please submit an issue on GitHub.
+# NOTE: The website is finnicky. If you need the datasets, please submit an issue on GitHub.
 download_datasets()
 {
 	cd "$DATASET_DIR"
@@ -431,3 +462,6 @@ run_benchmark
 install_PowerGraph
 run_benchmark
 
+### Run the GraphMat benchmark
+#install_GraphMat
+#run_benchmark
