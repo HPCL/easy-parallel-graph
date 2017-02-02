@@ -45,11 +45,11 @@ Another issue among parallel graph processing systems is the lack of comprehensi
 
 Graphalytics \cite{Capota:2015:Graphalytics} also attempts to remedy these problems. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must provide Java methods to call the particular implementations and initialization shell scripts to satisfy dependencies and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
 
-With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. As with Graphalytics, the initial development effort is high but Granula allows for multiple experiments to be run easily.
+With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. The requires in-depth knowledge of the source code and execution model which is not always available. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula.
 
-One drawback of Granula is it requires knowledge of the source code and execution model which is not always available. Furthermore, this requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
+As with Graphalytics, the initial development effort is high but Granula paired with graphalytics allows automatic execution and compilation of performance results\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}. Likewise, our approach provides automatic execution and performance analysis without requiring a performance and execution model for each system.
 
-To address these concerns we analyze the performance of several graph processing benchmarks to facilitate the selection among such systems. Our analysis is done without modification of the existing source code.
+To showcase our methods we analyze the performance of several graph processing benchmarks to facilitate the selection among such systems. Our analysis is done with minimal source code modification.
 
 \section{Experimental Setup}
 
@@ -153,7 +153,7 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 	\label{tab:graphalytics}
 \end{table}
 
-The following figures are not useful. They were are merely placeholders while further experiments are being run using the correct number of threads and roots. These issues are especially noticeable in GraphBIG.
+
 \begin{table}[!htb]
 	\centering
 	\begin{tabular}{l|c|c|c}
@@ -266,10 +266,8 @@ The following figures are not useful. They were are merely placeholders while fu
 
 
 \section{Conclusion} % Begin with the end in mind...
-We have presented an updated survey of parallel graph processing frameworks supplementary to \cite{Doekemeijer:2015:GPFSurvey}. From this, we have selected a representative subset of frameworks on which performance is analyzed and have stored these results in a database. To facilitate parallel graph processing, hardware information and performance results are automatically populated (as were all the tables in this paper). These performance results are then used to provide simple recommendations of the optimally-performing framework given a particular algorithm and problem size.
-% We have developed a simple model of hardware and its correlation with performance to predict performance on other architectures
 
-%\bibliographystyle{acm}
+
 \bibliographystyle{IEEEtranS}
 \bibliography{../drp}
 \end{document}
