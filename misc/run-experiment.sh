@@ -6,18 +6,21 @@
 # ./run-experiment
 # or
 # qsub run-experiment.sh
+USAGE="usage: run-experiment <scale> <num-threads>" # 2^{<scale>} = Number of vertices.
 
+# Say where the packages are located
 # NOTE: YOU MUST SET THE REPOSITORY LOCATIONS AND MODULES TO LOAD
 # It is assumed these are all built and the gen-dataset.sh script has been run.
 # The building instructions are available in the respective repositories.
 # Here, edge factor (number of edges per vertex) is the default of 16.
-S= # Scale. 2^S = Number of vertices.
 DDIR= # Dataset directory
 GAPDIR=
 GRAPHBIGDIR=
 GRAPH500DIR=
 GRAPHMATDIR=
+POWERGRAPHDIR=
 
+# Set some other variables used throughout the experiment
 # PageRank is usually represented as a 32-bit float,
 # so ~6e-8*nvertices is the minimum absolute error detectable
 # We set alpha = 0.15 in the respective source codes.
@@ -25,15 +28,18 @@ GRAPHMATDIR=
 MAXITER=50 # Maximum iterations for PageRank
 TOL=0.00000006
 NRT=32 # Number of roots
+export SKIP_VALIDATION=1
+S=$1
 if [ -z $S -o -z "$DDIR" ]; then
-	echo 'Please set S and the parameters of the form *DIR in run-experiment.sh'
+	echo 'Please provide S and T and set parameters of the form *DIR in run-experiment.sh'
+	echo "$USAGE"
 	exit 2
 fi
-if [ -z "$1" -o "$1" = "-h" -o "$1" = "--help" ]; then
-	echo "usage: run-experiment <num_threads>"
+if [ "$#" -ne 2 -o "$1" = "-h" -o "$1" = "--help" ]; then
+	echo "$USAGE"
 	exit 2
 fi
-export OMP_NUM_THREADS=$1
+export OMP_NUM_THREADS=$2
 
 # Load all the modules here
 module load intel/17
@@ -54,10 +60,17 @@ module load intel/17
 # Graph500:
 # 	git clone https://github.com/sampollard/graph500.git
 #   cd graph500; make
-# PowerGraph: (not used here)
+# PowerGraph: (not ready yet)
+#	# NOTE: Shared memory only!
+# 	NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
+# 	if [ "$NUM_CORES" -gt 64 ]; then
+# 	    export GRAPHLAB_THREADS_PER_WORKER=64
+# 	else
+# 	    export GRAPHLAB_THREADS_PER_WORKER=$NUM_CORES
+# 	fi
 # 	git clone https://github.com/sampollard/PowerGraph
 # 	cd PowerGraph
-# 	./configure
+# 	./configure --no_mpi
 #   cd release/toolkits/graph_analytics
 #   make -j4
 # PBGL: (not used here)
@@ -86,7 +99,7 @@ fi
 # It would be nice if you could read in a file for the roots
 # Just do one trial to be the same as the rest of the experiments
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-${S}.el" -n 1
+	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-${S}.el" -n 1 -s
 done
 
 # Run the GraphBIG BFS
@@ -103,7 +116,7 @@ done
 
 # Run the GAP SSSP for each root
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-${S}-undir.el" -n 1
+	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-${S}.el" -n 1 -s
 done
 
 # Run the GraphBIG SSSP
@@ -115,6 +128,17 @@ done
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
 	echo "SSSP root: $ROOT"
 	"$GRAPHMATDIR/bin/SSSP" "$DDIR/kron-${S}.graphmat" $ROOT
+done
+
+# Run PowerGraph SSSP
+if [ "$OMP_NUM_THREADS" -gt 64 ]; then
+    export GRAPHLAB_THREADS_PER_WORKER=64
+	echo "WARNING: PowerGraph does not work with > 64 threads. Running on 64 threads."
+else
+    export GRAPHLAB_THREADS_PER_WORKER=$OMP_NUM_THREADS
+fi
+for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/kron-${S}.el" --format tsv --source $ROOT
 done
 
 # Run GAP PageRank
@@ -137,8 +161,4 @@ done
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-${S}.graphmat"
 done
-
-# Run PBGL BFS
-# Run PBGL SSSP
-# Run PBGL PageRank
 
