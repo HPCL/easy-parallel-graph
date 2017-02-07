@@ -1,7 +1,10 @@
 # Generate some plots using the data parsed by ../../misc/parse-output.sh
 # Make this section be the results from the optimal number of threads
-# TODO: Make the first filename compared the highest-performing one.
-scale <- 20
+
+###
+# Part 1: Generate the plots for a single problem size and multiple algorithms
+###
+scale <- 21
 bpc <- "cyan"
 filename <- paste0("parsed",scale,"-32.csv")
 x <- read.csv(filename, header = FALSE)
@@ -64,6 +67,10 @@ barplot(pr_mean_iters, ylab = "Time (second)",
 		names.arg = unique(pr_iters$Sys))
 dev.off()
 
+###
+# Part 2: Generate the plots for a single algorithm and multiple problem sizes
+###
+scale <- 20
 # Read in and average the data for BFS for each thread
 # It is wasteful to reread the parsed*-1.csv but it simplifies the code
 threadcnts <- c(1,2,4,8,16,32,64,72)
@@ -101,10 +108,12 @@ for (pli in seq(2,nrow(bfs_ss))) {
 	lines(as.numeric(bfs_ss[pli,]), col = colors[pli], type = "b",
 			lwd = 3, pch = pli, lty = pli) # XXX: lty may repeat after 8
 }
+lines(1:length(threadcnts), 1/threadcnts, lwd = 1, col = "#000000FF")
 axis(1, at = seq(length(threadcnts)), labels = threadcnts)
-legend(legend = rownames(bfs_ss), x = "topright", col = colors,
-		lty = 1:length(systems), pch = 1:length(systems),
-		box.lwd = 1, lwd = 3)
+legend(legend = c(rownames(bfs_ss), "Ideal"), x = "topright",
+		lty = c(1:length(systems), 1), pch = c(1:length(systems), NA_integer_),
+		box.lwd = 1, lwd = c(rep(3,length(systems)), 1),
+		col = c(colors, "#000000FF"))
 dev.off()
 
 # Plot the speedup for BFS

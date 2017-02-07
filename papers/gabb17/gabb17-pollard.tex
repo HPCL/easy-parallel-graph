@@ -30,7 +30,7 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-In this paper we analyze the performance of four parallel graph processing systems to determine their performance and scalability using synthetic and real-world datasets. We perform analysis for three algorithms: breadth first serach, single source shortest paths, and PageRank. This paper examines previously overlooked aspects of parallel programming performance such as file I/O in addition to a more detailed performance analysis.
+There are an intimidating number of parallel graph processing systems. One survey in 2014 identified over 80. Since then, the landscape has changed; some packages have become inactive, even more projects have been introducted, and the previous top performers are being usurped. To address the high churn of projects and the complexity of selecting a system for a given problem, we analyze the performance and scalability of four parallel open source graph processing systems (GraphMat, GAP Benchmark Suite, GraphBIG, and PowerGraph) using synthetic and real-world datasets. We perform analysis for three algorithms: breadth first search, single source shortest paths, and PageRank. We compare our results to largest parallel graph processing performance and benchmarking project: Graphalytics. This paper examines previously overlooked aspects of parallel graph processing performance such as energy usage in addition to a detailed performance analysis modeled after the Graph500 that takes into consideration multiple runs and the phases of computation that graph programs typically undergo.
 \end{abstract}
 
 \section{Introduction}
@@ -44,6 +44,8 @@ In addition to libraries with associated APIs there has also been a propagation 
 Another issue among parallel graph processing systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Beyond this, there are optimizations for each system which are not exploited in a na\"ive implementation. Addressing these issues helps provide an environment in which no graph processing system has an advantage.
 
 Graphalytics \cite{Capota:2015:Graphalytics} also attempts to remedy these problems. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must provide Java methods to call the particular implementations and initialization shell scripts to satisfy dependencies and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
+
+The complexity of Graphalytics obfuscates the true behavior of the algorithm. We use GraphMat, the single source shortest paths algorithm, the dota-league dataset, and the default settings as an example here. By default, Graphalytics generates an HTML report giving the runtimes for each dataset in seconds. Two separate runs for a single dataset, all else being equal, gave 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.6 seconds, 0.19 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures.
 
 With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. The requires in-depth knowledge of the source code and execution model which is not always available. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula.
 
@@ -108,6 +110,8 @@ We use the Graph500 synthetic graph generator which creates a Kronecker graph \c
 The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset is sourced from the Game Trace Archive\cite{Guo:2012:GTA} and modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}.
 
 \section{Performance Analysis}
+
+We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage.
 
 
 In Table~\ref{tab:graphalytics} we show the results from running Graphalytics. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}.
