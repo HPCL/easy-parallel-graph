@@ -57,7 +57,7 @@ install_graphalytics()
 		cd "$BASE_DIR"
 		git clone https://github.com/sampollard/ldbc_graphalytics.git
 		cd ldbc_graphalytics
-		mvn install -Dlicence.skip=true
+		mvn clean install -DskipTests=true -Dlicense.skip=true
 		cd ..
 	else
 		echo "I found an ldbc_graphalytics directory. I assume everything is built in there."
@@ -191,7 +191,7 @@ install_GraphX()
 	fi
 	GRAPHX_DIR="$BASE_DIR/graphalytics-platforms-graphx"
 	cd "$GRAPHX_DIR"
-	mvn package
+	mvn clean package
 
 	PKGNAME=$(basename $(find $GRAPHX_DIR -maxdepth 1 -name '*.tar.gz'))
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
@@ -250,7 +250,7 @@ install_OpenG()
 		git clone 'https://github.com/tudelft-atlarge/graphalytics-platforms-openg.git'
 	fi
 	cd "$OPENG_DIR" # You have to be in this dir for it to work
-	mvn package
+	mvn clean package
 	PKGNAME=$(basename $(find $OPENG_DIR -maxdepth 1 -name '*.tar.gz'))
 	tar -xf "$PKGNAME"
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
@@ -348,7 +348,7 @@ install_PowerGraph()
  		export GRAPHLAB_THREADS_PER_WORKER=$NUM_THREADS
  	fi
 
-	mvn package -DskipTests
+	mvn clean package -DskipTests
     PKGNAME=$(basename $(find $PLATFORM_DIR -maxdepth 1 -name '*.tar.gz'))
     VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
     GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
@@ -382,7 +382,7 @@ install_GraphMat()
 	cd "$BASE_DIR"
 	# Check for icpc
 	icpc --version
-	if [ $? -ne 0 ]
+	if [ $? -ne 0 ]; then
 		echo "You must have a working intel compiler to continue"
 		exit 1
 	fi
@@ -395,7 +395,7 @@ install_GraphMat()
 	GRAPHMAT_DIR="$BASE_DIR/graphalytics-platforms-graphmat"
 	git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphmat.git
 	cd "$GRAPHMAT_DIR"
-	mvn package
+	mvn clean package
 	PKGNAME=$(basename $(find $GRAPHMAT_DIR -maxdepth 1 -name '*.tar.gz'))
 	tar -xf "$PKGNAME"
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
@@ -404,10 +404,9 @@ install_GraphMat()
 	PKGDIR="$GRAPHMAT_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
 	cp -r config-template config	
-	CONFIG=$(printf "$platform.home = $BASE_DIR/GraphMat\n$platform.intermediate-dir = $GRAPHMAT_DIR/intermediate\nopeng.output-dir = $GRAPHMAT_DIR/output\n$platform.num-threads = $NUM_THREADS\n$platform.command.convert = %%s %%s\n$platform.command.run = KMP_AFFINITY=scatter numactl -i all %%s %%s\n")
+	CONFIG=$(printf "$platform.home = $BASE_DIR/GraphMat\n$platform.intermediate-dir = $GRAPHMAT_DIR/intermediate\nopeng.output-dir = $GRAPHMAT_DIR/output\n$platform.num-threads = $NUM_THREADS\n$platform.command.convert = %%s %%s\n$platform.command.run = env KMP_AFFINITY=scatter numactl -i all %%s %%s\n")
 	echo "$CONFIG" > config/$platform.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
-	# Still causing some issues. I suspect it's because of the file conversion...
 }
 
 # Downloads em all
@@ -431,10 +430,11 @@ run_benchmark()
 	mkdir -p "$BASE_DIR/experiments"
 	LOG_FILE="$BASE_DIR/experiments/${platform}-log.txt"
 	./run-benchmark.sh | tee "$LOG_FILE" # calls prepare-benchmark.sh
-	# Parse through logs and move the html outputs to a more convenient location
+	# Parse through logs and move the reports to a more convenient location
 	OUTPUT=$(dirname $(awk -F '"' '/Wrote benchmark report/{print $(NF-1)}' "$LOG_FILE"))
-	echo "$PKGDIR/$OUTPUT"
+	echo -e "Moving experiment and log files from\n$PKGDIR/$OUTPUT\nto\n$BASE_DIR/experiments"
 	mv "$PKGDIR/$OUTPUT" "$BASE_DIR/experiments"
+	mv "$LOG_FILE" "$BASE_DIR/experiments/$OUTPUT"
 }
 # For each platform repository package up an executable
 
@@ -447,8 +447,8 @@ install_graphalytics
 #download_datasets
 
 ### Run the GraphBIG OpenG benchmark
-install_OpenG
-run_benchmark
+#install_OpenG
+#run_benchmark
 
 ### Run the GraphX benchmark
 # DOES NOT CURRENTLY WORK
@@ -459,9 +459,9 @@ run_benchmark
 #run_benchmark
 
 ### Run the PowerGraph benchmark
-install_PowerGraph
-run_benchmark
+#install_PowerGraph
+#run_benchmark
 
 ### Run the GraphMat benchmark
-#install_GraphMat
-#run_benchmark
+install_GraphMat
+run_benchmark
