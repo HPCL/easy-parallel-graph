@@ -327,8 +327,10 @@ install_PowerGraph()
 		cd PowerGraph
 		./configure --no_jvm
 		# Make everything (May not need everything) using at most 16 processes.
-		cd release/toolkits # TODO: Determine what exactly needs to be made
+		cd release/toolkits/graph_analytics
 		local NP=$(if [ "$NUM_CORES" -lt 16 ]; then echo 8; else echo $NUM_CORES; fi)
+		make -j $NP
+		cd ../graph_algorithms
 		make -j $NP
 	else
 		echo "Found PowerGraph directory. I'm assuming you have everything built in there."
