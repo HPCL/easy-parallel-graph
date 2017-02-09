@@ -1,7 +1,7 @@
 # For the Mac only, comment out for other architectures
 #LATEXFLAGS = "-output-format=0"
 
-MAIN=gabb17-pollard
+MAIN=paper-pollard
 
 all: $(MAIN).pdf findref
 
@@ -12,7 +12,7 @@ $(MAIN).pdf: $(wildcard *.tex) $(wildcard *.bib) $(wildcard graphics/*.pdf) $(wi
 	pdflatex $(LATEXFLAGS) $(MAIN)
 
 clean:
-	$(RM) *.aux *.log $(MAIN).dvi $(MAIN).ps $(MAIN).pdf $(MAIN).bbl $(MAIN).blg
+	$(RM) *.aux *.log $(MAIN).dvi $(MAIN).ps $(MAIN).pdf $(MAIN).bbl $(MAIN).blg $(MAIN).synctex.gz
 
 findref:
 	@echo
@@ -28,3 +28,4 @@ findref:
                done
 
 .PHONY: clean
+

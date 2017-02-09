@@ -1,7 +1,8 @@
-\documentclass[conference]{IEEEtran}
+\documentclass{llncs}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{hyperref}
+\usepackage{cite} % Multiple citations in one \cite command
 \usepackage{pgfplotstable}
 \usepackage{array} % Required for pgfplotstable dec sep align
 \pgfplotsset{compat=1.12}
@@ -10,30 +11,19 @@
 \usepackage{enumitem}
 \setlist{parsep=0pt, listparindent=0.5cm}
 
-\title{A Comparison of Parallel Graph Processing Benchmarks}
-\author{
-	\IEEEauthorblockN{Sam D. Pollard}
-	\IEEEauthorblockA{Department of Computer and Information Science \\
-		University of Oregon \\
-		Eugene, OR, USA \\
-		Email: spollard@cs.uoregon.edu
-	}
-	\and
-	\IEEEauthorblockN{Boyana Norris}
-	\IEEEauthorblockA{Department of Computer and Information Science \\
-	University of Oregon \\
-	Eugene, OR, USA \\
-	Email: norris@cs.uoregon.edu
-	}
-}
-
 \begin{document}
+\title{A Comparison of Parallel Graph Processing Benchmarks}
+\author{Samuel D. Pollard \and Boyana Norris}
+\institute{University of Oregon \\
+	Eugene OR 97403, USA \\
+	\email{\{spollard,norris\}@cs.uoregon.edu}
+}
 \maketitle
 \begin{abstract}
-There are an intimidating number of parallel graph processing systems. One survey in 2014 identified over 80. Since then, the landscape has changed; some packages have become inactive, even more projects have been introducted, and the previous top performers are being usurped. To address the high churn of projects and the complexity of selecting a system for a given problem, we analyze the performance and scalability of four parallel open source graph processing systems (GraphMat, GAP Benchmark Suite, GraphBIG, and PowerGraph) using synthetic and real-world datasets. We perform analysis for three algorithms: breadth first search, single source shortest paths, and PageRank. We compare our results to largest parallel graph processing performance and benchmarking project: Graphalytics. This paper examines previously overlooked aspects of parallel graph processing performance such as energy usage in addition to a detailed performance analysis modeled after the Graph500 that takes into consideration multiple runs and the phases of computation that graph programs typically undergo.
+There are an intimidating number of parallel graph processing systems. One survey in 2014 identified over 80. Since then, the landscape has changed; some packages have become inactive, even more have been introduced, and previous top performers have been usurped. To address the high churn of projects and the complexity of selecting a system for a given problem, we analyze the performance and scalability of four parallel open source graph processing systems (GraphMat, GAP Benchmark Suite, GraphBIG, and PowerGraph) using synthetic and real-world datasets. We perform analysis for three algorithms: breadth first search, single source shortest paths, and PageRank. We then compare our results to the most comprehensive parallel graph processing performance and benchmarking project: Graphalytics. We examine previously overlooked aspects of parallel graph processing performance such as energy usage in addition to a performance analysis model based on the Graph500.
 \end{abstract}
 
-\section{Introduction}
+\section{Introduction and Related Work}
 
 Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}. The systems described operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
 
@@ -43,7 +33,7 @@ In addition to libraries with associated APIs there has also been a propagation 
 
 Another issue among parallel graph processing systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Beyond this, there are optimizations for each system which are not exploited in a na\"ive implementation. Addressing these issues helps provide an environment in which no graph processing system has an advantage.
 
-Graphalytics \cite{Capota:2015:Graphalytics} also attempts to remedy these problems. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must provide Java methods to call the particular implementations and initialization shell scripts to satisfy dependencies and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
+Graphalytics \cite{Capota:2015:Graphalytics} also attempts to remedy these problems. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
 
 The complexity of Graphalytics obfuscates the true behavior of the algorithm. We use GraphMat, the single source shortest paths algorithm, the dota-league dataset, and the default settings as an example here. By default, Graphalytics generates an HTML report giving the runtimes for each dataset in seconds. Two separate runs for a single dataset, all else being equal, gave 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.6 seconds, 0.19 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures.
 
@@ -57,7 +47,7 @@ To showcase our methods we analyze the performance of several graph processing b
 
 \subsection{Graph Processing Systems}
 
-This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the fourth is included because it has been cited as highly performant \cite{Sundaram:2015:GraphMat}. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations for all algorithms. The systems are:
+This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the fourth is included because it has been cited as highly performant \cite{Sundaram:2015:GraphMat}. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations. The systems are:
 
 \begin{enumerate}
 	\item The Graph500\footnote{We used the most recent version from \url{https://github.com/graph500/graph500}, most similar to release 2.1.4.} \cite{Murphy:2010:Graph500}
@@ -173,40 +163,35 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{graphics/bfs_time.pdf}
-	\vspace{-18pt}
+	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
 	\caption{The $y$-axis is logarithmic.}
 	\label{fig:bfs-time}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{graphics/bfs_dsc.pdf}
-	\vspace{-18pt}
+	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
 	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
 	\label{fig:bfs-dsc}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{graphics/sssp_time.pdf}
-	\vspace{-18pt}
+	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_time.pdf}
 	\caption{The $y$-axis is logarithmic.}
 	\label{fig:sssp-time}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{graphics/pr_time.pdf}
-	\vspace{-18pt}
+	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
 	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point]}
 	\label{fig:pr-time}
 \end{figure}
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{graphics/pr_iters.pdf}
-	\vspace{-18pt}
+	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
 	\caption{The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change.}
 	\label{fig:pr-iters}
 \end{figure}
@@ -216,8 +201,7 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{graphics/bfs_ss.pdf}
-	\vspace{-18pt}
+	\includegraphics[width=0.8\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ss.pdf}
 	\caption{Strong Scaling for $2^{20}$ vertices and an average of 16 edges per vertex.}
 	\label{fig:bfs-ss}
 \end{figure}
@@ -225,7 +209,7 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 \begin{figure}
 	\centering
 	% trim left bottom right top
-	\includegraphics[width=\columnwidth, trim=0 18pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
+	\includegraphics[width=\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
 	\caption{Speedup.}
 	\label{fig:bfs-speedup}
 \end{figure}
@@ -271,7 +255,6 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 
 \section{Conclusion} % Begin with the end in mind...
 
-
-\bibliographystyle{IEEEtranS}
+\bibliographystyle{splncs03}
 \bibliography{../drp}
 \end{document}
