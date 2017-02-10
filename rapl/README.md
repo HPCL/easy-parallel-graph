@@ -1,5 +1,5 @@
 # Using RAPL
-You must modify your Makefile to get power monitoring. An example is shown below and consists of building the object file, then linking it in to your main executable.
+You must modify your Makefile to get power monitoring. An example is shown below and consists of building the object file, then linking it in to your main executable. You must have PAPI installed and set the ```PAPI_HOME```  variable accordingly.
 
 The executable must be run as root.
 
@@ -16,7 +16,7 @@ profiled_target: power_rapl.o
 	$(CC) $(CFLAGS) -o profiled_target <other objects> power_rapl.o $(LDLIBS)
 ```
 
-Then put something like this inside your source code
+Then put something like this inside your source code. This will work with C or C++.
 ```
 #ifdef POWER_PROFILING
 #include "power_rapl.h"
