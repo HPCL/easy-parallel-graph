@@ -23,17 +23,33 @@
 The increasing popularity of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems (one survey in 2014 identified over 80). Since then, the landscape has evolved---some packages have become inactive while others are being added. The challenge of trying to determine the best approach for a given problem is infeasible for most developers. To enable \emph{easy}, \emph{rigorous} and \emph{repeatable} comparison of parallel graph software capabilities, we have developed an approach and associated software for analyzing the performance and scalability of parallel open source graph processing systems.  We demonstrate our approach on four graph frameworks: GraphMat, GAP Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world datasets. We analyze three algorithms: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics. We examine previously overlooked aspects of parallel graph processing performance such as energy usage.
 \end{abstract}
 
-\section{Introduction and Related Work}
+\section{Introduction}
 
-Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}. The systems described operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
-
-Beyond the systems described by Doekemeijer and Varbanescu, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon}, \cite{Perez:2015:Ringo}, distributed memory approaches such as \cite{Hong:2015:PGX}. domain-specific languages \cite{Hong:2012:GreenMarl}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, as well as novel communication schemes \cite{Edmonds:2013:ActiveMessages}. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' daunting.
-
-In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
+%% What's the problem (motivation)
 
 Another issue among parallel graph processing systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Beyond this, there are optimizations for each system which are not exploited in a na\"ive implementation. Addressing these issues helps provide an environment in which no graph processing system has an advantage.
 
-Graphalytics \cite{Capota:2015:Graphalytics} also attempts to remedy these problems. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
+
+%% How do we address it?
+
+
+Our contributions can be summarized as follows.
+\begin{itemize}
+\item
+\item
+\item
+\end{itemize}
+
+\section{Related Work}
+
+Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}. The systems described operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
+
+Beyond the systems described by Doekemeijer and Varbanescu, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon,Perez:2015:Ringo}, distributed memory approaches such as \cite{Hong:2015:PGX}. domain-specific languages \cite{Hong:2012:GreenMarl}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, as well as novel communication schemes \cite{Edmonds:2013:ActiveMessages}. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' daunting.
+
+In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
+
+
+Graphalytics \cite{Capota:2015:Graphalytics} attempts to automate the setup and execution of packages in order to compare performance. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
 
 The complexity of Graphalytics obfuscates the true behavior of the algorithm. We use GraphMat, the single source shortest paths algorithm, the dota-league dataset, and the default settings as an example here. By default, Graphalytics generates an HTML report giving the runtimes for each dataset in seconds. Two separate runs for a single dataset, all else being equal, gave 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.6 seconds, 0.19 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures.
 
