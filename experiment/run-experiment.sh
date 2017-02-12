@@ -1,12 +1,13 @@
 #!/bin/bash
 # Runs all the experiments for a given scale and thread count.
-# NOTE: Must have called gen-datasets with the scale beforehand.
-# Current algorithms: Breadth First Search, Single Source Shortest Paths
-# Current platforms: GraphBIG, Graph500, GAP, GraphMat
-# This can be run with either 
-# ./run-experiment
-# or
-# qsub run-experiment.sh
+# NOTE: Must have called gen-datasets with same <scale> beforehand.
+# Current algorithms:
+#   Breadth First Search, Single Source Shortest Paths, PageRank
+# Current platforms:
+#   GraphBIG, Graph500, GAP, GraphMat, PowerGraph (SSSP & PR only)
+# Recommended usage for bash
+#   ./run-experiment $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
+#   disown %<jobnum> # This can be found out using jobs
 USAGE="usage: run-experiment <scale> <num-threads>" # 2^{<scale>} = Number of vertices.
 
 # Say where the packages are located
@@ -87,6 +88,8 @@ module load intel/17
 #PBS -e /home8/spollard/compare/graph_exeriments.err
 # Other options: -M email, -m when to send email- abe, -X X11 forwarding
 
+echo Starting experiment at $(date)
+
 # Run the Graph500 BFS: OpenMP
 # This isn't working, so just regenerate the data
 #omp-csr/omp-csr -s $S -o "$DDIR/kron-${S}.graph500" -r "$DDIR/kron-${S}.roots"
@@ -142,15 +145,15 @@ for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/kron-${S}.el" --format tsv --source $ROOT
 done
 
+# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 # Run GAP PageRank
 # error = sum(|newPR - oldPR|)
-# Note: ROOT is a dummy variable for pagerank; we just ensure the same trials are computed.
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
 	"$GAPDIR"/pr -f "$DDIR/kron-${S}.el" -i $MAXITER -t $TOL -n 1
 done
 
 # Run GraphBIG PageRank
-# GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
+# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
 	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-${S}" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS
@@ -161,5 +164,10 @@ done
 # GraphMat has been modified so alpha = 0.15
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-${S}.graphmat"
+done
+
+# Run PowerGraph PageRank
+for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-${S}.el" --tol "$TOL" --format tsv
 done
 
