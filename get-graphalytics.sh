@@ -305,7 +305,8 @@ install_PowerGraph()
 	cd $BASE_DIR
 	platform=powergraph
 	echo "Checking dependencies..."
-	export LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/
+	# Currently does not work quite right with jvm (jvm required for HDFS)
+	# export LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/
 	# For libhdfs, you need to change graphalytics-0.3-powergraph0.1/bin/standard/CMakeFile/main.dir/link.txt to have -lhdfs
 	# There are a few dependencies to be satisfied since you're not running inside PowerGraph/apps
 	# XXX Seems to work fine for this.
@@ -321,8 +322,6 @@ install_PowerGraph()
 	# fi
 	echo "Installing PowerGraph..."
 	if [ ! $(find "$BASE_DIR" -type d -name PowerGraph) ]; then
-		# git clone https://github.com/jegonzal/PowerGraph.git
-		# XXX: Temporarily use my repository until the changes are merged
 		git clone https://github.com/sampollard/PowerGraph.git
 		cd PowerGraph
 		./configure --no_jvm
@@ -449,8 +448,8 @@ install_graphalytics
 #download_datasets
 
 ### Run the GraphBIG OpenG benchmark
-#install_OpenG
-#run_benchmark
+install_OpenG
+run_benchmark
 
 ### Run the GraphX benchmark
 # DOES NOT CURRENTLY WORK
@@ -461,8 +460,8 @@ install_graphalytics
 #run_benchmark
 
 ### Run the PowerGraph benchmark
-#install_PowerGraph
-#run_benchmark
+install_PowerGraph
+run_benchmark
 
 ### Run the GraphMat benchmark
 install_GraphMat

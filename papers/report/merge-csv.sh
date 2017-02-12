@@ -30,7 +30,7 @@ for f in *-runtime.csv; do
  		cat "$f" | sed "s/$dataset1/$experiment1/" > $outfile
  	else
  		experimentn=${f%-runtime.csv}
-		cat "$f" | cut -d ',' -f 2- | sed "s/$dataset1/$experimentn/" | paste -d, runtime.csv - | tee "$outfile"
+		cat "$f" | cut -d ',' -f 2- | sed "s/$dataset1/$experimentn/" | paste -d, runtime.csv	- | tee "$outfile"
  	fi
 done
 echo "to $outfile using dataset $dataset1"
