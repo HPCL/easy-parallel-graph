@@ -120,12 +120,12 @@ void power_rapl_print(power_rapl_t* ps) {
     for(i = 0; i < ps->num_events; i++) {
         if (strncmp(ps->events[i], "rapl:::PACKAGE_ENERGY:PACKAGE", 29) == 0) {
             printf("%.4f s %.4f (* Total Energy for %s *)\n",
-                    ps->total_time,
+                    ps->elapsed_time,
                     ((double)ps->values[i]/1.0e9),
                     ps->events[i]);
         }
         printf("%.4f s %.4f (* Average Power for %s *)\n",
-                ps->total_time,
+                ps->elapsed_time,
                 ((double)ps->values[i]/1.0e9)/(double)ps->elapsed_time,
                 ps->events[i]);
     }

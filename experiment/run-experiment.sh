@@ -1,5 +1,6 @@
 #!/bin/bash
-# Runs all the experiments
+# Runs all the experiments for a given scale and thread count.
+# NOTE: Must have called gen-datasets with the scale beforehand.
 # Current algorithms: Breadth First Search, Single Source Shortest Paths
 # Current platforms: GraphBIG, Graph500, GAP, GraphMat
 # This can be run with either 
@@ -60,7 +61,7 @@ module load intel/17
 # Graph500:
 # 	git clone https://github.com/sampollard/graph500.git
 #   cd graph500; make
-# PowerGraph: (not ready yet)
+# PowerGraph:
 #	# NOTE: Shared memory only!
 # 	NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
 # 	if [ "$NUM_CORES" -gt 64 ]; then
@@ -70,7 +71,7 @@ module load intel/17
 # 	fi
 # 	git clone https://github.com/sampollard/PowerGraph
 # 	cd PowerGraph
-# 	./configure --no_mpi
+# 	./configure --no_jvm
 #   cd release/toolkits/graph_analytics
 #   make -j4
 # PBGL: (not used here)
