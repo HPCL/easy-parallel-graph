@@ -27,55 +27,85 @@ The increasing popularity of large network analysis problems has led to the emer
 \section{Introduction}
 
 %% What's the problem (motivation)
+Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without even including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}.
 
-Another issue among parallel graph processing systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Beyond this, there are optimizations for each system which are not exploited in a na\"ive implementation. Addressing these issues helps provide an environment in which no graph processing system has an advantage.
+An issue among these systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Additionally, some systems are developed with large, multi-node clusters in mind while others only work with shared memory, single node computers. An example of the former is GraphX \cite{Xin:2013:GraphX}, which incurs some overhead while gaining fault tolerance and an example of the latter is Ligra \cite{Shun:2013:Ligra}, a framework requiring a shared-memory architecture.
+% ``The project was motivated by the fact that the largest publicly available real-world graphs all fit in shared memory''
 
+At the human level, there are optimizations for each system which may not be apparent. For example, the Parallel Boost Graph Library (PBGL) \cite{Gregor:2005:PBGL} provides generic implementations of their algorithms and the programmer must provide the template specializations. The optimal data structures may differ across algorithms and graphs and must be determined by the programmer.
 
 %% How do we address it?
+To mitigate the inherent bias in hand-generated implementations, all the experiments performed use the author-provided implementations; we assume the developers of each system will provide the most performant implementation. While this limits the scope of the experiments it mitigates the bias inherent in our programming skills.
 
+%To address the challenges of getting various systems installed, we automate the process as much as possible n
+%To showcase our methods we analyze the performance of several graph processing benchmarks to facilitate the selection among such systems. Our analysis is done with minimal source code modification.
 
 Our contributions can be summarized as follows.
 \begin{itemize}
-\item
-\item
-\item
+	\item Automation of the installation, configuration, and dataset conversion to ensure the experiments execute in the same manner. Essentially, we provide a ``level playing field'' for graph algorithms.
+	\item Comparison of algorithm runtime and scalability using a variety of data sets
+	\item Comparison of our framework with the Graphalytics \cite{Capota:2015:Graphalytics} project
+	\item Inspection of the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms
+	\item Provision of a experimental framework distinguishing between the data structure generation and algorithm execution phases of each system
+	\item Analysis of energy consumption during the algorithm execution phase
 \end{itemize}
 
 \section{Related Work}
+A related performance analysis project is Graphalytics \cite{Capota:2015:Graphalytics} which also attempts to automate the setup and execution of packages for performance analysis. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set the correct shell commands to execute. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
 
-Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}. The systems described operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
+The complexity of Graphalytics obfuscates the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, data such as the number of iterations run for PageRank is not easily available using Graphalytics.
+% We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
+% The full logs:
+%Finished setting ids, time: 0.157009
+%Starting sort
+%Finished sort, time: 1.39571
+%Finished setting edge pointers, time: 0.000133
+%Starting build_dcsc
+%Finished build_dcsc, time: 0.235948
+%Finished setting ids, time: 0.154693
+%Starting sort
+%Finished sort, time: 1.75676
+%Finished setting edge pointers, time: 0.000142
+%Starting build_dcsc
+%Finished build_dcsc, time: 0.238386
+%Completed reading A from memory in 4.089144 seconds.
+%Completed reading A from file in 5.114708 seconds
+%Completed 19 iterations
+%Timing results:
+%- load graph: 5.11472 sec
+%- initialize engine: 2.88486e-05 sec
+%- run algorithm: 0.212451 sec
+%- print output: 0.0799532 sec
+%- deinitialize engine: 2.88486e-05 sec
+%17:29:05.575 [INFO ] Benchmarking algorithm "Single source shortest paths" on graph "dota-league" took 5955 ms.
 
-Beyond the systems described by Doekemeijer and Varbanescu, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon,Perez:2015:Ringo}, distributed memory approaches such as \cite{Hong:2015:PGX}. domain-specific languages \cite{Hong:2012:GreenMarl}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, as well as novel communication schemes \cite{Edmonds:2013:ActiveMessages}. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' daunting.
+With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. The requires in-depth knowledge of the source code and execution model which is not always available. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
 
-In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
+As with Graphalytics, the initial development effort is high but Granula paired with graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis without requiring a performance and execution model for each system.
 
+% The systems described in \cite{Doekemeijer:2015:GPFSurvey} operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
 
-Graphalytics \cite{Capota:2015:Graphalytics} attempts to automate the setup and execution of packages in order to compare performance. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set environment variables. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
+% Beyond the systems described by Doekemeijer and Varbanescu, the problem has compounded with the addition of even more proprietary and open source projects such as \cite{Cheramangalath:2015:Falcon, Perez:2015:Ringo}, distributed memory approaches such as \cite{Hong:2015:PGX}. domain-specific languages \cite{Hong:2012:GreenMarl}, distributed database querying, \cite{Rodriguez:2015:Gremlin}, as well as novel communication schemes \cite{Edmonds:2013:ActiveMessages}. At the outset, this plethora of choices makes the question, ``which system is the best for my problem?'' daunting.
 
-The complexity of Graphalytics obfuscates the true behavior of the algorithm. We use GraphMat, the single source shortest paths algorithm, the dota-league dataset, and the default settings as an example here. By default, Graphalytics generates an HTML report giving the runtimes for each dataset in seconds. Two separate runs for a single dataset, all else being equal, gave 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.6 seconds, 0.19 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures.
-
-With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. The requires in-depth knowledge of the source code and execution model which is not always available. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula.
-
-As with Graphalytics, the initial development effort is high but Granula paired with graphalytics allows automatic execution and compilation of performance results\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}. Likewise, our approach provides automatic execution and performance analysis without requiring a performance and execution model for each system.
-
-To showcase our methods we analyze the performance of several graph processing benchmarks to facilitate the selection among such systems. Our analysis is done with minimal source code modification.
+% In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
 
 \section{Experimental Setup}
 
 \subsection{Graph Processing Systems}
 
-This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the fourth is included because it has been cited as highly performant \cite{Sundaram:2015:GraphMat}. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations. The systems are:
+This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the remaining two are included because of their performance and popularity. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations. The systems are:
 
 \begin{enumerate}
 	\item The Graph500\footnote{We used the most recent version from \url{https://github.com/graph500/graph500}, most similar to release 2.1.4.} \cite{Murphy:2010:Graph500}
 	\item The Graph Algorithm Platform (GAP) Benchmark Suite \cite{Beamer:2015:GAPBench}
 	\item GraphBIG \cite{Nai:2015:Graphbig}
 	\item GraphMat \cite{Sundaram:2015:GraphMat}
+	\item PowerGraph \cite{Gonzalez:2012:Powergraph}
 \end{enumerate}
 
 \subsection{Algorithms}
 
-We consider three algorithms:
+We consider three algorithms, but not all algorithms are available on all systems.
 
 \begin{enumerate}
 	\item Breadth First Search (BFS)
@@ -83,16 +113,16 @@ We consider three algorithms:
 	\item PageRank
 \end{enumerate}
 
-The canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm: breadth first search.
+The canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm: BFS.
 
-This report aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots.
+Our work aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots.
 
 One straightforward extension to BFS and our second algorithm is the Single-Source Shortest Paths algorithm (SSSP). We use the same graph and the same source vertices as in BFS.
 
-The third algorithm is PageRank. These three algorithms are used because of their popularity; most libraries provide reference implementations. All the experiments performed use the developer-provided implementations because we assume the vendor will provide a more performant implementation than us. While this limits the scope of the experiments it mitigates the bias inherent in any developer's programming skills.
+The third algorithm is PageRank. These three algorithms are used because of their popularity; most libraries provide reference implementations.
 
 \subsection{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the research machine. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.
+Table~\ref{tab:specs} shows the specifications of the research computer.
 
 \begin{table}
 	\centering
@@ -107,7 +137,7 @@ Table~\ref{tab:specs} shows the specifications of the research machine. The disp
 	columns/1/.style={column type={l|}},
 	every last row/.style={after row=\toprule},
 	]{../report/specs.csv}
-	\caption{The operating system is GNU/Linux version 4.4.0-22.}
+	\caption{The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.}
 	\label{tab:specs}
 \end{table}
 
@@ -123,26 +153,9 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 
 In Table~\ref{tab:graphalytics} we show the results from running Graphalytics. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}.
 
-From this we get only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture.
+From this we get only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture. It is difficult to make any claims about GraphMat from Graphalytics because of its lack of algorithm diversity.
 
-[How to make this a paper worth submitting: add in PowerGraph as a platform and see how it fares using our method compared to Graphalytics. Also run this on different datasets and compare results.]
-
-%\begin{table}[htb]
-%	\centering
-%	\begin{tabular}{l|c|c|c}
-%		& BFS & SSSP & PR \\ \hline
-%		Graph500 & & & \\ \hline
-%		PBGL  & & & \\ \hline
-%		GAP  & & & \\ \hline
-%		GraphBIG  & & & \\ \hline
-%		Galois  & & & \\ \hline
-%		PowerGraph  & & &
-%	\end{tabular}
-%	\caption{Performance. Note that implementations of every algorithm are not availabe for every platform.}
-%	\label{tab:reportcard}
-%\end{table}
-
-%Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
+%Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while BFS traverses each edge exactly once, and the number of edges traversed with PageRank depends on the connectivity of the graph and the number of iterations.
 
 \begin{table}
 	\centering
