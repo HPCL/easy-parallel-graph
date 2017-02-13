@@ -58,6 +58,7 @@ boxplot(Time~Sys, pr_time, ylab = "Time (seconds)",
 dev.off()
 
 pdf("graphics/pr_iters.pdf", width = 4.5, height = 4.5)
+# Could be done with aggregate instead
 pr_mean_iters <- c(
 		mean(pr_iters$Time[pr_iters$Sys == "GraphBIG"]),
 		mean(pr_iters$Time[pr_iters$Sys == "GraphMat"]),
@@ -132,6 +133,81 @@ axis(1, at = seq(length(threadcnts)), labels = threadcnts)
 legend(legend = c(rownames(bfs_spd), "Ideal"), x = "topleft",
 		col = c(colors,"#000000FF"), lwd = c(rep(3,length(systems)),1),
 		lty = c(1:length(systems), 1), pch = c(1:length(systems), NA_integer_))
+dev.off()
+
+###
+# Part 3: Power
+###
+# Just BFS for now... :(
+# Read in the data
+GRAPH500NRT <- 64 # Even though everyone else does 32.
+scale <- 16
+filename <- paste0("parsed",scale,"-32-power.csv")
+x <- read.csv(filename, header = FALSE)
+colnames(x) <- c("Sys","Algo","Metric","Value")
+bfs_cpu_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average CPU Power (W)",
+		c("Sys","Value"))
+bfs_cpu_nrg <- subset(x, x$Algo == "BFS" & x$Metric == "Total CPU Energy (J)",
+		c("Sys","Value"))
+cpu_pwr_sleep <- subset(x,
+		x$Sys == "Baseline" & x$Metric == "Average CPU Power (W)",
+		c("Sys","Value"))
+ram_pwr_sleep <- subset(x,
+		x$Sys == "Baseline" & x$Metric == "Average DRAM Power (W)",
+		c("Sys","Value"))
+bfs_cpu_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
+bfs_cpu_nrg$Sys <- factor(bfs_cpu_nrg$Sys)
+
+bfs_systems <- unique(bfs_cpu_nrg$Sys)
+bfs_cpu_nrg_per_root <- numeric(length(bfs_systems))
+for (si in seq(length(bfs_systems))) {
+	sys <- as.character(unique(bfs_cpu_nrg$Sys)[si])
+	one_sys <- subset(x,
+			x$Algo=="BFS" & x$Metric=="Total CPU Energy (J)" & x$Sys==sys,
+			Value)
+	if (sys == "Graph500") {
+		bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value) / GRAPH500NRT
+	} else {
+		bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value)
+	}
+}
+
+bfs_ram_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average DRAM Power (W)",
+		c("Sys","Value"))
+bfs_ram_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
+
+# Make some plots
+pdf("graphics/bfs_cpu_power.pdf", width = 4.5, height = 4.5)
+boxplot(Value~Sys, bfs_cpu_pwr, ylab = "Average Power (Watts)",
+		col="yellow")
+title(main = "CPU Average Power Consumption During BFS")
+mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+dev.off()
+
+pdf("graphics/bfs_cpu_energy.pdf", width = 4.5, height = 4.5)
+# TODO: Something that would be nice to have:
+# For each barplot, an overlaid line or another box which
+# indicates the part that would have been used anyway if the system were
+# sleeping. To get this, we must multiply time * sleep watts
+# Maybe we could do mean(bfs_cpu_pwr) (as long as it was /64 for Graph500)
+# then divide the energy per root by this to get the time, then multiply
+# that by the wattage of sleeping.
+barplot(bfs_cpu_nrg_per_root, ylab = "Energy (Joules)",
+		col=c("gold","magenta","cyan"),
+		names.arg = bfs_systems)
+title(main = "BFS CPU Energy Usage Per Root")
+mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+dev.off()
+
+# par(xpd = TRUE) and change inset if you want the legend to be outside the box
+pdf("graphics/bfs_ram_power.pdf", width = 4.5, height = 4.5)
+boxplot(Value~Sys, bfs_ram_pwr, ylab = "Average Power (Watts)",
+		col="yellow")
+title(main = "RAM Power Consumption During BFS",
+		sub = paste0("Scale = ",scale)) # May want to remove subtitle later
+abline(mean(ram_pwr_sleep$Value), 0, col = "orangered", lwd = 2)
+legend(legend = c("sleep(10)"), x = "bottomright", inset = c(0,0),
+		lty = c(1), lwd = 2, col = "orangered")
 dev.off()
 
 # Try out a violin plot too!

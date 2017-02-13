@@ -16,7 +16,8 @@
 \author{Samuel D. Pollard \and Boyana Norris}
 \institute{University of Oregon \\
 	Eugene OR 97403, USA \\
-	\email{\{spollard,norris\}@cs.uoregon.edu}
+	\email{spollard@cs.uoregon.edu} \\
+	\email{norris@cs.uoregon.edu}
 }
 \maketitle
 \begin{abstract}
@@ -144,22 +145,26 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 %Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while breadth first search (BFS) traverses each edge exactly once, and on na\:ive implementations single-source shortest paths (SSSP) may have $O(|E| + |V|^2)$ traversed edges.
 
 \begin{table}
-%	\begin{tabular}{l|r|r|}
-%	 & PowerGraph & OpenG \\ \hline
-%	BFS & 81.8 & 341 \\ \hline
-%	SSSP & 1.64 & 15.0 \\ \hline
-%	LCC & 54.6 & 142 \\ \hline
-%	\end{tabular}
-		\centering
-		\pgfplotstabletypeset[
-			col sep=comma,
-			columns={[index]0,GraphBIG,PowerGraph},
-			every head row/.style={after row=\midrule},
-			columns/0/.style={string type, column type={l|}, column name={}},
-			columns/openg/.style={dec sep align},
-			columns/powergraph/.style={dec sep align}
-		]{../report/runtime.csv}
-	\caption{Performance results are in milliseconds. LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components}
+	\centering
+	\pgfplotstabletypeset[
+		col sep=comma,
+		columns={[index]0,graphmat,openg,powergraph},
+		every head row/.style={after row=\midrule},
+		columns/0/.style={string type, column type={l|}, column name={}},
+		columns/graphmat/.style={
+			column name={GraphMat},
+			string replace={0}{},
+			dec sep align,
+			empty cells with={N/A}
+		},
+		columns/openg/.style={
+		column name={GraphBIG},
+			dec sep align},
+			columns/powergraph/.style={
+			column name={PowerGraph},
+			dec sep align}
+	]{../report/runtime.csv}
+	\caption{Performance results are in milliseconds. LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components. At the time of this writing, Graphalytics only supports SSSP for GraphMat.}
 	\label{tab:graphalytics}
 \end{table}
 
