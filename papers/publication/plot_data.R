@@ -35,11 +35,13 @@ pr_dsc$Sys <- factor(pr_dsc$Sys)
 pdf("graphics/bfs_time.pdf", width = 5.2, height = 5.2)
 boxplot(Time~Sys, bfs_time, ylab = "Time (seconds)",
 		main = "BFS Time", log = "y", col=bpc)
+mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
 dev.off()
 
-pdf("graphics/bfs_dsc.pdf", width = 4.5, height = 4.5)
+pdf("graphics/bfs_dsc.pdf", width = 5.2, height = 5.2)
 boxplot(Time~Sys, bfs_dsc, ylab = "Time (seconds)",
 		main = "BFS Data Structure Construction", col=bpc, log = "y")
+mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
 dev.off()
 
 pdf("graphics/sssp_time.pdf", width = 4.5, height = 4.5)
@@ -55,17 +57,18 @@ dev.off()
 pdf("graphics/pr_time.pdf", width = 4.5, height = 4.5)
 boxplot(Time~Sys, pr_time, ylab = "Time (seconds)",
 		main = "PageRank Time", log = "y", col=bpc)
+mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
 dev.off()
 
 pdf("graphics/pr_iters.pdf", width = 4.5, height = 4.5)
 # Could be done with aggregate instead
 pr_mean_iters <- c(
+		mean(pr_iters$Time[pr_iters$Sys == "GAP"]),
 		mean(pr_iters$Time[pr_iters$Sys == "GraphBIG"]),
-		mean(pr_iters$Time[pr_iters$Sys == "GraphMat"]),
-		mean(pr_iters$Time[pr_iters$Sys == "GAP"]))
+		mean(pr_iters$Time[pr_iters$Sys == "GraphMat"]))
 barplot(pr_mean_iters, ylab = "Time (second)",
 		main = "PageRank Iterations", col=c("green","orange","cyan"),
-		names.arg = unique(pr_iters$Sys))
+		names.arg = c("GAP","GraphBIG","GraphMat"))
 dev.off()
 
 ###
@@ -141,7 +144,7 @@ dev.off()
 # Just BFS for now... :(
 # Read in the data
 GRAPH500NRT <- 64 # Even though everyone else does 32.
-scale <- 16
+scale <- 22
 filename <- paste0("parsed",scale,"-32-power.csv")
 x <- read.csv(filename, header = FALSE)
 colnames(x) <- c("Sys","Algo","Metric","Value")
@@ -160,15 +163,23 @@ bfs_cpu_nrg$Sys <- factor(bfs_cpu_nrg$Sys)
 
 bfs_systems <- unique(bfs_cpu_nrg$Sys)
 bfs_cpu_nrg_per_root <- numeric(length(bfs_systems))
+sleep_nrg_per_root <- numeric(length(bfs_systems))
 for (si in seq(length(bfs_systems))) {
 	sys <- as.character(unique(bfs_cpu_nrg$Sys)[si])
 	one_sys <- subset(x,
 			x$Algo=="BFS" & x$Metric=="Total CPU Energy (J)" & x$Sys==sys,
 			Value)
+	sys_time <- subset(x,
+			x$Algo=="BFS" & x$Metric=="RAPL Time (s)" & x$Sys == sys,
+			Value)
 	if (sys == "Graph500") {
 		bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value) / GRAPH500NRT
+		sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) *
+				mean(sys_time$Value) / GRAPH500NRT
 	} else {
 		bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value)
+		sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) *
+				mean(sys_time$Value)
 	}
 }
 
@@ -184,19 +195,19 @@ title(main = "CPU Average Power Consumption During BFS")
 mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
 dev.off()
 
+# We hope that sleeping uses less energy than running the BFS...
+stopifnot(all(sleep_nrg_per_root < bfs_cpu_nrg_per_root))
 pdf("graphics/bfs_cpu_energy.pdf", width = 4.5, height = 4.5)
-# TODO: Something that would be nice to have:
-# For each barplot, an overlaid line or another box which
-# indicates the part that would have been used anyway if the system were
-# sleeping. To get this, we must multiply time * sleep watts
-# Maybe we could do mean(bfs_cpu_pwr) (as long as it was /64 for Graph500)
-# then divide the energy per root by this to get the time, then multiply
-# that by the wattage of sleeping.
-barplot(bfs_cpu_nrg_per_root, ylab = "Energy (Joules)",
-		col=c("gold","magenta","cyan"),
+bfs_cpu_nrg_mat <- matrix(
+		c(sleep_nrg_per_root, bfs_cpu_nrg_per_root), # -sleep_nrg_per_root),
+		nrow = 2, ncol = length(bfs_systems), byrow = TRUE)
+barplot(bfs_cpu_nrg_mat, ylab = "Energy (Joules)", beside = TRUE, log = "y",
+		col=c("orangered3","gold"),
 		names.arg = bfs_systems)
 title(main = "BFS CPU Energy Usage Per Root")
 mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+legend(legend = c("BFS Energy", "Sleeping Energy"), x = "topleft",
+		fill = c("gold","orangered3"))
 dev.off()
 
 # par(xpd = TRUE) and change inset if you want the legend to be outside the box

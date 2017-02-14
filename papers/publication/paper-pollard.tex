@@ -29,7 +29,7 @@ The increasing popularity of large network analysis problems has led to the emer
 %% What's the problem (motivation)
 Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without even including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}.
 
-An issue among these systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Additionally, some systems are developed with large, multi-node clusters in mind while others only work with shared memory, single node computers. An example of the former is GraphX \cite{Xin:2013:GraphX}, which incurs some overhead while gaining fault tolerance and an example of the latter is Ligra \cite{Shun:2013:Ligra}, a framework requiring a shared-memory architecture.
+An overarching issue among these systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Additionally, some systems are developed with large, multi-node clusters in mind while others only work with shared memory, single node computers. An example of the former is GraphX \cite{Xin:2013:GraphX}, which incurs some overhead while gaining fault tolerance and an example of the latter is Ligra \cite{Shun:2013:Ligra}, a framework requiring a shared-memory architecture.
 % ``The project was motivated by the fact that the largest publicly available real-world graphs all fit in shared memory''
 
 At the human level, there are optimizations for each system which may not be apparent. For example, the Parallel Boost Graph Library (PBGL) \cite{Gregor:2005:PBGL} provides generic implementations of their algorithms and the programmer must provide the template specializations. The optimal data structures may differ across algorithms and graphs and must be determined by the programmer.
@@ -54,7 +54,7 @@ Our contributions can be summarized as follows.
 A related performance analysis project is Graphalytics \cite{Capota:2015:Graphalytics} which also attempts to automate the setup and execution of packages for performance analysis. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set the correct shell commands to execute. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API.
 
 The complexity of Graphalytics obfuscates the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, data such as the number of iterations run for PageRank is not easily available using Graphalytics.
-% We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
+%We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
 % The full logs:
 %Finished setting ids, time: 0.157009
 %Starting sort
@@ -148,9 +148,6 @@ The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the D
 
 \section{Performance Analysis}
 
-We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage.
-
-
 In Table~\ref{tab:graphalytics} we show the results from running Graphalytics. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}.
 
 From this we get only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture. It is difficult to make any claims about GraphMat from Graphalytics because of its lack of algorithm diversity.
@@ -181,8 +178,9 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 	\label{tab:graphalytics}
 \end{table}
 
+Table~\ref{tab:epg-perf}, we show the performance results of running graphalytics and our approach using the same, synthetic dataset. Now, our approach computes multiple runs whereas graphalytics only uses one root for BFS. This gives a better picture of algorithm reliability and is explained further.
 
-\begin{table}[!htb]
+\begin{table}
 	\centering
 	\begin{tabular}{l|c|c|c}
 		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
@@ -192,21 +190,21 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 		GraphBIG & 37.22  & N/A    & 0.1528 \\
 	\end{tabular}
 	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
-	\label{tab:fileload}
+	\label{tab:epg-perf}
 \end{table}
 
-\begin{figure}
-	\centering
-	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
-	\caption{The $y$-axis is logarithmic.}
-	\label{fig:bfs-time}
-\end{figure}
+We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
+	\end{minipage}
 	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
-	\label{fig:bfs-dsc}
+	\label{fig:bfs-time}
 \end{figure}
 
 \begin{figure}
@@ -218,18 +216,15 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
-	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point]}
-	\label{fig:pr-time}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
+	\end{minipage}
+	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. [Note that for figure Fig.\ref{fig:pr-iters}, mention time per iteration]}
+	\label{fig:pr}
 \end{figure}
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
-	\caption{The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change.}
-	\label{fig:pr-iters}
-\end{figure}
-[Note that for figure Fig.\ref{fig:pr-iters}, mention time per iteration]
 
 [Compare lines of code for implementation]
 
