@@ -35,23 +35,25 @@ pr_dsc$Sys <- factor(pr_dsc$Sys)
 pdf("graphics/bfs_time.pdf", width = 5.2, height = 5.2)
 boxplot(Time~Sys, bfs_time, ylab = "Time (seconds)",
 		main = "BFS Time", log = "y", col=bpc)
-mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
 pdf("graphics/bfs_dsc.pdf", width = 5.2, height = 5.2)
 boxplot(Time~Sys, bfs_dsc, ylab = "Time (seconds)",
 		main = "BFS Data Structure Construction", col=bpc, log = "y")
-mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
 pdf("graphics/sssp_time.pdf", width = 4.5, height = 4.5)
 boxplot(Time~Sys, sssp_time, ylab = "Time (seconds)",
 		main = "SSSP Time", log = "y", col=bpc)
+mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
 pdf("graphics/sssp_dsc.pdf", width = 4.5, height = 4.5)
 boxplot(Time~Sys, sssp_time, ylab = "Time (seconds)",
 		main = "SSSP Data Structure Construction", log = "y", col=bpc)
+mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
 pdf("graphics/pr_time.pdf", width = 4.5, height = 4.5)
@@ -164,23 +166,22 @@ bfs_cpu_nrg$Sys <- factor(bfs_cpu_nrg$Sys)
 bfs_systems <- unique(bfs_cpu_nrg$Sys)
 bfs_cpu_nrg_per_root <- numeric(length(bfs_systems))
 sleep_nrg_per_root <- numeric(length(bfs_systems))
+bfs_time_per_root <- numeric(length(bfs_systems))
 for (si in seq(length(bfs_systems))) {
 	sys <- as.character(unique(bfs_cpu_nrg$Sys)[si])
 	one_sys <- subset(x,
-			x$Algo=="BFS" & x$Metric=="Total CPU Energy (J)" & x$Sys==sys,
+			x$Algo=="BFS" & x$Metric=="Average CPU Power (W)" & x$Sys==sys,
 			Value)
 	sys_time <- subset(x,
 			x$Algo=="BFS" & x$Metric=="RAPL Time (s)" & x$Sys == sys,
 			Value)
 	if (sys == "Graph500") {
-		bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value) / GRAPH500NRT
-		sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) *
-				mean(sys_time$Value) / GRAPH500NRT
+		bfs_time_per_root[si] <- mean(sys_time$Value) / GRAPH500NRT
 	} else {
-		bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value)
-		sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) *
-				mean(sys_time$Value)
+		bfs_time_per_root[si] <- mean(sys_time$Value)
 	}
+	bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value) * bfs_time_per_root[si]
+	sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) * bfs_time_per_root[si]
 }
 
 bfs_ram_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average DRAM Power (W)",
@@ -197,18 +198,30 @@ dev.off()
 
 # We hope that sleeping uses less energy than running the BFS...
 stopifnot(all(sleep_nrg_per_root < bfs_cpu_nrg_per_root))
-pdf("graphics/bfs_cpu_energy.pdf", width = 4.5, height = 4.5)
-bfs_cpu_nrg_mat <- matrix(
-		c(sleep_nrg_per_root, bfs_cpu_nrg_per_root), # -sleep_nrg_per_root),
-		nrow = 2, ncol = length(bfs_systems), byrow = TRUE)
-barplot(bfs_cpu_nrg_mat, ylab = "Energy (Joules)", beside = TRUE, log = "y",
-		col=c("orangered3","gold"),
-		names.arg = bfs_systems)
-title(main = "BFS CPU Energy Usage Per Root")
-mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
-legend(legend = c("BFS Energy", "Sleeping Energy"), x = "topleft",
-		fill = c("gold","orangered3"))
-dev.off()
+intersperse <- function(vec, ele) { return(paste(vec, collapse = ele)) }
+print(paste0("Average Energy Per Root (J) & ",
+		intersperse(bfs_cpu_nrg_per_root, " & ")))
+print(paste0("Time Per Root (s) & ",
+		intersperse(bfs_time_per_root, " & ")))
+print(paste0("Sleeping Energy (J) & ",
+		intersperse(sleep_nrg_per_root, " & ")))
+print(paste0("Increase over sleep & ",
+		intersperse(bfs_cpu_nrg_per_root/sleep_nrg_per_root, " & ")))
+
+# This plot doesn't convey the data quite right...
+# pdf("graphics/bfs_cpu_energy.pdf", width = 4.5, height = 4.5)
+# bfs_cpu_nrg_mat <- matrix(
+# 		c(sleep_nrg_per_root, bfs_cpu_nrg_per_root), # -sleep_nrg_per_root),
+# 		nrow = 2, ncol = length(bfs_systems), byrow = TRUE)
+# xcoords <- barplot(bfs_cpu_nrg_per_root, ylab = "Energy (Joules)",
+# 		col=c("gold"),
+# 		names.arg = bfs_systems)
+# text(x = xcoords, y = bfs_cpu_nrg_per_root, label = bfs_time_per_root, pos = 3)
+# title(main = "BFS CPU Energy Usage Per Root")
+# mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+# legend(legend = c("BFS Energy", "Sleeping Energy"), x = "topleft",
+# 		fill = c("gold","orangered3"))
+# dev.off()
 
 # par(xpd = TRUE) and change inset if you want the legend to be outside the box
 pdf("graphics/bfs_ram_power.pdf", width = 4.5, height = 4.5)

@@ -105,7 +105,7 @@ This report explores four shared memory parallel graph processing platforms. The
 
 \subsection{Algorithms}
 
-We consider three algorithms, but not all algorithms are available on all systems.
+We consider three algorithms though not all algorithms are available on all systems.
 
 \begin{enumerate}
 	\item Breadth First Search (BFS)
@@ -148,13 +148,22 @@ The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the D
 
 \section{Performance Analysis}
 
+\subsection{Runtime}
+
 In Table~\ref{tab:graphalytics} we show the results from running Graphalytics. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}.
 
-From this we get only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture. It is difficult to make any claims about GraphMat from Graphalytics because of its lack of algorithm diversity.
+Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture. It is difficult to make any claims about GraphMat from Graphalytics because of its lack of algorithm diversity.
 
 %Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while BFS traverses each edge exactly once, and the number of edges traversed with PageRank depends on the connectivity of the graph and the number of iterations.
 
 \begin{table}
+% ,graphmat,openg,powergraph
+%	Community Detection,0,212.5,1167
+%	PageRank,0,293.5,983
+%	Local Clustering Coefficient,0,316.5,1011
+%	Weakly Connected Components,0,89,767.5
+%	Single-Source Shortest Paths,11298.5,6378.5,34654.5
+	\caption{Performance results are in milliseconds. Community detection is performed using label propagation. At the time of this writing, Graphalytics only supports SSSP for GraphMat.}
 	\centering
 	\pgfplotstabletypeset[
 		col sep=comma,
@@ -168,20 +177,44 @@ From this we get only a broad overview of the two systems: GraphBIG and PowerGra
 			empty cells with={N/A}
 		},
 		columns/openg/.style={
-		column name={GraphBIG},
+			column name={GraphBIG},
 			dec sep align},
-			columns/powergraph/.style={
+		columns/powergraph/.style={
 			column name={PowerGraph},
 			dec sep align}
 	]{../report/runtime.csv}
-	\caption{Performance results are in milliseconds. LCC is local clustering coefficient, PR is PageRank, CDLP is community detection using label propagation, and WCC is weakly connected components. At the time of this writing, Graphalytics only supports SSSP for GraphMat.}
 	\label{tab:graphalytics}
 \end{table}
 
-Table~\ref{tab:epg-perf}, we show the performance results of running graphalytics and our approach using the same, synthetic dataset. Now, our approach computes multiple runs whereas graphalytics only uses one root for BFS. This gives a better picture of algorithm reliability and is explained further.
+Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance results of running graphalytics and our approach using the same dataset [TODO: GET DOTA LEAGUE WORKING FOR EPG!]. For compactness, Table~\ref{tab:epg-perf} shows the average time across 32 roots, while Table~\ref{tab:graphalytics} shows results for a single root. Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show the distribution of runtimes. However, even these do not give a complete picture of performance. Both of these show GraphMat to not be highly performant. However, a likely explanation is that GraphMat's underlying computation model (sparse matrix operations) paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation is more conducive to larger-scale graphs.
+
+\begin{figure}
+	\centering
+	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
+	\end{minipage}
+	\label{fig:bfs-time}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\caption{The $y$-axis is logarithmic. [TODO: FIX IT SO GRAPHBIG HAS NO DSC]}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_dsc.pdf}
+	\end{minipage}
+	\label{fig:sssp-time}
+\end{figure}
 
 \begin{table}
 	\centering
+	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
 	\begin{tabular}{l|c|c|c}
 		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
 		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
@@ -189,101 +222,52 @@ Table~\ref{tab:epg-perf}, we show the performance results of running graphalytic
 		GraphMat & 0.1511 & 1.101  & 0.1031 \\
 		GraphBIG & 37.22  & N/A    & 0.1528 \\
 	\end{tabular}
-	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
 	\label{tab:epg-perf}
 \end{table}
 
-We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage.
 
 \begin{figure}
 	\centering
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
+	\caption{Both figures use the kronecker graph with $2^{20}$ vertices with an average of 16 edges per vertex.}
+	\begin{minipage}{0.55\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
 	\end{minipage}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
+	\begin{minipage}{0.425\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ss.pdf}
 	\end{minipage}
-	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
-	\label{fig:bfs-time}
+	\label{fig:bfs-scaling}
 \end{figure}
 
-\begin{figure}
+\subsection{Power and Energy Consumption}
+We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage. PAPI provides convenient access to these values and provides average energy in nanojoules for a given time interval.
+
+\begin{table}
+	\caption{The timeframe measured here is only when the BFS is performed. Sleeping Energy refers to the power (in Watts) consumed during the Unix \texttt{sleep} function, multiplied by time. Effectively, this measures the amount of energy that would have been consumed even if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over the 32 roots.}
 	\centering
-	\includegraphics[width=0.6\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_time.pdf}
-	\caption{The $y$-axis is logarithmic.}
-	\label{fig:sssp-time}
-\end{figure}
+	\begin{tabular}{l|c|c|c|c}
+			&	GAP  &    Graph500 & GraphMat & GraphBIG \\ \hline
+		Energy Per Root (J) &	1.184 & 1.830 & 112.213 & 111.104 \\
+		Time (s) &  0.01636 & 0.01884 & 1.600 & 1.424 \\
+		Sleeping Energy (J) & 0.4046  & 0.4660 & 39.591 &  35.234 \\
+		Increase over Sleep & 2.926 & 3.928 & 2.834 & 3.153
+	\end{tabular}
+\end{table}
 
 \begin{figure}
 	\centering
+	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. [Note that for figure Fig.\ref{fig:pr}, mention time per iteration]}
 	\begin{minipage}{0.48\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
 	\end{minipage}
 	\begin{minipage}{0.48\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
 	\end{minipage}
-	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. [Note that for figure Fig.\ref{fig:pr-iters}, mention time per iteration]}
 	\label{fig:pr}
 \end{figure}
 
-[Compare lines of code for implementation]
 
-\begin{figure}
-	\centering
-	\includegraphics[width=0.8\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ss.pdf}
-	\caption{Strong Scaling for $2^{20}$ vertices and an average of 16 edges per vertex.}
-	\label{fig:bfs-ss}
-\end{figure}
-
-\begin{figure}
-	\centering
-	% trim left bottom right top
-	\includegraphics[width=\columnwidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
-	\caption{Speedup.}
-	\label{fig:bfs-speedup}
-\end{figure}
-
-%\section{Graph Processing Taxonomy}
-%This is in the spirit of \cite{Doekemeijer:2015:GPFSurvey}. Here, ``|'' means ``or'' and ``+'' means ``and.'' FOSS means Free and Open Source Software. The quotes around ``yes'' for HPC mean that the product claims to be amenable to high performance computing. Whether these actually achieve their goal is one of the purposes of this project.
-%\begin{table*}[t]
-%	\begin{minipage}{\linewidth} % So the footnotes all get printed on the same page
-%		\centering
-%		%\small
-%		\pgfplotstabletypeset[
-%			col sep=comma,
-%			string type, % Makes the .style={string type} redundant
-%			columns={Name,Type,Parallelism,Target,FOSS,Source,Notes},
-%			every head row/.style={after row=\midrule},
-%			columns/Name/.style={string type, column type={l|}},
-%			columns/Type/.style={string type},
-%			% columns/HPC/.style={string type},
-%			columns/Parallelism/.style={string type},
-%%			columns/Comm./.style={%
-%%				string type,
-%%				postproc cell content/.style={%
-%%					@cell content/.add={\footnotesize}
-%%				}
-%%			},
-%			columns/Target/.style={string type},
-%			columns/FOSS/.style={string type},
-%			columns/Source/.style={string type},
-%			columns/Notes/.style={
-%				preproc cell content/.style={@cell content=
-%					\ifx&##1&% Only make a footnote if the cell is nonempty
-%						##1
-%					\else
-%						\footnote{##1}
-%					\fi}
-%			},
-%		]{../report/platforms.csv}
-%		\caption{Tools used for graph processing}
-%		\label{tab:frameworks}
-%	\end{minipage}
-%\end{table*}
-
-
-\section{Conclusion} % Begin with the end in mind...
-
+\section{Future Work and Conclusion}
+The problem of choosing a system for graph processing at large scale is far from being simple. We make our source code open source at \url{github.com/HPCL/easy-parallel-graph} and encourage further experimentation.
 \bibliographystyle{splncs03}
 \bibliography{../drp}
 \end{document}
