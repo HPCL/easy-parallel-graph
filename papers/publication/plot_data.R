@@ -4,7 +4,7 @@
 ###
 # Part 1: Generate the plots for a single problem size and multiple algorithms
 ###
-scale <- 21
+scale <- 22
 bpc <- "cyan"
 filename <- paste0("parsed",scale,"-32.csv")
 x <- read.csv(filename, header = FALSE)
@@ -44,16 +44,16 @@ boxplot(Time~Sys, bfs_dsc, ylab = "Time (seconds)",
 mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
-pdf("graphics/sssp_time.pdf", width = 4.5, height = 4.5)
+pdf("graphics/sssp_time.pdf", width = 5.5, height = 4.5)
 boxplot(Time~Sys, sssp_time, ylab = "Time (seconds)",
 		main = "SSSP Time", log = "y", col=bpc)
 mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
-pdf("graphics/sssp_dsc.pdf", width = 4.5, height = 4.5)
-boxplot(Time~Sys, sssp_time, ylab = "Time (seconds)",
-		main = "SSSP Data Structure Construction", log = "y", col=bpc)
-mtext(paste0("Scale = ",scale), side = 3)
+pdf("graphics/sssp_dsc.pdf", width = 3.5, height = 4.5)
+boxplot(Time~Sys, sssp_dsc, ylab = "Time (seconds)",
+		main = "SSSP Data Structure\nConstruction", log = "y", col=bpc)
+# mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
 pdf("graphics/pr_time.pdf", width = 4.5, height = 4.5)
@@ -76,25 +76,30 @@ dev.off()
 ###
 # Part 2: Generate the plots for a single algorithm and multiple problem sizes
 ###
-scale <- 20
-# Read in and average the data for BFS for each thread
-# It is wasteful to reread the parsed*-1.csv but it simplifies the code
 threadcnts <- c(1,2,4,8,16,32,64,72)
-x <- read.csv(paste0("parsed",scale,"-1.csv"), header = FALSE)
-colnames(x) <- c("Sys","Algo","Metric","Time")
-systems <- unique(x$Sys)
-bfs_scale <- data.frame(
-		matrix(ncol = length(threadcnts), nrow = length(systems)),
-		row.names = systems)
-colnames(bfs_scale) <- threadcnts
-for (ti in seq(length(threadcnts))) {
-	thread <- threadcnts[ti]
-	Y <- read.csv(paste0("parsed",scale,"-",thread,".csv"),
-			header = FALSE)
-	bfs_time <- subset(Y, Y[[2]] == "BFS" & Y[[3]] == "Time",
-			c(V1,V4))
-	bfs_scale[ti] <- aggregate(bfs_time$V4, list(bfs_time$V1), mean)[[2]]
+scale <- 20
+measure_scale <- function(algo) {
+	# Read in and average the data for BFS for each thread
+	# It is wasteful to reread the parsed*-1.csv but it simplifies the code
+	x <- read.csv(paste0("parsed",scale,"-1.csv"), header = FALSE)
+	colnames(x) <- c("Sys","Algo","Metric","Time")
+	systems <- unique(subset(x$Sys, x$Algo == algo, c("Sys")))
+	bfs_scale <- data.frame(
+			matrix(ncol = length(threadcnts), nrow = length(systems)),
+			row.names = systems)
+	colnames(bfs_scale) <- threadcnts
+	for (ti in seq(length(threadcnts))) {
+		thread <- threadcnts[ti]
+		Y <- read.csv(paste0("parsed",scale,"-",thread,".csv"),
+				header = FALSE)
+		bfs_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
+				c(V1,V4))
+		bfs_scale[ti] <- aggregate(bfs_time$V4, list(bfs_time$V1), mean)[[2]]
+	}
+	return(bfs_scale)
 }
+
+bfs_scale <- measure_scale("BFS")
 
 colors <- rainbow(nrow(bfs_scale))
 colors <- gsub("F", "C", colors) # You want it darker
@@ -163,12 +168,12 @@ ram_pwr_sleep <- subset(x,
 bfs_cpu_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
 bfs_cpu_nrg$Sys <- factor(bfs_cpu_nrg$Sys)
 
-bfs_systems <- unique(bfs_cpu_nrg$Sys)
+bfs_systems <- sort(unique(bfs_cpu_nrg$Sys))
 bfs_cpu_nrg_per_root <- numeric(length(bfs_systems))
 sleep_nrg_per_root <- numeric(length(bfs_systems))
 bfs_time_per_root <- numeric(length(bfs_systems))
 for (si in seq(length(bfs_systems))) {
-	sys <- as.character(unique(bfs_cpu_nrg$Sys)[si])
+	sys <- as.character(bfs_systems[si])
 	one_sys <- subset(x,
 			x$Algo=="BFS" & x$Metric=="Average CPU Power (W)" & x$Sys==sys,
 			Value)
@@ -199,10 +204,14 @@ dev.off()
 # We hope that sleeping uses less energy than running the BFS...
 stopifnot(all(sleep_nrg_per_root < bfs_cpu_nrg_per_root))
 intersperse <- function(vec, ele) { return(paste(vec, collapse = ele)) }
-print(paste0("Average Energy Per Root (J) & ",
-		intersperse(bfs_cpu_nrg_per_root, " & ")))
-print(paste0("Time Per Root (s) & ",
+print(paste0(" & ", intersperse(bfs_systems, " & ")))
+print(paste0("Time per Root (s) & ",
 		intersperse(bfs_time_per_root, " & ")))
+print(paste0("Average Power per Root (W) & ", intersperse(
+		aggregate(bfs_cpu_pwr$Value, list(bfs_cpu_pwr$Sys), mean)[[2]],
+		" & ")))
+print(paste0("Average Energy per Root (J) & ",
+		intersperse(bfs_cpu_nrg_per_root, " & ")))
 print(paste0("Sleeping Energy (J) & ",
 		intersperse(sleep_nrg_per_root, " & ")))
 print(paste0("Increase over sleep & ",

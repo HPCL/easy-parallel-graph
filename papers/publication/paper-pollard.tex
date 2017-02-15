@@ -79,7 +79,7 @@ The complexity of Graphalytics obfuscates the true behavior of the program. By d
 %- deinitialize engine: 2.88486e-05 sec
 %17:29:05.575 [INFO ] Benchmarking algorithm "Single source shortest paths" on graph "dota-league" took 5955 ms.
 
-With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. The requires in-depth knowledge of the source code and execution model which is not always available. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
+With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. This requires in-depth knowledge of the source code and execution model. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
 
 As with Graphalytics, the initial development effort is high but Granula paired with graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis without requiring a performance and execution model for each system.
 
@@ -126,7 +126,7 @@ Table~\ref{tab:specs} shows the specifications of the research computer.
 
 \begin{table}
 	\centering
-	% Keep in mind you can do this at the beginning: string replace={s1}{s2}
+	\caption{The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.}
 	% For arya I deleted Max RAM Freq	2133MHz
 	\pgfplotstabletypeset[
 	header=false,
@@ -137,7 +137,6 @@ Table~\ref{tab:specs} shows the specifications of the research computer.
 	columns/1/.style={column type={l|}},
 	every last row/.style={after row=\toprule},
 	]{../report/specs.csv}
-	\caption{The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.}
 	\label{tab:specs}
 \end{table}
 
@@ -150,9 +149,7 @@ The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the D
 
 \subsection{Runtime}
 
-In Table~\ref{tab:graphalytics} we show the results from running Graphalytics. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}.
-
-Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture. It is difficult to make any claims about GraphMat from Graphalytics because of its lack of algorithm diversity.
+In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on a single dataset. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}. Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture.
 
 %Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while BFS traverses each edge exactly once, and the number of edges traversed with PageRank depends on the connectivity of the graph and the number of iterations.
 
@@ -186,31 +183,9 @@ Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: Gra
 	\label{tab:graphalytics}
 \end{table}
 
-Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance results of running graphalytics and our approach using the same dataset [TODO: GET DOTA LEAGUE WORKING FOR EPG!]. For compactness, Table~\ref{tab:epg-perf} shows the average time across 32 roots, while Table~\ref{tab:graphalytics} shows results for a single root. Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show the distribution of runtimes. However, even these do not give a complete picture of performance. Both of these show GraphMat to not be highly performant. However, a likely explanation is that GraphMat's underlying computation model (sparse matrix operations) paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation is more conducive to larger-scale graphs.
+Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance results of running graphalytics and our approach using the same dataset [TODO: Get the Dota-League Dataset working with eas-parallel-graph and replace Table~\ref{epg-perf}]. Table~\ref{tab:epg-perf} shows the average time across 32 roots, whereas Graphalytics by default shows results for a single root.
 
-\begin{figure}
-	\centering
-	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
-	\end{minipage}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
-	\end{minipage}
-	\label{fig:bfs-time}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\caption{The $y$-axis is logarithmic. [TODO: FIX IT SO GRAPHBIG HAS NO DSC]}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_time.pdf}
-	\end{minipage}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_dsc.pdf}
-	\end{minipage}
-	\label{fig:sssp-time}
-\end{figure}
+Further detail is shown in Figs.~\ref{fig:bfs-time} and \ref{fig:sssp-time}, giving box plots for the runtime distributions. However, even these do not give a complete picture of performance. Both of these show GraphMat to not be highly performant. However, a likely explanation is that GraphMat's underlying computation model (sparse matrix operations) paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation is more conducive to larger-scale graphs.
 
 \begin{table}
 	\centering
@@ -225,6 +200,41 @@ Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance resu
 	\label{tab:epg-perf}
 \end{table}
 
+\begin{figure}
+	\centering
+	\caption{The $y$-axis is logarithmic. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
+	\end{minipage}
+	\label{fig:bfs-time}
+\end{figure}
+f
+\begin{figure}
+	\centering
+	\caption{The $y$-axis is logarithmic. Both PowerGraph and GraphBIG construct their data structures at the same time as they read in the file.}
+	\begin{minipage}{0.59\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.365\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_dsc.pdf}
+	\end{minipage}
+	\label{fig:sssp-time}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] [FIX IT SO POWERGRAPH IS INCLUDED] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. For the others, we use the stopping condition that the sum of the changes in the weights is no more than $6 \times 10^{-8}$, or approximately machine epsilon for single precision floating point numbers. [Note that for figure Fig.\ref{fig:pr}, mention time per iteration]}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
+	\end{minipage}
+	\label{fig:pr}
+\end{figure}
 
 \begin{figure}
 	\centering
@@ -238,21 +248,6 @@ Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance resu
 	\label{fig:bfs-scaling}
 \end{figure}
 
-\subsection{Power and Energy Consumption}
-We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage. PAPI provides convenient access to these values and provides average energy in nanojoules for a given time interval.
-
-\begin{table}
-	\caption{The timeframe measured here is only when the BFS is performed. Sleeping Energy refers to the power (in Watts) consumed during the Unix \texttt{sleep} function, multiplied by time. Effectively, this measures the amount of energy that would have been consumed even if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over the 32 roots.}
-	\centering
-	\begin{tabular}{l|c|c|c|c}
-			&	GAP  &    Graph500 & GraphMat & GraphBIG \\ \hline
-		Energy Per Root (J) &	1.184 & 1.830 & 112.213 & 111.104 \\
-		Time (s) &  0.01636 & 0.01884 & 1.600 & 1.424 \\
-		Sleeping Energy (J) & 0.4046  & 0.4660 & 39.591 &  35.234 \\
-		Increase over Sleep & 2.926 & 3.928 & 2.834 & 3.153
-	\end{tabular}
-\end{table}
-
 \begin{figure}
 	\centering
 	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. [Note that for figure Fig.\ref{fig:pr}, mention time per iteration]}
@@ -265,9 +260,30 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 	\label{fig:pr}
 \end{figure}
 
+\subsection{Power and Energy Consumption}
+We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage. PAPI provides convenient access to these values and average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation. In our case, the fastest code is also the most energy efficient, though with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
+
+\begin{table}
+	\caption{The data are generated from a Kronecker graph with $2^{22}$ vertices. Sleeping Energy refers to the power (in Watts) consumed during the Unix \texttt{sleep} function, multiplied by time. Effectively, this measures the amount of energy that would have been consumed even if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over the 32 roots.}
+	\centering
+	\begin{tabular}{l|r|r|r|r}
+			&	GAP  &    Graph500 & GraphBIG & GraphMat \\ \hline
+		Time (s) &  0.01636 & 0.01884 & 1.600 & 1.424 \\
+		Average Power per Root (W) & 72.38 & 97.17 & 78.01 & 70.12 \\
+		Energy per Root (J) &	1.184 & 1.830 & 112.213 & 111.104 \\
+		Sleeping Energy (J) & 0.4046  & 0.4660 & 39.591 &  35.234 \\
+		Increase over Sleep & 2.926 & 3.928 & 2.834 & 3.153
+	\end{tabular}
+\end{table}
+
 
 \section{Future Work and Conclusion}
-The problem of choosing a system for graph processing at large scale is far from being simple. We make our source code open source at \url{github.com/HPCL/easy-parallel-graph} and encourage further experimentation.
+The problem of choosing a system for graph processing at large scale is far from being simple. We make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories.
+
+Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets and the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite to as a good test of performance.
+
+There are a vast number of directions this work could go. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG this required the file to be loaded in for each experiment. This was by far the most time consuming of the experiments; the file reading for GraphBIG being done serially on an uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question.
+
 \bibliographystyle{splncs03}
 \bibliography{../drp}
 \end{document}
