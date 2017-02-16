@@ -94,19 +94,19 @@ measure_scale <- function(algo) {
 	x <- read.csv(paste0("parsed",scale,"-1.csv"), header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
 	systems <- unique(subset(x$Sys, x$Algo == algo, c("Sys")))
-	bfs_scale <- data.frame(
+	algo_time <- data.frame(
 			matrix(ncol = length(threadcnts), nrow = length(systems)),
 			row.names = systems)
-	colnames(bfs_scale) <- threadcnts
+	colnames(algo_time) <- threadcnts
 	for (ti in seq(length(threadcnts))) {
 		thread <- threadcnts[ti]
 		Y <- read.csv(paste0("parsed",scale,"-",thread,".csv"),
 				header = FALSE)
-		bfs_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
+		ti_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
 				c(V1,V4))
-		bfs_scale[ti] <- aggregate(bfs_time$V4, list(bfs_time$V1), mean)[[2]]
+		algo_time[ti] <- aggregate(ti_time$V4, list(ti_time$V1), mean)[[2]]
 	}
-	return(bfs_scale)
+	return(algo_time)
 }
 
 bfs_scale <- measure_scale("BFS")
@@ -116,33 +116,38 @@ colors <- gsub("F", "C", colors) # You want it darker
 colors <- gsub("CC$", "FF", colors) # But keep it opaque
 
 # Plot the strong scalability for BFS
-pdf("graphics/bfs_ss.pdf", width = 4.5, height = 4.5)
+pdf("graphics/bfs_ss.pdf", width = 7, height = 4)
 bfs_ss <- bfs_scale
 # Strong scaling for sequential is 1---we compute that last
 for (ti in rev(seq(length(threadcnts)))) {
 	bfs_ss[ti] <- bfs_ss[1] / (threadcnts[ti] * bfs_ss[ti])
 }
 plot(as.numeric(bfs_ss[1,]), xaxt = "n", type = "b", ylim = c(0,1),
-		ylab = "Scalability", xlab = "Threads", col = colors[1],
+		ylab = "", xlab = "Threads", col = colors[1],
 		main = "BFS Strong Scaling", lty = 1, pch = 1, lwd = 3)
 for (pli in seq(2,nrow(bfs_ss))) {
 	lines(as.numeric(bfs_ss[pli,]), col = colors[pli], type = "b",
 			lwd = 3, pch = pli, lty = pli) # XXX: lty may repeat after 8
 }
-lines(1:length(threadcnts), 1/threadcnts, lwd = 1, col = "#000000FF")
+# Linear strong scaling: T_n = T_1/n => T_1 / n*T_n = 1
+lines(x = threadcnts, y = rep(1,length(threadcnts)), lwd = 1, col = "black")
 axis(1, at = seq(length(threadcnts)), labels = threadcnts)
-legend(legend = c(rownames(bfs_ss), "Ideal"), x = "topright",
-		lty = c(1:length(systems), 1), pch = c(1:length(systems), NA_integer_),
-		box.lwd = 1, lwd = c(rep(3,length(systems)), 1),
-		col = c(colors, "#000000FF"))
+legend(legend = c("Linear", rownames(bfs_ss)), x = "topright",
+		lty = c(1, 1:length(systems)), pch = c(NA_integer_, 1:length(systems)),
+		box.lwd = 1, lwd = c(1, rep(3,length(systems))),
+		col = c("#000000FF", colors),
+		bg = "white")
+mtext(paste0("Scale = ", scale), side = 3)
+mtext(expression(italic(over(T[1],n*T[n]))),
+		side = 2, las = 1, xpd = NA, outer = TRUE, adj = -0.2)
 dev.off()
 
 # Plot the speedup for BFS
-pdf("graphics/bfs_speedup.pdf", width = 5*1.1, height = 4*1.1)
+pdf("graphics/bfs_speedup.pdf", width = 7, height = 4)
 bfs_spd <- data.frame(t(apply(bfs_ss, 1, function(x){x*threadcnts})))
 colnames(bfs_spd) <- threadcnts
 plot(as.numeric(bfs_spd[1,]), xaxt = "n", type = "b", ylim = c(1,10),
-		ylab = "Speedup", xlab = "Threads", col = colors[1],
+		ylab = "Speedup", xlab = "Threads", col = colors[1], log = "y",
 		main = "BFS Speedup", lty = 1, pch = 1, lwd = 3)
 for (pli in seq(2,nrow(bfs_ss))) {
 	lines(as.numeric(bfs_spd[pli,]), col = colors[pli], type = "b",
@@ -150,15 +155,15 @@ for (pli in seq(2,nrow(bfs_ss))) {
 }
 lines(1:length(threadcnts), threadcnts, lwd = 1, col = "#000000FF")
 axis(1, at = seq(length(threadcnts)), labels = threadcnts)
-legend(legend = c(rownames(bfs_spd), "Ideal"), x = "topleft",
-		col = c(colors,"#000000FF"), lwd = c(rep(3,length(systems)),1),
-		lty = c(1:length(systems), 1), pch = c(1:length(systems), NA_integer_))
+legend(legend = c("Linear", rownames(bfs_spd)), x = "topleft", bg = "white",
+		col = c("#000000FF", colors), lwd = c(1,rep(3,length(systems))),
+		lty = c(1:length(systems), 1), pch = c(NA_integer_, 1:length(systems)))
 dev.off()
 
 ###
 # Part 3: Power
 ###
-# Just BFS for now... :(
+# Just BFS for now.
 # Read in the data
 GRAPH500NRT <- 64 # Even though everyone else does 32.
 scale <- 22
