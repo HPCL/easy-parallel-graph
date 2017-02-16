@@ -24,6 +24,7 @@ set +o histexpand
 trap "exit 1" INT
 export TOP_PID=$$ 
 MAX_THREADS=64 # This is a PowerGraph limitation.
+MAX_THREADS=32 # To ensure compatibility with easy-parallel-graph
 
 OSNAME=$(uname)
 if [ "$JAVA_HOME" = "" -a "$OSNAME" = "Linux" ]; then
@@ -211,7 +212,7 @@ install_GraphX()
 # 	if [ "$EXEC_MEMORY_KB" -gt 7448928 ]; then # Yarn doesn't allow more than 8GB per executor but has overhead
 # 		EXEC_MEMORY_KB=7448928
 # 	fi
-	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
+	cp -r "$BASE_DIR/ldbc_graphalytics/config" "$PKGDIR/config"
 	echo "graphx.job.num-executors = $NUM_WORKERS" > "$PKGDIR/config/graphx.properties"
 	#echo "graphx.job.executor-memory = ${EXEC_MEMORY_KB}k" >> "$PKGDIR/config/graphx.properties"	
 	echo "graphx.job.executor-memory = 6g" >> "$PKGDIR/config/graphx.properties"
@@ -263,7 +264,7 @@ install_OpenG()
  		echo "Using $NUM_THREADS threads on $NUM_CORES available cores to maintain an even comparison with PowerGraph."
  	fi
 	CONFIG=$(printf "openg.home = $GRAPHBIG_DIR\nopeng.intermediate-dir = $GRAPHBIG_DIR/intermediate\nopeng.output-dir = $GRAPHBIG_DIR/output\nopeng.num-worker-threads=$NUM_THREADS")
-	cp -r "$PKGDIR/config-template" "$PKGDIR/config"
+	cp -r "$BASE_DIR/ldbc_graphalytics/config" "$PKGDIR/config"
 	echo "$CONFIG" > $PKGDIR/config/$platform.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 }
@@ -357,8 +358,8 @@ install_PowerGraph()
     PKGDIR="$PLATFORM_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 
 	# Set configuration in the packaged file
-	cp -r "$PKGDIR/config-template/" "$PKGDIR/config"
-	cp "$GA_DIR/config/graphs.properties" "$PKGDIR/config"
+	cp -r "$BASE_DIR/ldbc_graphalytics/config" "$PKGDIR/config"
+	cp "$GA_DIR/config/graphs.properties" "$PKGDIR/config" # Redundant
 	echo "powergraph.home = $POWERGRAPH_DIR" > "$PKGDIR/config/powergraph.properties"
 	echo "powergraph.num-threads = $GRAPHLAB_THREADS_PER_WORKER" >> "$PKGDIR/config/powergraph.properties"
 	#echo "powergraph.disable_mpi = false" >> "$PKGDIR/config/powergraph.properties" # TODO: Insert if > 1 node
@@ -389,23 +390,24 @@ install_GraphMat()
 	fi
 	# If you are not a member of HPCL please use
 	# https://github.com/narayanan2004/GraphMat instead
-	git clone https://github.com/HPCL/GraphMat.git
-	cd GraphMat
-	make
-	cd ..
-	GRAPHMAT_DIR="$BASE_DIR/graphalytics-platforms-graphmat"
-	git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphmat.git
+	GRAPHMAT_DIR="$BASE_DIR/GraphMat_GA"
+	git clone https://github.com/HPCL/GraphMat.git "$GRAPHMAT_DIR"
 	cd "$GRAPHMAT_DIR"
+	make
+	cd "$BASE_DIR"
+	GRAPHMAT_PLT_DIR="$BASE_DIR/graphalytics-platforms-graphmat"
+	git clone https://github.com/tudelft-atlarge/graphalytics-platforms-graphmat.git
+	cd "$GRAPHMAT_PLT_DIR"
 	mvn clean package
-	PKGNAME=$(basename $(find $GRAPHMAT_DIR -maxdepth 1 -name '*.tar.gz'))
+	PKGNAME=$(basename $(find $GRAPHMAT_PLT_DIR -maxdepth 1 -name '*.tar.gz'))
 	tar -xf "$PKGNAME"
 	VERSION=$(echo $PKGNAME | awk -F '-' '{print $4}')
 	GA_VERSION=$(echo $PKGNAME | awk -F '-' '{print $2}')
 	platform=$(echo $PKGNAME | awk -F '-' '{print $3}')
-	PKGDIR="$GRAPHMAT_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
+	PKGDIR="$GRAPHMAT_PLT_DIR/graphalytics-$GA_VERSION-$platform-$VERSION"
 	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
-	cp -r config-template config	
-	CONFIG=$(printf "$platform.home = $BASE_DIR/GraphMat\n$platform.intermediate-dir = $GRAPHMAT_DIR/intermediate\nopeng.output-dir = $GRAPHMAT_DIR/output\n$platform.num-threads = $NUM_THREADS\n$platform.command.convert = %%s %%s\n$platform.command.run = env KMP_AFFINITY=scatter numactl -i all %%s %%s\n")
+	cp -r "$BASE_DIR/ldbc_graphalytics/config" "$PKGDIR/config"
+	CONFIG=$(printf "$platform.home = $GRAPHMAT_DIR\n$platform.intermediate-dir = $GRAPHMAT_PLT_DIR/intermediate\nopeng.output-dir = $GRAPHMAT_PLT_DIR/output\n$platform.num-threads = $NUM_THREADS\n$platform.command.convert = %%s %%s\n$platform.command.run = env KMP_AFFINITY=scatter numactl -i all %%s %%s\n")
 	echo "$CONFIG" > config/$platform.properties
 	perl -0777 -i.original -pe "s?graphs.root-directory.*?graphs.root-directory = $DATASET_DIR?" "$PKGDIR/config/graphs.properties"
 }
