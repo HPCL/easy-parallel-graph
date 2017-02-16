@@ -7,6 +7,7 @@
 \usepackage{array} % Required for pgfplotstable dec sep align
 \pgfplotsset{compat=1.12}
 \usepackage{booktabs}
+\usepackage{todonotes}
 
 \usepackage{enumitem}
 \setlist{parsep=0pt, listparindent=0.5cm}
@@ -123,9 +124,6 @@ One straightforward extension to BFS and our second algorithm is the Single-Sour
 
 The third algorithm is PageRank. These three algorithms are used because of their popularity; most libraries provide reference implementations.
 
-\subsection{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the research computer.
-
 \begin{table}
 	\centering
 	\caption{The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.}
@@ -148,6 +146,13 @@ We use the Graph500 synthetic graph generator which creates a Kronecker graph \c
 The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset is sourced from the Game Trace Archive\cite{Guo:2012:GTA} and modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}.
 
 \section{Performance Analysis}
+
+
+\todo{Describe the experiment methodology -- how many measurements for each algorithm and dataset, varying number of threads, etc.}
+
+\subsection{Machine Specifications}
+Table~\ref{tab:specs} shows the specifications of the research computer.
+
 
 \subsection{Runtime}
 
