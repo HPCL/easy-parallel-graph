@@ -243,12 +243,12 @@ The behavior of PageRank is slightly different. As with SSSP and BFS, the GAP Be
 \begin{figure}
 	\centering
 	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
+		\includegraphics[width=\linewidth, trim=0 24pt 18pt 0, clip]{graphics/pr_time.pdf}
 	\end{minipage}
 	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
+		\includegraphics[width=\linewidth, trim=0 24pt 18pt 0, clip]{graphics/pr_iters.pdf}
 	\end{minipage}
-	\caption{[TODO: Rerun PowerGraph] The $y$-axis is logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change.}
+	\caption{The $y$-axis is logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change.}
 	\label{fig:pr}
 \end{figure}
 
@@ -283,6 +283,14 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 	\end{tabular}
 \end{table}
 
+RAPL also allows the measurement of DRAM power and energy, whose results are shown in Fig.~\ref{fig:ram-power}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ram_power.pdf}
+	\caption{RAM Power Consumption, averaged across all roots. [TODO: Explain more]}
+	\label{fig:ram-power}
+\end{figure}
 
 \section{Future Work and Conclusion}
 The problem of choosing a system for graph processing at large scale is far from being simple. We make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories.
