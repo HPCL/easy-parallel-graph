@@ -193,14 +193,6 @@ bfs_ram_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average DRAM Power (W)",
 		c("Sys","Value"))
 bfs_ram_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
 
-# Make some plots
-pdf("graphics/bfs_cpu_power.pdf", width = 4.5, height = 4.5)
-boxplot(Value~Sys, bfs_cpu_pwr, ylab = "Average Power (Watts)",
-		col="yellow")
-title(main = "CPU Average Power Consumption During BFS")
-mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
-dev.off()
-
 # We hope that sleeping uses less energy than running the BFS...
 stopifnot(all(sleep_nrg_per_root < bfs_cpu_nrg_per_root))
 intersperse <- function(vec, ele) { return(paste(vec, collapse = ele)) }
@@ -232,15 +224,26 @@ print(paste0("Increase over sleep & ",
 # 		fill = c("gold","orangered3"))
 # dev.off()
 
+# Make some plots
 # par(xpd = TRUE) and change inset if you want the legend to be outside the box
-pdf("graphics/bfs_ram_power.pdf", width = 4.5, height = 4.5)
+pdf("graphics/bfs_cpu_power.pdf", width = 5.2, height = 5.2)
+boxplot(Value~Sys, bfs_cpu_pwr, ylab = "Average Power (Watts)",
+		col="yellow", ylim=c(cpu_pwr_sleep$Value*0.9, max(bfs_cpu_pwr$Value)))
+title(main = "CPU Average Power Consumption During BFS")
+abline(mean(cpu_pwr_sleep$Value), 0, col = "orangered", lwd = 2)
+mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+legend(legend = c("sleep"), x = "bottomright", inset = c(0,0),
+		lty = c(1), lwd = 2, col = "orangered", bg = "white")
+dev.off()
+
+pdf("graphics/bfs_ram_power.pdf", width = 5.2, height = 5.2)
 boxplot(Value~Sys, bfs_ram_pwr, ylab = "Average Power (Watts)",
-		col="yellow")
+		col="yellow", ylim=c(ram_pwr_sleep$Value*0.9, max(bfs_ram_pwr$Value)))
 title(main = "RAM Power Consumption During BFS",
 		sub = paste0("Scale = ",scale)) # May want to remove subtitle later
 abline(mean(ram_pwr_sleep$Value), 0, col = "orangered", lwd = 2)
-legend(legend = c("sleep(10)"), x = "bottomright", inset = c(0,0),
-		lty = c(1), lwd = 2, col = "orangered")
+legend(legend = c("sleep"), x = "bottomright", inset = c(0,0),
+		lty = c(1), lwd = 2, col = "orangered", bg = "white")
 dev.off()
 
 # Try out a violin plot too!
