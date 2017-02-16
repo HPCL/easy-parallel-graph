@@ -94,6 +94,11 @@ Other related work includes that of \cite{Satish:2014:NavigatingGraph}, which an
 
 \section{Experimental Setup}
 
+\todo{Describe the experiment methodology -- how many measurements for each algorithm and dataset, varying number of threads, etc.}
+
+\subsection{Machine Specifications}
+Table~\ref{tab:specs} shows the specifications of the research computer.
+
 \subsection{Graph Processing Systems}
 
 This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the remaining two are included because of their performance and popularity. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations. The systems are:
@@ -146,13 +151,6 @@ We use the Graph500 synthetic graph generator which creates a Kronecker graph \c
 The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset is sourced from the Game Trace Archive\cite{Guo:2012:GTA} and modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}.
 
 \section{Performance Analysis}
-
-
-\todo{Describe the experiment methodology -- how many measurements for each algorithm and dataset, varying number of threads, etc.}
-
-\subsection{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the research computer.
-
 
 \subsection{Runtime}
 
