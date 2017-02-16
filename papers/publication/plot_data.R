@@ -56,22 +56,32 @@ boxplot(Time~Sys, sssp_dsc, ylab = "Time (seconds)",
 # mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
-pdf("graphics/pr_time.pdf", width = 4.5, height = 4.5)
-boxplot(Time~Sys, pr_time, ylab = "Time (seconds)",
-		main = "PageRank Time", log = "y", col=bpc)
-mtext(paste0("Scale = ",scale), side = 3) # May want to remove subtitle later
+pdf("graphics/pr_iters.pdf", width = 4.5, height = 4.5)
+pr_mean_iters <- aggregate(pr_iters$Time, list(pr_iters$Sys), mean)
+pr_sys_order <- order(pr_mean_iters[[2]])
+pr_mean_iters <- pr_mean_iters[pr_sys_order,]
+bp <- barplot(pr_mean_iters[[2]], ylab = "Time (second)",
+		main = "PageRank Iterations", col=rainbow(length(pr_mean_iters[[1]])))
+text(bp, par("usr")[3], labels = pr_mean_iters[[1]], srt = 30,
+		adj = c(0.95,0.95), xpd = TRUE, cex = 1.0)
 dev.off()
 
-pdf("graphics/pr_iters.pdf", width = 4.5, height = 4.5)
-# Could be done with aggregate instead
-pr_mean_iters <- c(
-		mean(pr_iters$Time[pr_iters$Sys == "GAP"]),
-		mean(pr_iters$Time[pr_iters$Sys == "GraphBIG"]),
-		mean(pr_iters$Time[pr_iters$Sys == "GraphMat"]))
-barplot(pr_mean_iters, ylab = "Time (second)",
-		main = "PageRank Iterations", col=c("green","orange","cyan"),
-		names.arg = c("GAP","GraphBIG","GraphMat"))
+pdf("graphics/pr_time.pdf", width = 4.5, height = 4.5)
+pr_sys_labels <- pr_mean_iters[[1]] # Get the order from iterations
+pr_time$Sys <- factor(pr_time$Sys, pr_sys_labels, ordered = TRUE)
+pr_time <- pr_time[order(pr_time$Sys),]
+pr_sys <- levels(pr_time$Sys)
+boxplot(Time~Sys, pr_time, ylab = "Time (seconds)",
+		main = "PageRank Time", log = "y", col=bpc,
+		xaxt = "n", xlab = "")
+		#names.arg = pr_sys)
+axis(1, labels = FALSE)
+mtext(paste0("Scale = ",scale), side = 3)
+text(x = seq(pr_sys), y = par("usr")[3]+0.90,
+		srt = 30, adj = c(1,2), xpd = TRUE,
+		labels = pr_sys, cex = 1.0)
 dev.off()
+
 
 ###
 # Part 2: Generate the plots for a single algorithm and multiple problem sizes

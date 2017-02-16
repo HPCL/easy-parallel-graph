@@ -189,18 +189,18 @@ Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance resu
 
 Further detail is shown in Figs.~\ref{fig:bfs-time} and \ref{fig:sssp-time}, giving box plots for the runtime distributions. However, even these do not give a complete picture of performance. Both of these show GraphMat to not be highly performant. However, a likely explanation is that GraphMat's underlying computation model (sparse matrix operations) paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation is more conducive to larger-scale graphs.
 
-\begin{table}
-	\centering
-	\caption{The above table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
-	\begin{tabular}{l|c|c|c}
-		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
-		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
-		GAP      & 2.351  & 0.1935 & 0.001393 \\
-		GraphMat & 0.1511 & 1.101  & 0.1031 \\
-		GraphBIG & 37.22  & N/A    & 0.1528 \\
-	\end{tabular}
-	\label{tab:epg-perf}
-\end{table}
+%\begin{table}
+%	\centering
+%	\begin{tabular}{l|c|c|c}
+%		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
+%		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
+%		GAP      & 2.351  & 0.1935 & 0.001393 \\
+%		GraphMat & 0.1511 & 1.101  & 0.1031 \\
+%		GraphBIG & 37.22  & N/A    & 0.1528 \\
+%	\end{tabular}
+%	\caption{This table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
+%	\label{tab:epg-perf}
+%\end{table}
 
 \begin{figure}
 	\centering
@@ -213,53 +213,58 @@ Further detail is shown in Figs.~\ref{fig:bfs-time} and \ref{fig:sssp-time}, giv
 	\end{minipage}
 	\label{fig:bfs-time}
 \end{figure}
-f
+
 \begin{figure}
 	\centering
-	\caption{The $y$-axis is logarithmic. Both PowerGraph and GraphBIG construct their data structures at the same time as they read in the file.}
 	\begin{minipage}{0.59\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_time.pdf}
 	\end{minipage}
 	\begin{minipage}{0.365\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/sssp_dsc.pdf}
 	\end{minipage}
+	\caption{The $y$-axis is logarithmic. Both PowerGraph and GraphBIG construct their data structures at the same time as they read in the file.}
 	\label{fig:sssp-time}
 \end{figure}
 
+The behavior of PageRank is slightly different. As with SSSP and BFS, the GAP Benchmark Suite is the fastest, and it also requires the fewest iterations. While care was taken to ensure the same stopping criterion is met, the particular implementation methods make it impossible to ensure the same computations are taking place. In general, we measured $\sum_{k=1}^{n} |p_k^{(i)} - p_k^{(i-1)}|$ where $i$ is the iteration and $n$ is the number of vertices, both the vertex-centric approaches, PowerGraph and GraphMat, take more iterations.
+
 \begin{figure}
 	\centering
-	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] [FIX IT SO POWERGRAPH IS INCLUDED] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. For the others, we use the stopping condition that the sum of the changes in the weights is no more than $6 \times 10^{-8}$, or approximately machine epsilon for single precision floating point numbers. [Note that for figure Fig.\ref{fig:pr}, mention time per iteration]}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/pr_time.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/pr_iters.pdf}
+	\end{minipage}
+	\caption{The $y$-axis is logarithmic only for the left figure. GraphMat continues to run until none of the vertices' ranks change. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. For the others, we use the stopping condition that the sum of the changes in the weights is no more than $6 \times 10^{-8}$, or approximately machine epsilon for single precision floating point numbers.}
+	\label{fig:pr}
+\end{figure}
+
+\begin{figure}
+	\centering
 	\begin{minipage}{0.48\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
 	\end{minipage}
 	\begin{minipage}{0.48\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
 	\end{minipage}
+	\caption{[TODO: Rerun PowerGraph] The $y$-axis is logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change.}
 	\label{fig:pr}
 \end{figure}
 
+The challenge in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite stores vertex weights as 32-bit integers. However, other systems store them as floating point numbers. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a grpah is represented in the system (e.g. weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
+
+In Fig.~\ref{fig:bfs-scaling}, we see BFS scalability\dots
 \begin{figure}
 	\centering
-	\caption{Both figures use the kronecker graph with $2^{20}$ vertices with an average of 16 edges per vertex.}
 	\begin{minipage}{0.55\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
 	\end{minipage}
 	\begin{minipage}{0.425\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ss.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/bfs_ss.pdf}
 	\end{minipage}
+	\caption{Both figures use the kronecker graph with $2^{20}$ vertices with an average of 16 edges per vertex.}
 	\label{fig:bfs-scaling}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\caption{The $y$-axis is logarithmic. GraphMat continues to run until none of the vertices' ranks change. [There is only one data point] The $y$-axis \emph{not} logarithmic. GraphMat iterations are measured differently because of the ``think like a vertex'' paradigm and runs until none of the vertices' ranks change. [Note that for figure Fig.\ref{fig:pr}, mention time per iteration]}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_time.pdf}
-	\end{minipage}
-	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/pr_iters.pdf}
-	\end{minipage}
-	\label{fig:pr}
 \end{figure}
 
 \subsection{Power and Energy Consumption}
