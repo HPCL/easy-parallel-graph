@@ -171,3 +171,4 @@ for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-${S}.el" --tol "$TOL" --format tsv
 done
 
+echo Finished experiment at $(date)

@@ -62,3 +62,9 @@ awk -v NRT=$NRT '/Build Time:/{i++; if(i>2*NRT)print "GAP,PageRank,Data structur
 grep -B 2 'Average Time:' "$FN" | awk '/^\s*[0-9]+/{print "GAP,PageRank,Iterations," $1}'
 awk -v NRT=$NRT '/Average Time:/{i++; if(i>2*NRT)print "GAP,PageRank,Time," $3}' "$FN"
 
+
+# PowerGraph
+# The first NRT are SSSP, the next NRT PageRank.
+awk -v NRT=$NRT '/Finished Running engine/{i++; if(i<=NRT)print "PowerGraph,SSSP,Time," $5}' "$FN"
+awk -v NRT=$NRT '/Finished Running engine/{i++; if(i>NRT)print "PowerGraph,SSSP,Time," $5}' "$FN"
+

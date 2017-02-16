@@ -1,11 +1,15 @@
 #!/bin/bash
+# Compiles and runs the experiments for power measurement
+# NOTE: This should just be used for building
+# and run-power for experiment running.
+RUN_EXPERIMENTS=false
 
 # Set and check where everything is going to be stored
 # For SamXu2
 #BASE_DIR="$HOME/uo/research/easy-parallel-graph"
 #DATASET_DIR="$HOME/uo/research/datasets"
 # For Arya
-BASE_DIR="$HOME/gap"
+BASE_DIR="$HOME/power"
 DATASET_DIR="$HOME/graphalytics/all-datasets"
 if [ -z "$BASE_DIR" ]; then
 	echo "Please set BASE_DIR to be where all the benchmarks and output will be stored."
@@ -23,12 +27,47 @@ if [ ! -d "$BASE_DIR/gapbs" ]; then
 fi
 GAPBS_DIR="$BASE_DIR/gapbs"
 cd "$GAPBS_DIR"
+sed -i 's/BUILD_RAPL = No/BUILD_RAPL = Yes/' Makefile
 make
 make test
 if [ $? -ne 0 ]; then
 	echo "Some gapbs tests didn't pass"
 	exit 1
 fi
+
+# Download and compile GraphBIG Benchmark Suite
+echo "Preparing GraphBIG..."
+cd "$BASE_DIR"
+if [ ! -d graphBIG ]; then
+	git clone "https://github.com/HPCL/graphBIG.git"
+fi
+cd graphBIG/benchmark
+sed -i 's/BUILD_RAPL = No/BUILD_RAPL = Yes/' common.mk
+make clean all
+
+# Download and compile Graph500
+echo "Preparing GraphBIG..."
+cd "$BASE_DIR"
+if [ ! -d graphBIG ]; then
+	git clone https://github.com/sampollard/graph500.git
+fi
+cd graph500
+cp make-incs/make.inc-gcc make.inc
+sed -i 's/# BUILD_OPENMP = Yes/BUILD_OPENMP = Yes/' make.inc
+sed -i 's/# CFLAGS_OPENMP = -fopenmp/CFLAGS_OPENMP = -fopenmp/' make.inc
+sed -i 's/BUILD_RAPL = No/BUILD_RAPL = Yes/' Makefile
+sed -i 's/gcc-4\.6/gcc/' make.inc
+make
+
+# Download and compile GraphMat
+echo "Preparing GraphMat..."
+cd "$BASE_DIR"
+if [ ! -d GraphMat ]; then
+	git clone https://github.com/HPCL/GraphMat.git
+fi
+cd GraphMat
+sed -i 's/BUILD_RAPL = No/BUILD_RAPL = Yes/' Makefile
+make
 
 # Check for datasets
 # They cannot be downloaded automatically. You must download them yourself :(
@@ -65,9 +104,6 @@ for d in ${GRAPHALYTICS_DATASETS[@]}; do
 	sed 's/[:space:]+/,/' "$DATASET_DIR/$d.v" >> "$DATASET_DIR/$d/vertex.csv"
 done
 
-# TODO: Get other datasets converted to the right formats.
-# Right now: LDBC Graphalytics datasets are not compatible since the edge numbers skip
-
 # Set the names for the algorithms. They're not the same in GAP and GraphBIG.
 # NOTE: GAP algorithms are the "canonical" algorithms; that's how the output files are named.
 # NOTE: All algorithms must appear in the same order.
@@ -78,6 +114,11 @@ ALGORITHM_DIRS=( bench_BFS bench_pageRank bench_shortestPath ) # Just used for G
 ### Run the benchmarks
 # The general loop structure is a doubly-nested for loop
 # looping over each dataset then each algorithm.
+
+if [ $RUN_EXPERIMENTS = false ]; then
+	echo "No experiments run."
+	exit 0
+fi
 
 # Run GAP Benchmark
 mkdir "$BASE_DIR/output"
@@ -92,15 +133,6 @@ for d in "${DATASETS[@]}"; do
 		./${ALG} -f "$DATASET_DIR/$d/$d.el" > "$BASE_DIR/output/${ALG}-GAP-$d.txt"
 	done
 done
-
-# Download and compile GraphBIG Benchmark Suite
-echo "Preparing GraphBIG..."
-cd "$BASE_DIR"
-if [ ! -d graphBIG ]; then
-	git clone "https://github.com/graphbig/graphBIG.git"
-fi
-cd graphBIG/benchmark
-make clean all
 
 # Run GraphBIG Benchmark
 for d in "${DATASETS[@]}"; do

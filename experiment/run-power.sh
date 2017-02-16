@@ -7,13 +7,15 @@
 
 # Set some parameters and environment variables
 # CHECK THAT THESE ARE CORRECT ON YOUR OWN SYSTEM!
+# NOTE: on Arya, graph500, GraphBIG, and GAP must be recompiled.
 module load intel/17
 module load papi/git
 DDIR= # Dataset directory
 GAPDIR=
 GRAPH500DIR=
 GRAPHMATDIR=
-S=16
+GRAPHBIGDIR=
+S=22
 NRT=32 # Number of roots that we did BFS on. GraphBIG has issues with >32.
 PKG=2 # The number of physical chips
 export OMP_NUM_THREADS=32
@@ -39,6 +41,11 @@ for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
 	sudo bash -c "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH; $GRAPHMATDIR/bin/BFS $DDIR/kron-${S}.graphmat $ROOT"
 	#"$GRAPHMATDIR/bin/BFS" "$DDIR/kron-${S}.graphmat" "$ROOT"
 done >> "$FN" 2>> "$ERRFN"
+# GraphBIG BFS
+for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
+	sudo "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
+done >> "$FN" 2>> "$ERRFN"
+
 # Baseline (do nothing, just sleep)
 sudo "$GAPDIR"/sleep_baseline >> "$FN" 2>> "$ERRFN"
 sudo chown spollard "$FN"
@@ -57,6 +64,9 @@ grep -A 29 'RAPL on Graph500 BFS' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENE
 # GraphMat
 grep -A 29 'RAPL on GraphMat BFS' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphMat,BFS,Average CPU Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 grep -A 29 'RAPL on GraphMat BFS' "$FN" | awk -v PKG=$PKG '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphMat,BFS,Total CPU Energy (J)," t;t=0}else{t+=$3}}' >> "$PFN"
+# GraphBIG
+grep -A 29 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphBIG,BFS,Average CPU Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
+grep -A 29 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphBIG,BFS,Total CPU Energy (J)," t;t=0}else{t+=$3}}' >> "$PFN"
 # Baseline
 grep -A 29 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Baseline,Sleep,Average CPU Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 grep -A 29 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Baseline,Sleep,Total CPU Energy (J)," t;t=0}else{t+=$3}}' >> "$PFN"
@@ -64,13 +74,28 @@ grep -A 29 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Total Energy.*PAC
 # RAM
 # DRAM Average Power
 # We sum across all packages--all the DIMMs associated with one physical chip
+# GAP
 grep -A 31 'RAPL on GAP BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GAP,BFS,Average DRAM Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 # Graph500
 grep -A 31 'RAPL on Graph500 BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Graph500,BFS,Average DRAM Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 # GraphMat
 grep -A 31 'RAPL on GraphMat BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphMat,BFS,Average DRAM Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
+# GraphBIG
+grep -A 31 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphBIG,BFS,Average DRAM Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 # Baseline
 grep -A 31 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Baseline,Sleep,Average DRAM Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
+
+# Timings
+# GAP
+grep -A 31 'RAPL on GAP BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GAP,BFS,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
+# Graph500
+grep -A 31 'RAPL on Graph500 BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Graph500,BFS,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
+# GraphMat
+grep -A 31 'RAPL on GraphMat BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphMat,BFS,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
+# GraphBIG
+grep -A 31 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphBIG,BFS,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
+# Baseline
+grep -A 31 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Baseline,Sleep,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
 
 sudo chown spollard "$PFN"
 
