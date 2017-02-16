@@ -11,7 +11,7 @@ if [ -z "$EXPERIMENT_DIR" ]; then
 	echo "Please specify where the output csv files are located."
 	exit 1
 fi
-PLATFORMS="openg powergraph"
+PLATFORMS="openg powergraph graphmat"
 # Compute the mean runtime.
 for p in $PLATFORMS; do
 	P_RUNS=$(find "$EXPERIMENT_DIR" -path */"${p}"-report-*/runtime.csv)
