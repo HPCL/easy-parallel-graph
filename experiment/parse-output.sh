@@ -3,9 +3,12 @@
 # Assumes the experiment is run $NRT times ($NRT roots or $NRT PageRanks)
 NRT=32
 FN=$1
+ERRFN=$2 # Needed for PowerGraph
 if [ -z "$FN" ]; then
 	echo "usage: parse-output.sh <output_file>"
 	exit 2
+elif [ -z "$ERRFN" ]; then
+	>&2 echo "WARNING: No error filename specified. May cause issues with PowerGraph."
 fi
 
 # Graph500
@@ -66,5 +69,7 @@ awk -v NRT=$NRT '/Average Time:/{i++; if(i>2*NRT)print "GAP,PageRank,Time," $3}'
 # PowerGraph
 # The first NRT are SSSP, the next NRT PageRank.
 awk -v NRT=$NRT '/Finished Running engine/{i++; if(i<=NRT)print "PowerGraph,SSSP,Time," $5}' "$FN"
-awk -v NRT=$NRT '/Finished Running engine/{i++; if(i>NRT)print "PowerGraph,SSSP,Time," $5}' "$FN"
+awk -v NRT=$NRT '/iterations completed/{i++; if(i<=NRT)print "PowerGraph,SSSP,Iterations," $(NF-2)}' "$ERRFN"
+awk -v NRT=$NRT '/Finished Running engine/{i++; if(i>NRT)print "PowerGraph,PageRank,Time," $5}' "$FN"
+awk -v NRT=$NRT '/iterations completed/{i++; if(i>NRT)print "PowerGraph,PageRank,Iterations," $(NF-2)}' "$ERRFN"
 
