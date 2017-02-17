@@ -96,14 +96,14 @@ Unlike these approaches, we focus on the \emph{depth} of analysis rather than th
 % In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
 
 \section{Experimental Setup}
-We refer to a graphs's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
+We refer to a graph's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
 
 Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times. We plot many of the results as box plots with an implied 32 data points per box.
 
 When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the dataset construction.
 
 \subsection{Machine Specifications}
-We performed experiments on our 32-core Intel Haswell server, whose specifications are outlined below.
+We performed experiments on our 36-core Intel Haswell server whose specifications are outlined below.
 %Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
 %\begin{table}[h!tb]
 %	\centering
@@ -162,8 +162,7 @@ We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in
 
 \subsection{Runtime}
 
-In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on the Dota-League dataset. An explanation of each algorithm is given in \cite{Iosup:2016:Graphalyticstech}. Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG performs better. However, these preliminary results do not show the complete picture. 
-\todo[inline]{Would be good to add something here on what more is needed for getting a complete picture.}
+In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on the Dota-League dataset. An explanation of each algorithm is given in \cite{Iosup:2016:Graphalyticstech}. Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG performs better. However, these preliminary results do not show the complete picture. For example, one may want to know the cost of performing additional computations on a graph once the data structures have been built. Additionally, one may desire runtime bounds to get a reasonable maximum timespan for a given problem.
 
 %Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while BFS traverses each edge exactly once, and the number of edges traversed with PageRank depends on the connectivity of the graph and the number of iterations.
 
@@ -216,7 +215,6 @@ Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for 
 %	\label{tab:epg-perf}
 %\end{table}
 
-\todo{Make the text bigger for these}
 \begin{figure}
 	\centering
 	\begin{minipage}{0.48\linewidth}
@@ -296,7 +294,6 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 
 RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The left plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat exhibits the lowest average RAM power consumption (but not the shortest execution time). This information can be useful when choosing an algorithm to use in limited power scenarios, where a slower algorithms that will not exceed the power cap is preferred to a faster one that may exceed it.
 
-\todo{Make text bigger}
 \begin{figure}
 	\centering
 	\begin{minipage}{0.48\linewidth}
