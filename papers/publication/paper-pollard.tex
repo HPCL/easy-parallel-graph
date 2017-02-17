@@ -287,7 +287,7 @@ Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We defin
 \todo{Rerun GraphMat on scale 22 with 2 threads. Surprising that it slows down}
 
 \subsection{Power and Energy Consumption}
-We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage. PAPI provides convenient access to these values and average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation. In our case, the fastest code is also the most energy efficient, though with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
+We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage. PAPI provides convenient access to these values and average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation and give a summary of the results in Table~\ref{tab:power}. In our case, the fastest code is also the most energy efficient though with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
 
 \begin{table}
 	\caption{The data are generated from a Kronecker graph with $2^{22}$ vertices. Sleeping Energy refers to the power (in Watts) consumed during the Unix \texttt{sleep} function, multiplied by time. Effectively, this measures the amount of energy that would have been consumed even if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over the 32 roots.}
@@ -300,9 +300,10 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 		Sleeping Energy (J) & 0.4046  & 0.4660 & 39.591 &  35.234 \\
 		Increase over Sleep & 2.926 & 3.928 & 2.834 & 3.153
 	\end{tabular}
+	\label{tab:power}
 \end{table}
 
-RAPL also allows the measurement of DRAM power and energy, whose results are shown in Fig.~\ref{fig:power}.
+RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The left plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat results in the lowest RAM and power consumption despite not having the largest runtime.
 
 \todo{Make text bigger}
 \begin{figure}
