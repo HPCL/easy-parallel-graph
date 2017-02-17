@@ -95,7 +95,8 @@ measure_scale <- function(algo) {
 	# It is wasteful to reread the parsed*-1.csv but it simplifies the code
 	x <- read.csv(paste0("parsed",scale,"-1.csv"), header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
-	systems <- unique(subset(x$Sys, x$Algo == algo, c("Sys")))
+	x$Sys <- factor(x$Sys, ordered = TRUE)
+	systems <- levels(subset(x$Sys, x$Algo == algo, c("Sys")))
 	algo_time <- data.frame(
 			matrix(ncol = length(threadcnts), nrow = length(systems)),
 			row.names = systems)
@@ -268,14 +269,12 @@ dev.off()
 ###
 # Part 4: Dota-league dataset with easy-parallel-graph
 ###
-# STILL NOT RIGHT
-dota <- read.csv("parseddota-32.csv", header = FALSE)
+dota <- read.csv("parseddota-32-redo.csv", header = FALSE)
 colnames(dota) <- c("Sys","Algo","Metric","Time")
-dota_times <- aggregate(dota, list(paste(dota$Sys, dota$Algo)), mean)
-bfs_time <- subset(dota, dota$Algo == "BFS" & dota$Metric == "Time",
-		c("Sys","Time"))
-sssp_time <- subset(x, x$Algo == "SSSP" & x$Metric == "Time",
-		c("Sys","Time"))
+dota$Sys <- factor(dota$Sys, ordered = TRUE)
+systems <- levels(subset(x$Sys, x$Algo == algo, c("Sys")))
+#dota_times <- subset(dota, dota$Metric == "Time", c("Sys","Algo","Time"))
+dota_means <- aggregate(dota$Time, list(dota$Sys, dota$Algo, dota$Metric), mean)
 
 ###
 # Part 5: Supplementary statistics used in the paper's prose.
@@ -307,5 +306,4 @@ sd(sssp_time$Time[sssp_time$Sys == "GraphMat"]) /
 #bfs_t_gap <- bfs_time[["Time"]][bfs_time[["Sys"]] == "GAP"]
 #vioplot(bfs_t_gb, bfs_t_gm, bfs_t_gap,
 #		names=c("GraphBIG", "GraphMat", "GAP"),
-#		col="bisque")
-
+#		col="bislevels

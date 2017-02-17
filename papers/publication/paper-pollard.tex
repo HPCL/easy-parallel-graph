@@ -197,23 +197,21 @@ In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on
 \end{table}
 
 
-\todo{rework this. It would be nice to compare Graphalytics and our approach on the real-world dataset.}
-Table~\ref{tab:epg-perf}, by contrast, gives an overview of the performance results of running Graphalytics and our approach using the same dataset [TODO: Get the Dota-League Dataset working with easy-parallel-graph and replace Table~\ref{epg-perf}]. Table~\ref{tab:epg-perf} shows the average time across 32 roots, whereas Graphalytics by default shows results for a single root.
-
-Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for a Kronecker graph with scale $22$. The box plots give an idea of the runtime distributions. There is less variance in the runtimes of SSSP (between 0.1 and 1.7 seconds) compared to BFS (0.01 and 1.7 seconds) but GAP is the clear winner in both cases. The data structure construction times for GAP and GraphMat are consistent; in both cases the platforms create the same data structure for both algorithms. These results are consistent with \cite{Sundaram:2015:GraphMat} which lists GraphMat as more performant than PowerGraph in SSSP.
-
+% Table~\ref{tab:epg-perf}, by contrast, gives an overview of the performance results of running Graphalytics and our approach using the same dataset [TODO: Get the Dota-League Dataset working with easy-parallel-graph and replace Table~\ref{epg-perf}]. Table~\ref{tab:epg-perf} shows the average time across 32 roots, whereas Graphalytics by default shows results for a single root.
 %\begin{table}
 %	\centering
 %	\begin{tabular}{l|c|c|c}
-%		System & Load Graph & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS \\ \hline
-%		Graph500 & 0.3474 & 0.3971 & 0.003380 \\
-%		GAP      & 2.351  & 0.1935 & 0.001393 \\
-%		GraphMat & 0.1511 & 1.101  & 0.1031 \\
-%		GraphBIG & 37.22  & N/A    & 0.1528 \\
+%		System & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular} & Run BFS & Run SSSP \\ \hline
+%		PowerGraph & N/A & 0.003380 \\
+%		GAP        & 0.412 & 0.001393 \\
+%		GraphMat   &  & 0.1031 \\
+%		GraphBIG   & N/A & 0.1528 \\
 %	\end{tabular}
-%	\caption{This table shows times for $2^{20}$ verties and the times are in seconds. The Graph500 generates the graph instead of loading it into a file. GraphBIG builds the graph and reads in the file simultaneously. These results were averaged across 32 roots.}
+%	\caption{This table shows times for the Dota-League dataset using our method.}
 %	\label{tab:epg-perf}
 %\end{table}
+
+Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for a Kronecker graph with scale $22$. The box plots give an idea of the runtime distributions. There is less variance in the runtimes of SSSP (between 0.1 and 1.7 seconds) compared to BFS (0.01 and 1.7 seconds) but GAP is the clear winner in both cases. The data structure construction times for GAP and GraphMat are consistent; in both cases the platforms create the same data structure for both algorithms. These results are consistent with \cite{Sundaram:2015:GraphMat} which lists GraphMat as more performant than PowerGraph in SSSP.
 
 \begin{figure}
 	\centering
@@ -270,7 +268,7 @@ Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We defin
 	\begin{minipage}{0.9\linewidth}
 		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss.pdf}
 	\end{minipage}
-	\caption{The top figure has both axes logarithmic with an exception at 72 threads for readability. Linear speedup is. GraphMat dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time for $n$ threads.}
+	\caption{The top figure has both axes logarithmic with an exception at 72 threads for readability. Linear speedup is. GraphBIG dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time for $n$ threads.}
 	\label{fig:bfs-scaling}
 \end{figure}
 \todo{Rerun GraphMat on scale 22 with 2 threads. Surprising that it slows down}
@@ -309,9 +307,9 @@ RAPL also allows the measurement of DRAM power, the results of which are shown i
 \section{Future Work and Conclusion}
 We have presented a systematic approach to analyzing parallel graph processing performance, both measuring power consumption and the two fundamental phases of execution. While the comparison presented here can help one choose among alternatives for the selected packages and algorithms, the problem of selecting a graph processing framework for a given large-scale problem remains far from simple. Hence, we make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories. 
 
-Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets but the least scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite as a good test of performance.
+Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets though not the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their BFS implementations to the Graph500 for BFS, GAP Benchmark Suite for smaller problem sizes or a low number of cores (at most 32), and GraphMat for larger problems with more cores.
 
-We found that GraphMat is not highly performant but does scale relatively well. One explanation is that GraphMat's underlying computation model (sparse matrix operations), paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation, is better suited to larger-scale graphs.
+We found that GraphMat is relatively performant and scales better at higher cores. One explanation is that GraphMat's underlying computation model (sparse matrix operations), paired with the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation, is better suited to larger-scale graphs.
 % Furthermore, sparse matrix operations have been well studied so achieving good scalability is more realistic [cite]
 
 Our work can continue in many directions. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG, this required the file to be loaded in for each experiment. By far the most time consuming of the experiments was GraphBIG's serial file input of uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question we plan to pursue further.
