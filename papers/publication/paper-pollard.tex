@@ -33,7 +33,7 @@ Our research is motivated by the current state of parallel graph processing. The
 An overarching issue among these systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Additionally, some systems are developed with large, multi-node clusters in mind while others only work with shared memory, single node computers. An example of the former is GraphX \cite{Xin:2013:GraphX}, which incurs some overhead while gaining fault tolerance and an example of the latter is Ligra \cite{Shun:2013:Ligra}, a framework requiring a shared-memory architecture.
 % ``The project was motivated by the fact that the largest publicly available real-world graphs all fit in shared memory''
 
-At the human level, there are optimizations for each system which may not be apparent. For example, the Parallel Boost Graph Library (PBGL) \cite{Gregor:2005:PBGL} provides generic implementations of their algorithms and the programmer must provide the template specializations. The optimal data structures may differ across algorithms and graphs and must be determined by the programmer.
+From a graph algorithm user's point of view, there are optimizations for each system which may not be apparent. For example, the Parallel Boost Graph Library (PBGL)~\cite{Gregor:2005:PBGL} provides generic implementations of their algorithms and the programmer must provide the template specializations. The optimal data structures may differ across algorithms and graphs and must be determined by the programmer.
 
 %% How do we address it?
 To mitigate the inherent bias in hand-generated implementations, all the experiments performed use the author-provided implementations; we assume the developers of each system will provide the most performant implementation. While this limits the scope of the experiments it mitigates the bias inherent in our programming skills.
@@ -103,7 +103,25 @@ Each experiment uses 32 roots per graph. As with the Graph500, each root is sele
 When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the dataset construction.
 
 \subsection{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
+We performed experiments on our 32-core Intel Haswell server, whose specifications are outlined below.
+%Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
+%\begin{table}[h!tb]
+%	\centering
+%	\caption{
+The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.
+\begin{center}
+	% For arya I deleted Max RAM Freq	2133MHz
+	\pgfplotstabletypeset[
+	header=false,
+	col sep=tab,
+	string type,
+	every head row/.style={output empty row, before row=\bottomrule},
+	columns/0/.style={column type={|p{1in}|}},
+	columns/1/.style={column type={p{3.2in}|}},
+	every last row/.style={after row=\toprule},
+	]{../report/specs.csv}
+	%\label{tab:specs}
+\end{center}
 
 \subsection{Graph Processing Systems}
 
@@ -132,22 +150,6 @@ We select SSSP because of the straightforward extension from BFS; we need not mo
 PageRank is selected because of its popularity; most libraries provide reference implementations. One challenge with using PageRank is the stopping criterion; this is addressed in Sect.~\ref{sec:perf}. Verification of the PageRank results is beyond the scope of this paper, although this may explain some of the large performance discrepancies.
 
 This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms.
-
-\begin{table}
-	\centering
-	\caption{The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.}
-	% For arya I deleted Max RAM Freq	2133MHz
-	\pgfplotstabletypeset[
-	header=false,
-	col sep=tab,
-	string type,
-	every head row/.style={output empty row, before row=\bottomrule},
-	columns/0/.style={column type={|p{1in}|}},
-	columns/1/.style={column type={p{3.2in}|}},
-	every last row/.style={after row=\toprule},
-	]{../report/specs.csv}
-	\label{tab:specs}
-\end{table}
 
 \subsection{Datasets}\label{sec:datasets}
 We use the Graph500 synthetic graph generator which creates a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$ and set the average degree of a vertex as 16. Hence, a Kronecker graph with scale $S$ has $2^S$ vertices and approximately $16 \times 2^S$ edges.
@@ -241,7 +243,7 @@ Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for 
 
 The behavior of PageRank is slightly different. As with SSSP and BFS, the GAP Benchmark Suite is the fastest but it also requires the fewest iterations.
 
-We attempt to use similar stopping criteria for each system, but GraphMat executes until no vertices change rank; effectively its stopping criterion requires the $\infty$-norm be less than machine epsilon. This could account for the increased number of iterations. We adjusted the other systems to use $\sum_{k=1}^{n} |p_k^{(i)} - p_k^{(i-1)}| < \epsilon $ as the stopping criteria, where $i$ is the iteration and $n$ is the number of vertices. We use $\epsilon = 6 \times 10^{-8}$ because this value is approximately machine epsilon for a single precision floating-point number. The goal is to make the stopping criteria for all implementations as similar as possible.
+We attempt to define similar stopping criteria for each system, but GraphMat executes until no vertices change rank; effectively its stopping criterion requires the $\infty$-norm be less than machine epsilon. This could account for the increased number of iterations. We adjusted the other systems to use $\sum_{k=1}^{n} |p_k^{(i)} - p_k^{(i-1)}| < \epsilon $ as the stopping criteria, where $i$ is the iteration and $n$ is the number of vertices. We use $\epsilon = 6 \times 10^{-8}$ because this value is approximately machine epsilon for a single precision floating-point number. The goal is to make the stopping criteria for all implementations as similar as possible.
 
 Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} compresses the apparent variance in runtime. Each platform in Fig.~\ref{fig:pr} has a relative standard deviation between $1/4$ and $1/2$ that of the same system executing SSSP.
 
@@ -258,9 +260,9 @@ Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} c
 	\label{fig:pr}
 \end{figure}
 
-The challenge in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite stores vertex weights as 32-bit integers. However, other systems store them as floating point numbers. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a graph is represented in the system (e.g. weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
+The difficulty in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite stores vertex weights as 32-bit integers. However, other systems store them as floating-point numbers. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a graph is represented in the system (e.g., weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
 
-Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We define the strong scaling as $T_1 / (n T_n)$ where $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ is the time for $n$ threads. A linear scalability is when $T_n = T_1/n$ and is the horizontal line on the bottom plot in Fig.~\ref{fig:bfs-scaling}. These plots show in general poor scaling throughout, though GraphBIG has the best scaling. A potential explanation is GraphBIG is the slowest system so there is more room for improvement. Additionally, $2^{20}$ vertices is a ``small'' graph by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine.
+Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We define the strong scaling as $T_1 / (n T_n)$ where $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ is the time for $n$ threads. A linear scalability is when $T_n = T_1/n$ and is the horizontal line on the bottom plot in Fig.~\ref{fig:bfs-scaling}. These plots show in general poor scaling throughout, although GraphBIG has the best scaling. A potential explanation is GraphBIG is the slowest system, so there is more room for improvement. Additionally, $2^{20}$ vertices is a ``small'' graph by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine.
 \begin{figure}
 	\centering
 	\begin{minipage}{0.9\linewidth}
