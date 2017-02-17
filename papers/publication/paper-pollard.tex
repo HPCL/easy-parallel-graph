@@ -55,7 +55,7 @@ Our research contributions in this paper can be summarized as follows.
 \section{Related Work}
 A related project is Graphalytics \cite{Capota:2015:Graphalytics}, which also attempts to automate the setup and execution of graph packages for performance analysis. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set the correct shell commands to execute. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API and involve a nontrivial amount of programming.
 
-Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.6 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, other performance-relavant details, such as the number of iterations run for PageRank, are not easily available using Graphalytics.
+Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.96 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, other performance-relavant details, such as the number of iterations run for PageRank, are not easily available using Graphalytics.
 %We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
 % The full logs:
 %Finished setting ids, time: 0.157009
@@ -83,7 +83,7 @@ Moreover, the complexity of Graphalytics can obfuscate the true behavior of the 
 
 With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula}, one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. This requires in-depth knowledge of the source code and execution model. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
 
-As with Graphalytics, the initial development effort is high but Granula paired with graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis without requiring a performance and execution model for each system.
+As with Graphalytics, the initial development effort is high but Granula paired with Graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis but without requiring a performance and execution model for each system.
 
 Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and \cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model.
 
@@ -98,11 +98,15 @@ Unlike these approaches, we focus on the \emph{depth} of analysis rather than th
 \section{Experimental Setup}
 We refer to a graphs's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
 
-Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. In the case of PageRank, we simply run PageRank 32 times.
+Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times.
 
-When possible, we measure the data set construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the data set construction.
+When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the dataset construction.
 
+<<<<<<< HEAD
+Any box plot with the exception of the Graph500 (instead labeled as solid lines rather than boxes) is a representation of 32 datapoints per box.
+=======
 We plot many of the results as box plots with an implied 32 data points per box.
+>>>>>>> 9019d6628dc2d596dd5be4391dfbdc384d54ce1f
 
 \subsection{Machine Specifications}
 Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
@@ -122,11 +126,15 @@ Our approach is not specific or limited to these graph packages and can be exten
 
 \subsection{Algorithms}\label{sec:algs}
 
+<<<<<<< HEAD
+We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented for all systems.
+=======
 We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
+>>>>>>> 9019d6628dc2d596dd5be4391dfbdc384d54ce1f
 
 We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is that it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
 
-Our work aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots with the exception of PowerGraph which doesn't provide an reference implementation of BFS in its toolkits.
+Our work aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an unsorted edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots with the exception of PowerGraph which doesn't provide an reference implementation of BFS in its toolkits.
 
 We select SSSP because of the straightforward extension from BFS; we need not modify the graph nor the root vertices from BFS.
 
@@ -161,7 +169,7 @@ We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in
 
 \subsection{Runtime}
 
-In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on a single dataset. For an explanation of each algorithm used, see \cite{Iosup:2016:Graphalyticstech}. Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture.
+In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on the Dota-League dataset. An explanation of each algorithm is given in \cite{Iosup:2016:Graphalyticstech}. Table~\ref{tab:graphalytics} shows only a broad overview of the two systems: GraphBIG and PowerGraph. In general, we see GraphBIG is more performant. However, results such as these are preliminary and do not show the complete picture.
 
 %Table~\ref{tab:perf} lists performance in milliseconds of runtime according to the graphalytics output. Graphalytics also outputs MTEPS or millions of traversed edges pers econd. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while BFS traverses each edge exactly once, and the number of edges traversed with PageRank depends on the connectivity of the graph and the number of iterations.
 
@@ -199,9 +207,7 @@ In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on
 \todo{rework this. It would be nice to compare Graphalytics and our approach on the real-world dataset.}
 Table~\ref{tab:epg-perf}, in contrast, gives an overview of the performance results of running graphalytics and our approach using the same dataset [TODO: Get the Dota-League Dataset working with easy-parallel-graph and replace Table~\ref{epg-perf}]. Table~\ref{tab:epg-perf} shows the average time across 32 roots, whereas Graphalytics by default shows results for a single root.
 
-Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show more detail, with box plots for the runtime distributions. However, even these do not give a complete picture of performance. Both of these show GraphMat to not be highly performant. One explanation is GraphMat's underlying computation model (sparse matrix operations) paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation is more conducive to larger-scale graphs. There is less discrepancy between the runtimes of SSSP (between 0.1 and 1.7 seconds) compared to BFS (0.01 and 1.7 seconds) but GAP is the clear winner in both cases. The data structure construction times for GAP and GraphMat are consistent; in both cases the platforms create the same data structure for both algorithms.
-
-These results are consistent with \cite{Sundaram:2015:GraphMat} which lists GraphMat as more performant than PowerGraph in SSSP.
+Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for a Kronecker graph with scale $22$. The box plots give an idea of the runtime distributions. There is less discrepancy between the runtimes of SSSP (between 0.1 and 1.7 seconds) compared to BFS (0.01 and 1.7 seconds) but GAP is the clear winner in both cases. The data structure construction times for GAP and GraphMat are consistent; in both cases the platforms create the same data structure for both algorithms. These results are consistent with \cite{Sundaram:2015:GraphMat} which lists GraphMat as more performant than PowerGraph in SSSP.
 
 %\begin{table}
 %	\centering
@@ -262,7 +268,7 @@ Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} c
 
 The challenge in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite stores vertex weights as 32-bit integers. However, other systems store them as floating point numbers. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a graph is represented in the system (e.g. weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
 
-Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We define the strong scaling as $T_1 / (n T_n)$ where $T_1$ is the serial time and $n$ is the number of threads. A linear scalability is when $T_n = T_1/n$ and is the horizontal line on the bottom plot in Fig.~\ref{fig:bfs-scaling}. These plots show in general poor scaling throughout, though GraphBIG has the best scaling. A potential explanation is GraphBIG is the slowest system so there is more room for improvement. Additionally, a scale of 20 generates a small graph by today's standards and thus the focus is on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine.
+Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We define the strong scaling as $T_1 / (n T_n)$ where $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ is the time for $n$ threads. A linear scalability is when $T_n = T_1/n$ and is the horizontal line on the bottom plot in Fig.~\ref{fig:bfs-scaling}. These plots show in general poor scaling throughout, though GraphBIG has the best scaling. A potential explanation is GraphBIG is the slowest system so there is more room for improvement. Additionally, $2^{20}$ vertices is a ``small'' graph by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine.
 \begin{figure}
 	\centering
 	\begin{minipage}{0.9\linewidth}
@@ -272,7 +278,7 @@ Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We defin
 	\begin{minipage}{0.9\linewidth}
 		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss.pdf}
 	\end{minipage}
-	\caption{The top figure has both axes logarithmic. The exception is the extra space at 72 threads for readability. Linear speedup is. GraphMat dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time for $n$ threads.}
+	\caption{The top figure has both axes logarithmic with an exception at 72 threads for readability. Linear speedup is. GraphMat dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time for $n$ threads.}
 	\label{fig:bfs-scaling}
 \end{figure}
 \todo{Rerun GraphMat on scale 22 with 2 threads. Surprising that it slows down}
@@ -281,7 +287,7 @@ Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We defin
 We use the Performance Application Programming Interface (PAPI) \cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides access to a set of hardware counters measuring energy usage. PAPI provides convenient access to these values and average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation and give a summary of the results in Table~\ref{tab:power}. In our case, the fastest code is also the most energy efficient though with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
 
 \begin{table}
-	\caption{The data are generated from a Kronecker graph with $2^{22}$ vertices. Sleeping Energy refers to the power (in Watts) consumed during the Unix \texttt{sleep} function, multiplied by time. Effectively, this measures the amount of energy that would have been consumed even if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over the 32 roots.}
+	\caption{The data are generated using a Kronecker graph with a scale of 22. Sleeping Energy refers to the power (in Watts) consumed during the \texttt{unistd} C \texttt{sleep} function, multiplied by the Time row. Essentially, this measures the amount of energy that would have been consumed even if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over 32 roots.}
 	\centering
 	\begin{tabular}{l|r|r|r|r}
 			&	GAP  &    Graph500 & GraphBIG & GraphMat \\ \hline
@@ -312,7 +318,10 @@ RAPL also allows the measurement of DRAM power, the results of which are shown i
 \section{Future Work and Conclusion}
 We have presented a systematic approach to analyzing parallel graph processing performance, both measuring power consumption and the two fundamental phases of execution. While the comparison presented here can help choose among alternatives for the selected packages and algorithms, the problem of choosing a system for graph processing at large scale is far from simple. Hence, we make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories. 
 
-Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets and the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite as a good test of performance.
+Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets but the least scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite as a good test of performance.
+
+We found Graphmat to not be highly performant but relatively scalable. One explanation is GraphMat's underlying computation model (sparse matrix operations) paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation is more conducive to larger-scale graphs.
+% Furthermore, sparse matrix operations have been well studied so achieving good scalability is more realistic [cite]
 
 Our work can continue in many directions. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG, this required the file to be loaded in for each experiment. By far the most time consuming of the experiments was GraphBIG's serial file input of uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question we plan to pursue further.
 
