@@ -158,7 +158,7 @@ The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the D
 
 \section{Performance Analysis}\label{sec:perf}
 
-We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in terms of execution time, scalability over multiple threads, and power and energy consumption.
+We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in terms of execution time, scalability over multiple threads, and power and energy consumption. All figures except those measuring scalability (Fig.~\ref{fig:bfs-scaling}) use 32 threads.
 
 \subsection{Runtime}
 
@@ -169,7 +169,7 @@ In addition to the data presented in Table~\ref{tab:graphalytics}, one may want 
 % Graphalytics also outputs MTEPS or millions of traversed edges per second. However, the graphalytics version does not make sense in all cases: for example, computing the local clustering coefficient involves traversing each edge multiple times (proportional to the sparsity of the graph), while BFS traverses each edge exactly once, and the number of edges traversed with PageRank depends on the connectivity of the graph and the number of iterations.
 
 \begin{table}
-	\caption{The dataset used is the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds. Community detection is performed using label propagation.}
+	\caption{The dataset used is the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds running with the maximal number of threads (64 for Powergraph, 72 for the others). Community detection is performed using label propagation.}
 	\centering
 	\pgfplotstabletypeset[
 		col sep=comma,
@@ -195,7 +195,7 @@ In addition to the data presented in Table~\ref{tab:graphalytics}, one may want 
 
 \begin{table}
 	\centering
-	\caption{This table shows averages of runtimes for the Dota-League dataset using our method. Each cell represents the average over 32 runs. The ``N/A'' for PowerGraph and GraphBIG exist because both of these systems read in the files and build a graph data structure simultaneously. GraphMat is not included because reading in the Dota-League dataset crashes the system.}
+	\caption{This table shows averages of runtimes for the Dota-League dataset using our method using 32 threads. Each cell represents the average over 32 runs. The ``N/A'' for PowerGraph and GraphBIG exist because both of these systems read in the files and build a graph data structure simultaneously. GraphMat is not included because reading in the Dota-League dataset crashes the system.}
 	\begin{tabular}{l|c|c|c|c}
 		System & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular}
 		                   & Run BFS & Run SSSP & Run PageRank \\ \hline
@@ -300,9 +300,9 @@ RAPL also allows the measurement of DRAM power, the results of which are shown i
 \section{Future Work and Conclusion}
 We have presented a systematic approach to analyzing parallel graph processing performance, both measuring power consumption and the two fundamental phases of execution. While the comparison presented here can help one choose among alternatives for the selected packages and algorithms, the problem of selecting a graph processing framework for a given large-scale problem remains far from simple. Hence, we make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories. 
 
-Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets though not the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their BFS implementations to the Graph500 for BFS, GAP Benchmark Suite for smaller problem sizes or a low number of cores (at most 32), and GraphMat for larger problems with more cores. One last consideration is price: GraphMat requires the Intel compiler collection.
+Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets though not the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their BFS implementations to the Graph500 for BFS, GAP Benchmark Suite for smaller problem sizes or a low number of threads (at most 32), and GraphMat for larger problems with more threads. This is despite the fact that GraphBIG has the best scalability, because even at more than 16 threads the runtime for GraphBIG is still at least one order of magnitude slower than GAP or GraphMat for all sampled algorithms. One last consideration is price: GraphMat requires the Intel compiler collection.
 
-We found that GraphMat is relatively performant and scales better at higher cores. One explanation is that GraphMat's underlying computation model (sparse matrix operations), paired with the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation, is better suited to larger-scale graphs.
+We found that GraphMat is only decently performant, but scales to more threads. One explanation is that GraphMat's underlying computation model (sparse matrix operations), paired with the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation, is better suited to larger-scale graphs.
 % Furthermore, sparse matrix operations have been well studied so achieving good scalability is more realistic [cite]
 
 Our work can continue in many directions. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG, this required the file to be loaded in for each experiment. By far the most time consuming of the experiments was GraphBIG's serial file input of uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question we plan to pursue further.
