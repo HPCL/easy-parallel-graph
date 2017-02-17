@@ -223,7 +223,7 @@ Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for 
 	\begin{minipage}{0.48\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
 	\end{minipage}
-	\caption{The $y$-axes are logarithmic. The left box plot shows the time to compute BFS on 32 random roots while the right plot shows the times to construct the graph for each system. Graph500 only constructs its graph once. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
+	\caption{The $y$-axes are logarithmic. The left box plot shows the time to compute BFS on 32 random roots while the right plot shows the times to construct the graph for each system. The Graph500 only constructs its graph once. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
 	\label{fig:bfs-time}
 \end{figure}
 
@@ -292,7 +292,7 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 	\label{tab:power}
 \end{table}
 
-RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The left plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat exhibits the lowest average RAM power consumption (but not the shortest execution time). This information can be useful when choosing an algorithm for limited power scenarios, where a slower algorithms that will not exceed the power cap is preferred to a faster one that may exceed it.
+RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The left plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat exhibits the lowest average RAM power consumption (but not the shortest execution time). This information can be useful when choosing an algorithm to use in limited power scenarios, where a slower algorithms that will not exceed the power cap is preferred to a faster one that may exceed it.
 
 \begin{figure}
 	\centering
@@ -309,12 +309,12 @@ RAPL also allows the measurement of DRAM power, the results of which are shown i
 \section{Future Work and Conclusion}
 We have presented a systematic approach to analyzing parallel graph processing performance, both measuring power consumption and the two fundamental phases of execution. While the comparison presented here can help one choose among alternatives for the selected packages and algorithms, the problem of selecting a graph processing framework for a given large-scale problem remains far from simple. Hence, we make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories. 
 
-Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets but the least scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite as an example of good performance.
+Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets but the least scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite as a good test of performance.
 
 We found that GraphMat is not highly performant but does scale relatively well. One explanation is that GraphMat's underlying computation model (sparse matrix operations), paired the increased overhead of GraphMat's doubly-compressed sparse row (DSCR) graph representation, is better suited to larger-scale graphs.
 % Furthermore, sparse matrix operations have been well studied so achieving good scalability is more realistic [cite]
 
-To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG, this required the file to be loaded in for each experiment. By far the most time consuming of the experiments was GraphBIG's serial file input of uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question we plan to pursue further.
+Our work can continue in many directions. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG, this required the file to be loaded in for each experiment. By far the most time consuming of the experiments was GraphBIG's serial file input of uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question we plan to pursue further.
 
 \bibliographystyle{splncs03}
 \bibliography{../drp}
