@@ -223,7 +223,7 @@ Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for 
 	\begin{minipage}{0.48\linewidth}
 		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_dsc.pdf}
 	\end{minipage}
-	\caption{The $y$-axes are logarithmic. The left box plot shows the time to compute BFS on 32 random roots while the right plot shows the times to construct the graph for each system. The Graph500 only constructs its graph once. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
+	\caption{The $y$-axes are logarithmic. The left box plot shows the time to compute BFS on 32 random roots while the right plot shows the times to construct the graph for each system. Graph500 only constructs its graph once. GraphBIG reads in the file and generates the data structure simultaneously so is omitted.}
 	\label{fig:bfs-time}
 \end{figure}
 
@@ -292,7 +292,7 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 	\label{tab:power}
 \end{table}
 
-RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The left plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat exhibits the lowest average RAM power consumption (but not the shortest execution time). This information can be useful when choosing an algorithm to use in limited power scenarios, where a slower algorithms that will not exceed the power cap is preferred to a faster one that may exceed it.
+RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The left plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat exhibits the lowest average RAM power consumption (but not the shortest execution time). This information can be useful when choosing an algorithm for limited power scenarios, where a slower algorithms that will not exceed the power cap is preferred to a faster one that may exceed it.
 
 \begin{figure}
 	\centering
