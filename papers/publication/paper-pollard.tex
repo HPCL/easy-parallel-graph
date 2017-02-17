@@ -44,10 +44,11 @@ To mitigate the inherent bias in hand-generated implementations, all the experim
 Our research contributions in this paper can be summarized as follows.
 \begin{itemize}
 	\item Automation of the installation, configuration, and dataset conversion to ensure the experiments execute in the same manner. Essentially, we provide a ``level playing field'' for graph algorithms.
-	\item Comparison of algorithm runtime and scalability using a variety of data sets.
+	\item Comparison of algorithm runtime and scalability using several data sets.
 	\item Comparison of our framework with the Graphalytics \cite{Capota:2015:Graphalytics} project.
-	\item Inspection of the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms
-	\item Provision of a experimental framework distinguishing between the data structure generation and algorithm execution phases of each system.
+	% BN: I think the bullet below is a bit too low-level for this summary, moving to later section.
+	%\item Inspection of the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms.
+	\item An experimental framework distinguishing between the data structure generation and algorithm execution phases of each system.
 	\item Analysis of energy consumption during the algorithm execution phase.
 \end{itemize}
 
@@ -95,32 +96,41 @@ Unlike these approaches, we focus on the \emph{depth} of analysis rather than th
 % In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
 
 \section{Experimental Setup}
-We refer to a graphs's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on the reasearch machine, 72.
+We refer to a graphs's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
 
 Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times.
 
 When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the dataset construction.
 
+<<<<<<< HEAD
 Any box plot with the exception of the Graph500 (instead labeled as solid lines rather than boxes) is a representation of 32 datapoints per box.
+=======
+We plot many of the results as box plots with an implied 32 data points per box.
+>>>>>>> 9019d6628dc2d596dd5be4391dfbdc384d54ce1f
 
 \subsection{Machine Specifications}
-Table~\ref{tab:specs} shows the specifications of the research computer.
+Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
 
 \subsection{Graph Processing Systems}
 
-This report explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the remaining two are included because of their performance and popularity. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations. The systems are:
+This study explores four shared memory parallel graph processing platforms. The first three are so-called ``reference implementations'' while the remaining two are included because of their performance and popularity. Our target is shared memory CPU processing. Other popular libraries such as the Parallel Boost Graph Library \cite{Gregor:2005:PBGL} are not considered here because the authors do not provide reference implementations. We consider the following systems.
+\begin{itemize}
+	\item The Graph500\footnote{We used the most recent version from \url{https://github.com/graph500/graph500}, most similar to release 2.1.4.} \cite{Murphy:2010:Graph500}, a set of large-scale graph benchmarks.
+	\item The Graph Algorithm Platform (GAP) Benchmark Suite \cite{Beamer:2015:GAPBench}.
+	\item GraphBIG \cite{Nai:2015:Graphbig} benchmark suite.
+	\item GraphMat \cite{Sundaram:2015:GraphMat}, a high-performance graph library.
+	\item PowerGraph \cite{Gonzalez:2012:Powergraph}, a framework for distributed graph-parallel computation on natural graphs.
+\end{itemize}
 
-\begin{enumerate}
-	\item The Graph500\footnote{We used the most recent version from \url{https://github.com/graph500/graph500}, most similar to release 2.1.4.} \cite{Murphy:2010:Graph500}
-	\item The Graph Algorithm Platform (GAP) Benchmark Suite \cite{Beamer:2015:GAPBench}
-	\item GraphBIG \cite{Nai:2015:Graphbig}
-	\item GraphMat \cite{Sundaram:2015:GraphMat}
-	\item PowerGraph \cite{Gonzalez:2012:Powergraph}
-\end{enumerate}
+Our approach is not specific or limited to these graph packages and can be extended to others with relatively modest effort (building each package and if necessary, instrumenting the different phases of the computation).
 
-\subsection{Algorithms}
+\subsection{Algorithms}\label{sec:algs}
 
+<<<<<<< HEAD
 We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented for all systems.
+=======
+We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
+>>>>>>> 9019d6628dc2d596dd5be4391dfbdc384d54ce1f
 
 We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
 
@@ -154,6 +164,8 @@ We use the Graph500 synthetic graph generator which creates a Kronecker graph \c
 The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset comes from the Game Trace Archive\cite{Guo:2012:GTA} and is modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}. This dataset is useful because it is both weighted and more dense than the usual real-world dataset with an average out-degree of 824.
 
 \section{Performance Analysis}\label{sec:perf}
+
+We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in terms of execution time, scalability over multiple threads, and power and energy consumption.
 
 \subsection{Runtime}
 
