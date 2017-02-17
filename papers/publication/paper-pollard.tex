@@ -22,13 +22,13 @@
 }
 \maketitle
 \begin{abstract}
-The increasing popularity of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph frameworks: GraphMat, the Graph500, the Graph Algorithm Platform, GraphBIG, and PowerGraph using synthetic and real-world datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
+The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph frameworks: GraphMat, the Graph500, the Graph Algorithm Platform, GraphBIG, and PowerGraph using synthetic and real-world datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
 \end{abstract}
 
 \section{Introduction}
 
 %% What's the problem (motivation)
-Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and taxonomized over 80 different parallel graph processing systems without even including domain specific languages \cite{Doekemeijer:2015:GPFSurvey}.
+Our research is motivated by the current state of parallel graph processing. The most comprehensive survey, released in 2014, identified and categorized over 80 different parallel graph processing systems, without considering domain specific languages \cite{Doekemeijer:2015:GPFSurvey}.
 
 An overarching issue among these systems is the lack of comprehensive comparisons. One possible reason is the considerable effort involved in getting each system to run: satisfying dependencies and ensuring data are correctly formatted are generally nontrivial tasks. Additionally, some systems are developed with large, multi-node clusters in mind while others only work with shared memory, single node computers. An example of the former is GraphX \cite{Xin:2013:GraphX}, which incurs some overhead while gaining fault tolerance and an example of the latter is Ligra \cite{Shun:2013:Ligra}, a framework requiring a shared-memory architecture.
 % ``The project was motivated by the fact that the largest publicly available real-world graphs all fit in shared memory''
@@ -41,14 +41,14 @@ To mitigate the inherent bias in hand-generated implementations, all the experim
 %To address the challenges of getting various systems installed, we automate the process as much as possible n
 %To showcase our methods we analyze the performance of several graph processing benchmarks to facilitate the selection among such systems. Our analysis is done with minimal source code modification.
 
-Our contributions can be summarized as follows.
+Our research contributions in this paper can be summarized as follows.
 \begin{itemize}
 	\item Automation of the installation, configuration, and dataset conversion to ensure the experiments execute in the same manner. Essentially, we provide a ``level playing field'' for graph algorithms.
-	\item Comparison of algorithm runtime and scalability using a variety of data sets
-	\item Comparison of our framework with the Graphalytics \cite{Capota:2015:Graphalytics} project
+	\item Comparison of algorithm runtime and scalability using a variety of data sets.
+	\item Comparison of our framework with the Graphalytics \cite{Capota:2015:Graphalytics} project.
 	\item Inspection of the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms
-	\item Provision of a experimental framework distinguishing between the data structure generation and algorithm execution phases of each system
-	\item Analysis of energy consumption during the algorithm execution phase
+	\item Provision of a experimental framework distinguishing between the data structure generation and algorithm execution phases of each system.
+	\item Analysis of energy consumption during the algorithm execution phase.
 \end{itemize}
 
 \section{Related Work}
@@ -80,7 +80,7 @@ Moreover, the complexity of Graphalytics can obfuscate the true behavior of the 
 %- deinitialize engine: 2.88486e-05 sec
 %17:29:05.575 [INFO ] Benchmarking algorithm "Single source shortest paths" on graph "dota-league" took 5955 ms.
 
-With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula} one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. This requires in-depth knowledge of the source code and execution model. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
+With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula}, one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. This requires in-depth knowledge of the source code and execution model. Furthermore, creating such a model requires a high level of expertise with the given system and with Granula\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
 
 As with Graphalytics, the initial development effort is high but Granula paired with graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis without requiring a performance and execution model for each system.
 
