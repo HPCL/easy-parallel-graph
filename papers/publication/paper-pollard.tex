@@ -87,7 +87,7 @@ As with Graphalytics, the initial development effort is high but Granula paired 
 
 Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and \cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model.
 
-Unlike these approaches, we focus on the \emph{depth} of analysis rather than the breadth via diversity of datasets or graph processing systems. We analyze  power and energy consumption in addition to details such as the number of iterations or the time to construct the data structures. Moreover, our approach requires little knowledge of the inner workings of each system; the data are collected using either hardware counter sampling of model-specific registers (for power) or through parsing log files (for timing).
+Unlike these approaches, we focus on the \emph{depth} of analysis rather than the breadth via diversity of datasets or graph processing systems. We analyze  power and energy consumption in addition to details such as the number of iterations or the time to construct the data structures. Moreover, our approach requires little knowledge of the inner workings of each system; the data are collected using either hardware counter sampling of model-specific registers (for power) or through parsing log files (for execution time).
 
 % The systems described in \cite{Doekemeijer:2015:GPFSurvey} operate with a wide range of parallelism paradigms and target architectures such as GPU \cite{Zhong:2014:Medusa, Kang:2009:Pegasus}, shared memory CPU \cite{Shun:2013:Ligra, kyrola:2012:Graphchi, Nguyen:2013:Galois}, a combination of CPU and GPU \cite{Gharaibeh:2012:Totem}, distributed filesystem based approaches \cite{Xin:2013:GraphX}, and distributed memory with MPI \cite{Gregor:2005:PBGL}.
 
@@ -124,15 +124,15 @@ Our approach is not specific or limited to these graph packages and can be exten
 
 We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
 
-We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
+We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is that it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
 
 Our work aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots with the exception of PowerGraph which doesn't provide an reference implementation of BFS in its toolkits.
 
 We select SSSP because of the straightforward extension from BFS; we need not modify the graph nor the root vertices from BFS.
 
-PageRank is selected because of its popularity; most libraries provide reference implementations. One challenge with using PageRank is the stopping criterion; this is addressed in Sect.~\ref{sec:perf}. Verification of the PageRanks is beyond the scope of this paper though this may explain some of the large performance discrepancies.
+PageRank is selected because of its popularity; most libraries provide reference implementations. One challenge with using PageRank is the stopping criterion; this is addressed in Sect.~\ref{sec:perf}. Verification of the PageRank results is beyond the scope of this paper, although this may explain some of the large performance discrepancies.
 
-This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be easily extended to other algorithms.
+This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms.
 
 \begin{table}
 	\centering
@@ -143,8 +143,8 @@ This approach is not specific to a particular algorithm; measuring the execution
 	col sep=tab,
 	string type,
 	every head row/.style={output empty row, before row=\bottomrule},
-	columns/0/.style={column type={|r|}},
-	columns/1/.style={column type={l|}},
+	columns/0/.style={column type={|p{1in}|}},
+	columns/1/.style={column type={p{3.2in}|}},
 	every last row/.style={after row=\toprule},
 	]{../report/specs.csv}
 	\label{tab:specs}
@@ -243,9 +243,9 @@ These results are consistent with \cite{Sundaram:2015:GraphMat} which lists Grap
 
 The behavior of PageRank is slightly different. As with SSSP and BFS, the GAP Benchmark Suite is the fastest but it also requires the fewest iterations.
 
-We attempt to use similar stopping criteria for each system, but GraphMat executes until no vertices change rank; effectively its stopping criterion requires the $\infty$-norm be less than machine epsilon. This could account for the increased number of iterations. We adjusted the other systems to use $\sum_{k=1}^{n} |p_k^{(i)} - p_k^{(i-1)}| < \epsilon $ as the stopping criteria, where $i$ is the iteration and $n$ is the number of vertices. We use $\epsilon = 6 \times 10^{-8}$ because this value is approximately machine epsilon for a single precision floating point number. This is done with the goal of making the stoppping criteria as similar as possible.
+We attempt to use similar stopping criteria for each system, but GraphMat executes until no vertices change rank; effectively its stopping criterion requires the $\infty$-norm be less than machine epsilon. This could account for the increased number of iterations. We adjusted the other systems to use $\sum_{k=1}^{n} |p_k^{(i)} - p_k^{(i-1)}| < \epsilon $ as the stopping criteria, where $i$ is the iteration and $n$ is the number of vertices. We use $\epsilon = 6 \times 10^{-8}$ because this value is approximately machine epsilon for a single precision floating point number. This is done with the goal of making the stopping criteria as similar as possible.
 
-Furthermore, the logarithmic scale in Figs.~\ref{fig:pr} and~\ref{fig:bfs-time} compresses the apparent variance in runtime. Each platform in Fig.~\ref{fig:pr} has a relative standard deviation between $1/4$ and $1/2$ that of the same system executing SSSP.
+Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} compresses the apparent variance in runtime. Each platform in Fig.~\ref{fig:pr} has a relative standard deviation between $1/4$ and $1/2$ that of the same system executing SSSP.
 
 
 \begin{figure}
@@ -310,11 +310,11 @@ RAPL also allows the measurement of DRAM power, the results of which are shown i
 \end{figure}
 
 \section{Future Work and Conclusion}
-We have presented an approach to analyze parallel graph processing performance at fine detail, both measuring power consumption and the two fundamental phases of execution. Still, the problem of choosing a system for graph processing at large scale is far from being simple. We make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories.
+We have presented a systematic approach to analyzing parallel graph processing performance, both measuring power consumption and the two fundamental phases of execution. While the comparison presented here can help choose among alternatives for the selected packages and algorithms, the problem of choosing a system for graph processing at large scale is far from simple. Hence, we make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories. 
 
-Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets and the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite to as a good test of performance.
+Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets and the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite as a good test of performance.
 
-There are a vast number of directions this work could go. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG this required the file to be loaded in for each experiment. This was by far the most time consuming of the experiments; the file reading for GraphBIG being done serially on an uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question.
+Our work can continue in many directions. To ensure fairness, each platform must be configured to use the same graphs and the same roots. In the case of GraphBIG, this required the file to be loaded in for each experiment. By far the most time consuming of the experiments was GraphBIG's serial file input of uncompressed ASCII text format for graphs. This limited the sizes of the experiments we could run. Graphalytics also had circumstances with the more computationally expensive algorithms  where certain experiments fail \cite{Iosup:2016:Graphalyticstech}, so determining whether an algorithm will finish given a particular machine, input size, runtime limit, and resources is an important unanswered question we plan to pursue further.
 
 \bibliographystyle{splncs03}
 \bibliography{../drp}
