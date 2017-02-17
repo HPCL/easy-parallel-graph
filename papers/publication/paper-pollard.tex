@@ -98,15 +98,9 @@ Unlike these approaches, we focus on the \emph{depth} of analysis rather than th
 \section{Experimental Setup}
 We refer to a graphs's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
 
-Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times.
+Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times. We plot many of the results as box plots with an implied 32 data points per box.
 
 When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the dataset construction.
-
-<<<<<<< HEAD
-Any box plot with the exception of the Graph500 (instead labeled as solid lines rather than boxes) is a representation of 32 datapoints per box.
-=======
-We plot many of the results as box plots with an implied 32 data points per box.
->>>>>>> 9019d6628dc2d596dd5be4391dfbdc384d54ce1f
 
 \subsection{Machine Specifications}
 Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
@@ -126,11 +120,8 @@ Our approach is not specific or limited to these graph packages and can be exten
 
 \subsection{Algorithms}\label{sec:algs}
 
-<<<<<<< HEAD
-We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented for all systems.
-=======
-We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
->>>>>>> 9019d6628dc2d596dd5be4391dfbdc384d54ce1f
+
+We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, although not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
 
 We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is that it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
 
