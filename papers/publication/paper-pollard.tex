@@ -241,33 +241,16 @@ The behavior of PageRank is slightly different. As with SSSP and BFS, the GAP Be
 
 We attempt to use similar stopping criteria for each system, but GraphMat executes until no vertices change rank; effectively its stopping criterion requires the $\infty$-norm be less than machine epsilon. This could account for the increased number of iterations. We adjusted the other systems to use $\sum_{k=1}^{n} |p_k^{(i)} - p_k^{(i-1)}| < \epsilon $ as the stopping criteria, where $i$ is the iteration and $n$ is the number of vertices. We use $\epsilon = 6 \times 10^{-8}$ because this value is approximately machine epsilon for a single precision floating point number. This is done with the goal of making the stoppping criteria as similar as possible.
 
-Furthermore, the logarithmic scale in Figs.~\ref{fig:pr} and~\ref{fig:bfs-time} belies the actual variance in results. Each platform in Fig.~\ref{fig:pr} has a standard deviation comparable to that of 
-
-%> sd(pr_time$Time[pr_time$Sys == "PowerGraph"])
-%[1] 0.4654061
-%> sd(sssp_time$Time[sssp_time$Sys == "PowerGraph"])
-%[1] 0.1475608
-%> sd(pr_time$Time[pr_time$Sys == "GAP"])
-%[1] 0.01957317
-%> sd(sssp_time$Time[sssp_time$Sys == "GAP"])
-%[1] 0.01608644
-%> sd(pr_time$Time[pr_time$Sys == "GraphMat"])
-%[1] 0.9305763
-%> sd(sssp_time$Time[sssp_time$Sys == "GraphMat"])
-%[1] 0.02191714
-%> sd(pr_time$Time[pr_time$Sys == "GraphBIG"])
-%[1] 3.308351
-%> sd(sssp_time$Time[sssp_time$Sys == "GraphBIG"])
-%[1] 0.2165655
+Furthermore, the logarithmic scale in Figs.~\ref{fig:pr} and~\ref{fig:bfs-time} compresses the apparent variance in runtime. Each platform in Fig.~\ref{fig:pr} has a relative standard deviation between $1/4$ and $1/2$ that of the same system executing SSSP.
 
 
 \begin{figure}
 	\centering
 	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/pr_time.pdf}
+		\includegraphics[width=\linewidth, trim=0pt 18pt 18pt 0pt, clip]{graphics/pr_time.pdf}
 	\end{minipage}
 	\begin{minipage}{0.48\linewidth}
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/pr_iters.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0pt, clip]{graphics/pr_iters.pdf}
 	\end{minipage}
 	\caption{The $y$-axis is logarithmic only for the left figure. GraphMat continues to run until none of the vertices' ranks change. For the others, we use the stopping condition that the sum of the changes in the weights is no more than $6 \times 10^{-8}$, or approximately machine epsilon for single precision floating point numbers.}
 	\label{fig:pr}
@@ -288,17 +271,17 @@ Furthermore, the logarithmic scale in Figs.~\ref{fig:pr} and~\ref{fig:bfs-time} 
 
 The challenge in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite stores vertex weights as 32-bit integers. However, other systems store them as floating point numbers. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a graph is represented in the system (e.g. weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
 
-In Fig.~\ref{fig:bfs-scaling}, we see BFS scalability\dots
-
+Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We define the strong scaling as $T_1 / (n T_n)$ where $T_1$ is the serial time and $n$ is the number of threads. A linear scalability is when $T_n = T_1/n$ and is the horizontal line on the bottom plot in Fig.~\ref{fig:bfs-scaling}. These plots show in general poor scaling throughout, though GraphBIG has the best scaling. One explanation is GraphBIG is the slowest system so there is more room for improvement. Additionally, a scale of 20 generates a small graph by today's standards and thus the focus is on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine.
 \begin{figure}
 	\centering
 	\begin{minipage}{0.9\linewidth}
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/bfs_speedup.pdf}
+		% trim=left lower right upper
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_speedup.pdf}
 	\end{minipage}
 	\begin{minipage}{0.9\linewidth}
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 0, clip]{graphics/bfs_ss.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss.pdf}
 	\end{minipage}
-	\caption{The top figure has both axes logarithmic. Linear speedup is. GraphMat dips below 1 because it is slower for $2$ threads than for 1.}
+	\caption{The top figure has both axes logarithmic. The exception is the extra space at 72 threads for readability. Linear speedup is. GraphMat dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time for $n$ threads.}
 	\label{fig:bfs-scaling}
 \end{figure}
 \todo{Rerun GraphMat on scale 22 with 2 threads. Surprising that it slows down}
@@ -319,17 +302,23 @@ We use the Performance Application Programming Interface (PAPI) \cite{Browne:200
 	\end{tabular}
 \end{table}
 
-RAPL also allows the measurement of DRAM power and energy, whose results are shown in Fig.~\ref{fig:ram-power}.
+RAPL also allows the measurement of DRAM power and energy, whose results are shown in Fig.~\ref{fig:power}.
 
+\todo{Make text bigger}
 \begin{figure}
 	\centering
-	\includegraphics[width=0.6\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ram_power.pdf}
-	\caption{RAM Power Consumption, averaged across all roots. [TODO: Explain more]}
-	\label{fig:ram-power}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_ram_power.pdf}
+	\end{minipage}
+	\begin{minipage}{0.48\linewidth}
+		\includegraphics[width=\linewidth, trim=0 36pt 18pt 0, clip]{graphics/bfs_cpu_power.pdf}
+	\end{minipage}
+	\caption{Similar to Fig.~\ref{fig:bfs-time} we plot RAM and CPU Power Consumption for each of the 32 roots. Since the Graph500 runs multiple roots per execution, we only get a single datapoint. The baseline was computed by monitoring power consumption while a program containing only one call to the C \texttt{unistd} library function \texttt{sleep(10)} (ten seconds).}
+	\label{fig:power}
 \end{figure}
 
 \section{Future Work and Conclusion}
-The problem of choosing a system for graph processing at large scale is far from being simple. We make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories.
+We have presented an approach to analyze parallel graph processing performance at fine detail, both measuring power consumption and the two fundamental phases of execution. Still, the problem of choosing a system for graph processing at large scale is far from being simple. We make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories.
 
 Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets and the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their implementations against the GAP Benchmark Suite to as a good test of performance.
 
