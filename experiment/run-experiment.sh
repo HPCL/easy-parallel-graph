@@ -51,13 +51,13 @@ module load intel/17
 # 	git clone https://github.com/sampollard/gapbs.git
 # 	cd gapbs; make
 # GraphBIG: 
-# 	git clone https://github.com/HPCL/graphBIG.git
+# 	git clone https://github.com/sampollard/graphBIG.git
 #   cd graphBIG; make
 # 	cd GraphBIG/benchmark
 # 	make clean all
 # GraphMat:
 # 	module load intel/17
-# 	git clone https://github.com/HPCL/GraphMat
+# 	git clone https://github.com/sampollard/GraphMat.git
 # 	cd GraphMat; make 
 # Graph500:
 # 	git clone https://github.com/sampollard/graph500.git

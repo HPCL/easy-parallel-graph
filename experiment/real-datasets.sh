@@ -15,12 +15,14 @@ USAGE="usage: real-datasets.sh <num-threads>"
 # The building instructions are available in the respective repositories.
 # Here, edge factor (number of edges per vertex) is the default of 16.
 DDIR=
-DATA="dota-league" # Just one
 GAPDIR=
 GRAPHBIGDIR=
 GRAPH500DIR=
 GRAPHMATDIR=
 POWERGRAPHDIR=
+
+# Choose the datasets. This is a space-separated list.
+DATA="dota-league"
 
 # Set some other variables used throughout the experiment
 # PageRank is usually represented as a 32-bit float,
@@ -47,11 +49,26 @@ module load intel/17
 # # We convert to an integer because some systems store weights that way
 # We add 1 for GraphMat to ensure it's 1-indexed (adding 1 won't hurt)
 awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$DATA.e" > "$DDIR/$DATA.wel"
-# GraphBIG already exists for dota-league (for some reason)
-# TODO: Add GraphBIG conversion
+# Transform datasets from Graphalytics format to GraphBIG format
+# This has also been tested with cit-Patents
+for d in $DATA; do
+	mkdir -p "$DDIR/$d"
+	if [ $(awk '{print NF; exit}' "$DDIR/$d.e") -eq 2 ]; then
+		echo "SRC,DEST" > "$DDIR/$d/edge.csv"
+	elif [ $(awk '{print NF; exit}' "$DDIR/$d.e") -eq 3 ]; then
+		echo "SRC,DEST,WEIGHT" > "$DDIR/$d/edge.csv"
+	else
+		echo "File format not recognized"
+		exit 1
+	fi
+	sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
+	echo "ID" > "$DDIR/$d/vertex.csv"
+	sed 's/[:space:]+/,/' "$DDIR/$d.v" >> "$DDIR/$d/vertex.csv"
+done
+
+
 # Get the roots by running BFS and making sure you can visit a good number of vertices
-# XXX: May want to run on many roots so we can pare down the list to exactly $NRT
-"$GAPDIR"/sssp -f "$DDIR/$DATA.wel" -n $NRT > tmp.log
+"$GAPDIR"/sssp -f "$DDIR/$DATA.wel" -n $(($NRT*2)) > tmp.log
 # GAP output is, e.g. "took 382 iterations". We don't want it to take 1 iteration.
 awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$DATA-roots.v"
 rm tmp.log
