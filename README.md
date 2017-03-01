@@ -3,6 +3,7 @@
 This project is aimed at simplifying aspects of parallel graph processing starting with providing a framework for analyzing performance and energy usage for a given system. I am attempting to keep the README updated but the most up to date information is usually inside the comments of the various shell scripts.
 
 The general workflow could consist of the following steps. Each script is explained in further detail in the following sections.
+
 1. Download the systems and build them following the instructions in `experiment/run-experiment.sh` 
 2. Download the systems and build them with power monitoring by calling `build-power.sh`
 3. Select a scale and number of threads and run the experiment with `run-experiment.sh`
@@ -14,7 +15,7 @@ The general workflow could consist of the following steps. Each script is explai
 
 Below are some relevant scripts.
 
-## Easy Parallel Graph Method
+## "Easy Parallel Graph" Approach
 `experiment/gen-datasets.sh` This script generates the dataset based on the Graph500 specification and executable, then converts the data into the correct formats for GAP, GraphBIG, and GraphMat. It requires GraphMat and Graph500 repositories to be built and their paths set as variables in the script. usage: `gen-datasets.sh <S>` where 2^S is the number of vertices.
 
 `experiment/run-experiment.sh` This script takes no arguments, but several variables must be set inside of it. It also expects `gen-datasets.sh` has been run at the given scale. There are comments inside this script on how to get each system built.

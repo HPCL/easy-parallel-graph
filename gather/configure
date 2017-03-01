@@ -1,0 +1,41 @@
+#!/bin/bash
+# Download and build graph processing systems.
+USAGE=". gather-graph-systems.sh [--prefix /path/to/install (default: $HOME/epg)]"
+
+## Dependencies:
+### Spack
+#### Python 2.6 or 2.7, a C/C++ Compiler, git, and curl
+### GraphMat
+#### GCC, MPICH, libboost_serialization (Automatically downloaded)
+OLDWD=$(pwd)
+if [ -z $1 ]; then
+	PREFIX="$HOME/epg"
+else
+	PREFIX="$1"
+fi
+
+if [ -z "$SPACK_ROOT" ]; then
+	echo You must download spack and set the SPACK_ROOT environment variable
+	echo -e "This can be done using\n"
+	echo "export SPACK_ROOT=$HOME/spack"
+	echo "git clone https://github.com/LLNL/spack.git $SPACK_ROOT"
+	echo -e "\nsetting SPACK_ROOT as you wish"
+	exit 2
+fi
+# This adds spack to PATH and enables environment modules
+if [ -n $SPACK_ROOT ]; then
+	source $SPACK_ROOT/share/spack/setup-env.sh
+fi
+
+# GraphMat
+CXX_COMPILER=g++-5
+spack install boost@1.63.0%gcc@5.4.0
+spack install mpich@3.2%gcc@5.4.0
+spack load boost@1.63.0%gcc@5.4.0
+spack load mpich@3.2%gcc@5.4.0
+git clone https://github.com/narayanan2004/GraphMat.git "$PREFIX/GraphMat"
+cd "$PREFIX/GraphMat"
+make MPICXX="mpic++ -cxx=$CXX_COMPILER" CXX="$CXX_COMPILER"
+
+cd "$OLDWD"
+
