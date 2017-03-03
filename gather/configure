@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download and build graph processing systems.
-USAGE=". gather-graph-systems.sh [--prefix /path/to/install (default: $HOME/epg)]"
+USAGE="./configure [--prefix /path/to/install (default: $HOME/epg)]"
 
 ## Dependencies:
 ### Spack
@@ -8,11 +8,15 @@ USAGE=". gather-graph-systems.sh [--prefix /path/to/install (default: $HOME/epg)
 ### GraphMat
 #### GCC, MPICH, libboost_serialization (Automatically downloaded)
 OLDWD=$(pwd)
-if [ -z $1 ]; then
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+	echo $USAGE
+	exit 0
+elif [ -z $1 ]; then
 	PREFIX="$HOME/epg"
 else
 	PREFIX="$1"
 fi
+echo "Downloading packages in $PREFIX"
 
 if [ -z "$SPACK_ROOT" ]; then
 	echo You must download spack and set the SPACK_ROOT environment variable
@@ -23,16 +27,19 @@ if [ -z "$SPACK_ROOT" ]; then
 	exit 2
 fi
 # This adds spack to PATH and enables environment modules
+# You might also consider doing this in your own shell
 if [ -n $SPACK_ROOT ]; then
-	source $SPACK_ROOT/share/spack/setup-env.sh
+	. $SPACK_ROOT/share/spack/setup-env.sh
 fi
 
 # GraphMat
-CXX_COMPILER=g++-5
-spack install boost@1.63.0%gcc@5.4.0
-spack install mpich@3.2%gcc@5.4.0
-spack load boost@1.63.0%gcc@5.4.0
-spack load mpich@3.2%gcc@5.4.0
+# Use spack's default gcc (which may not be your regular gcc)
+CXX_COMPILER_SPEC=$(spack compilers | grep ^gcc | head -n 1)
+CXX_COMPILER=$(spack compiler info $CXX_COMPILER_SPEC | awk '/cxx/{print $3}')
+spack install boost@1.63.0%$CXX_COMPILER_SPEC
+spack install mpich@3.2%$CXX_COMPILER_SPEC
+spack load boost@1.63.0%$CXX_COMPILER_SPEC
+spack load mpich@3.2%$CXX_COMPILER_SPEC
 git clone https://github.com/narayanan2004/GraphMat.git "$PREFIX/GraphMat"
 cd "$PREFIX/GraphMat"
 make MPICXX="mpic++ -cxx=$CXX_COMPILER" CXX="$CXX_COMPILER"
