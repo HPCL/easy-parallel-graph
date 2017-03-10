@@ -1,0 +1,32 @@
+#!/bin/bash
+# Execute the experiment
+# Expects configure to have been called first.
+
+if [ $(uname) = Darwin ]; then
+    NUM_CORES=$(sysctl -n hw.ncpu) # Counts x2 for hyperthreading
+else
+    NUM_CORES=$(grep -c ^processor /proc/cpuinfo) # Counts x2 for hyperthreading
+    CPU_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l)
+fi
+
+# GraphMat
+NUM_PROCESSES=$CPU_SOCKETS # Maybe?
+export OMP_NUM_THREADS=$(($NUM_CORES / 2))
+export KMP_AFFINITY=scatter
+"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$BASE_FN.1wel" "$DDIR/$BASE_FN.graphmat"
+
+# Issue: Only works if you write the file using the same number of MPI Processes and threads.
+# Seems to also require the input file be split up?
+# Instead, try something like this:
+# typedef int edge_type;
+# 
+# GraphMat::edgelist_t<edge_type> E;
+# GraphMat::load_edgelist("edgefile", &E, false, false, true); //the three boolean parameters are: binaryformat, header, edgeweights_present
+# GraphMat::Graph<vertex_property, edge_type> G;
+# G.ReadEdgelist(E);
+# E.clear();
+# And  instead of G.ReadMTX in run_pagerank or whatever, make it G.ReadEdgelist(E) (pass in Edgelist, not filename)
+
+mpirun -np $NUM_PROCESSES numactl -i all bin/PageRank "$DDIR/$BASE_FN.graphmat"
+
+# Galois currently has a segmentation fault
