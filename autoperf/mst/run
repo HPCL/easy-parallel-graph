@@ -1,0 +1,51 @@
+#!/bin/bash
+# Runs autoperf experiments on Arya
+USAGE="usage: run generate_data|autoperf|all"
+
+# Parse command line options
+cmd="$1"
+if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
+	echo $USAGE
+	exit 2
+fi
+
+# Initialization
+module load tau/git # Also loads PAPI
+export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-openmp"
+PBBS_DIR=/home/users/spollard/dynamic-graphs/pbbs-msf/minSpanningForest
+DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
+SCALES="16 18 20" # Make sure to have SCALES be the same as what's in autoperf.cfg
+
+# Define commands to be run
+generate_data()
+{
+	for S in $SCALES; do
+		echo "Creating weighted rmat with 2^$S vertices and ~16 x 2^$S edges" # LOG
+		N=$(echo 2 ^ $S | bc)
+		M=$(echo $N '* 16' | bc)
+		TMP_FILE="$DDIR/rmat$S.eg"
+		INPUT_FILE="$DDIR/rmat$S.weg"
+		if [ ! -r "$INPUT_FILE" ]; then
+			"$PBBS_DIR/graphData/rMatGraph" -a 0.57 -b 0.19 -c 0.19 -d 0.05 -m $M $N $TMP_FILE
+			"$PBBS_DIR/graphData/addWeights" $TMP_FILE $INPUT_FILE
+			echo "saved to $DDIR/rmat$S.weg" # LOG
+		else
+			echo "file already exists at $DDIR/rmat$S.weg, avoiding overwriting." # LOG
+		fi
+	done
+}
+
+run_autoperf()
+{
+	autoperf
+}
+
+# Execute
+if [ "$cmd" = generate_data -o "$cmd" = all ]; then
+	generate_data
+fi
+
+if [ "$cmd" = autoperf -o "$cmd" = all ]; then
+	run_autoperf
+fi
+
