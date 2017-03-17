@@ -1,6 +1,10 @@
 #!/bin/bash
 # Runs autoperf experiments on Arya
-USAGE="usage: run generate_data|autoperf|all"
+# NOTE: You may need to execute
+#       . run build
+# To get the environment variables to stick.
+# TODO: Add editing to shell script
+USAGE="usage: ./run generate_data|build|autoperf|all"
 
 # Parse command line options
 cmd="$1"
@@ -10,9 +14,9 @@ if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
 fi
 
 # Initialization
-module load tau/git # Also loads PAPI
+LIB_DIR="$(pwd)/lib"
+module load tau # Also loads PAPI
 export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-openmp"
-PBBS_DIR=/home/users/spollard/dynamic-graphs/pbbs-msf/minSpanningForest
 DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 SCALES="16 18 20" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
@@ -35,6 +39,47 @@ generate_data()
 	done
 }
 
+build_autoperf()
+{
+	if [ -z "$SQLITE3" ]; then
+		echo "You may need SQLITE3 environment variable for autoperf. Trying to get it with dpkg."
+		export SQLITE3=$(dirname $(dpkg -L libsqlite3-dev | grep .so)) # Needed for autoperf
+		if [ -z "$SQLITE3" ]; then
+			echo "Unable to find SQLITE3 library"
+			exit 1
+		fi
+	fi
+	if [ -z "$PAPI" ]; then
+		echo "Please set the PAPI environment variable"
+		exit 1
+	fi
+	# Download autoperf and add it to your PATH
+	AUTOPERF_LOC=$(command -v autoperf) # Check if autoperf is already in path
+	if [ $? -ne 0 ]; then
+		echo "Installing autoperf"
+		git clone https://github.com/HPCL/autoperf.git "$HOME/autoperf"
+		cd "$HOME/autoperf"
+		python setup.py install --user
+	else
+		echo "found autoperf at $AUTOPERF_LOC"
+	fi
+}
+
+build_Galois()
+{
+	GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
+    module load boost-1.63.0-gcc-4.8-hucoocn
+    cd "$GALOIS_DIR/build"
+    mkdir -p release
+    cd release
+    cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 ../../ 
+}
+
+build_PBBS()
+{
+	PBBS_DIR="$LIB_DIR/pbbs-msf"
+}
+
 run_autoperf()
 {
 	autoperf
@@ -44,7 +89,11 @@ run_autoperf()
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
 	generate_data
 fi
-
+if [ "$cmd" = build -o "$cmd" = all ]; then
+	build_autoperf
+    build_Galois
+	build_PBBS
+fi
 if [ "$cmd" = autoperf -o "$cmd" = all ]; then
 	run_autoperf
 fi
