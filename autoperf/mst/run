@@ -3,14 +3,17 @@
 # NOTE: You may need to execute
 #       . run build
 # To get the environment variables to stick.
-# TODO: Add editing to shell script
-USAGE="usage: ./run generate_data|build|autoperf|all"
+# TODO: Add editing of autoperf.cfg to shell script? Or can we just export DDIR and stuff and be okay?
+# TODO: Edit generaate_data code to get the RMAT in 3 formats: .weg, .gr, and .weg.
+
+USAGE="usage: ./run generate_data|autoperf|all
+	. run build"
 
 # Parse command line options
 cmd="$1"
 if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
-	echo $USAGE
-	exit 2
+	echo "$USAGE"
+	return 2
 fi
 
 # Initialization
@@ -46,12 +49,12 @@ build_autoperf()
 		export SQLITE3=$(dirname $(dpkg -L libsqlite3-dev | grep .so)) # Needed for autoperf
 		if [ -z "$SQLITE3" ]; then
 			echo "Unable to find SQLITE3 library"
-			exit 1
+			return 1
 		fi
 	fi
 	if [ -z "$PAPI" ]; then
 		echo "Please set the PAPI environment variable"
-		exit 1
+		return 1
 	fi
 	# Download autoperf and add it to your PATH
 	AUTOPERF_LOC=$(command -v autoperf) # Check if autoperf is already in path
@@ -80,6 +83,47 @@ build_PBBS()
 	PBBS_DIR="$LIB_DIR/pbbs-msf"
 }
 
+# Build XPS. This also sort of generates the data (though derived from the previous datasets)
+build_XPS()
+{
+	git clone https://github.com/HPCL/xpscode.git "$LIB_DIR/xpscode" # Requires authentication
+	cd "$LIB_DIR/xpscode/WorkingCode"
+	ESSENSPATH="$LIB_DIR/xpscode/ESSENS"
+	# Use vim syntax to edit the Makefile so it has the correct path to ESSENS
+	ex -s Makefile "+:%s?^ESSENS=.*?ESSENS=$ESSENSPATH?g" '+:wq'
+	make all # This only builds the mst update executable (a.out)
+	make cE
+	make tEx
+	make lpath
+	make permF
+	# Create the MST Tree and the Remaining Graph
+	# ./tEx <filename> <starts with 1 or 0>
+	./tEx.out "$DDIR/rmat18.wel" 0
+	# This will create three files
+	# Graphall.txt (Original file, starting from 0, undirected)
+	# GraphC.txt  (the certificate files, MST/BFS)
+	# Graphdiff.txt  (remaining edges, not in certificate)
+
+	# Store the generated files with correct names
+	mkdir -p "$DDIR/XPS"
+	mv Graphall.txt "$DDIR/XPS/rmat18.wel"
+	mv GraphC.txt "$DDIR/XPS/rmat18.changes"
+	mv Graphdiff.txt "$DDIR/XPS/rmat18.diff"
+
+	# Create set of changed Edges  (create_edgelist.cpp)
+	# ./cE.out <filename> <number of edges>
+	./cE.out "$DDIR/XPS/rmat18.wel" 500 > "$DDIR/XPS/changedrmat18_500"
+
+	# Sort the edges for faster run
+	# sort -n -k1 <filename> > output
+	sort -n -k1 -k2 "$DDIR/XPS/changedrmat18_500" > "$DDIR/XPS/changedRMAT18_500S"
+
+	# The last step: actually run the update
+	# Run the update (main_code1.cpp)
+	# ./a.out <diff_file> <certificate> <set of changed edges>  <number of vertices>  <number of threads>
+	# ./a.out "$DDIR/XPS/rmat18.diff" "$DDIR/XPS/rmat18.changes" "$DDIR/XPS/changedrmat18_500S" 262144 4
+}
+
 run_autoperf()
 {
 	autoperf
@@ -93,6 +137,7 @@ if [ "$cmd" = build -o "$cmd" = all ]; then
 	build_autoperf
     build_Galois
 	build_PBBS
+	build_XPS
 fi
 if [ "$cmd" = autoperf -o "$cmd" = all ]; then
 	run_autoperf

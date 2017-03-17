@@ -3,7 +3,7 @@
 
 import psycopg2
 # Check if database exists
-conn_string = "dbname='epgdb' user='demo_user' password='demo_pwd' host='brix.d.cs.uoregon.edu'"
+conn_string = "dbname='demodb' user='demo_user' password='demo_pwd' host='brix.d.cs.uoregon.edu'"
 try:
     conn = psycopg2.connect(conn_string)
 except psycopg2.Error as ex:
@@ -19,5 +19,5 @@ except psycopg2.Error as ex:
     Afterwards, run taudb_configure using postgresql
     """)
 else:
-    print("Database connection using\n{}\nalready established".format(conn_string))
+    print("Database connection established using\n{}".format(conn_string))
     conn.close()
