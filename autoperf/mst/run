@@ -4,7 +4,6 @@
 #       . run build
 # To get the environment variables to stick.
 # TODO: Add editing of autoperf.cfg to shell script? Or can we just export DDIR and stuff and be okay?
-# TODO: Edit generaate_data code to get the RMAT in 3 formats: .weg, .gr, and .weg.
 
 USAGE="usage: ./run generate_data|autoperf|all
 	. run build"
@@ -20,7 +19,8 @@ fi
 LIB_DIR="$(pwd)/lib"
 module load tau # Also loads PAPI
 export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-openmp"
-DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
+export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
+PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 SCALES="16 18 20" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
 # Define commands to be run
@@ -30,12 +30,14 @@ generate_data()
 		echo "Creating weighted rmat with 2^$S vertices and ~16 x 2^$S edges" # LOG
 		N=$(echo 2 ^ $S | bc)
 		M=$(echo $N '* 16' | bc)
-		TMP_FILE="$DDIR/rmat$S.eg"
-		INPUT_FILE="$DDIR/rmat$S.weg"
-		if [ ! -r "$INPUT_FILE" ]; then
-			"$PBBS_DIR/graphData/rMatGraph" -a 0.57 -b 0.19 -c 0.19 -d 0.05 -m $M $N $TMP_FILE
-			"$PBBS_DIR/graphData/addWeights" $TMP_FILE $INPUT_FILE
+		EG_FILE="$DDIR/rmat$S.eg"
+		WEG_FILE="$DDIR/rmat$S.weg"
+		if [ ! -r "$WEG_FILE" ]; then
+			"$PBBS_DIR/graphData/rMatGraph" -a 0.57 -b 0.19 -c 0.19 -d 0.05 -m $M $N $EG_FILE
+			"$PBBS_DIR/graphData/addWeights" $EG_FILE $WEG_FILE
 			echo "saved to $DDIR/rmat$S.weg" # LOG
+			tail -n+2 "$DDIR/rmat$S.weg" > "$DDIR/rmat$S.wel"
+			echo "saved to $DDIR/rmat$S.wel" # LOG
 		else
 			echo "file already exists at $DDIR/rmat$S.weg, avoiding overwriting." # LOG
 		fi
@@ -48,7 +50,7 @@ build_autoperf()
 		echo "You may need SQLITE3 environment variable for autoperf. Trying to get it with dpkg."
 		export SQLITE3=$(dirname $(dpkg -L libsqlite3-dev | grep .so)) # Needed for autoperf
 		if [ -z "$SQLITE3" ]; then
-			echo "Unable to find SQLITE3 library"
+			echo "Unable to find libsqlite3 shared object file"
 			return 1
 		fi
 	fi
@@ -80,7 +82,8 @@ build_Galois()
 
 build_PBBS()
 {
-	PBBS_DIR="$LIB_DIR/pbbs-msf"
+	# TODO
+	echo "Assumes PBBS is built in the right place."
 }
 
 # Build XPS. This also sort of generates the data (though derived from the previous datasets)
@@ -89,6 +92,8 @@ build_XPS()
 	git clone https://github.com/HPCL/xpscode.git "$LIB_DIR/xpscode" # Requires authentication
 	cd "$LIB_DIR/xpscode/WorkingCode"
 	ESSENSPATH="$LIB_DIR/xpscode/ESSENS"
+	mkdir -p "$DDIR/XPS"
+	S=16
 	# Use vim syntax to edit the Makefile so it has the correct path to ESSENS
 	ex -s Makefile "+:%s?^ESSENS=.*?ESSENS=$ESSENSPATH?g" '+:wq'
 	make all # This only builds the mst update executable (a.out)
@@ -96,27 +101,36 @@ build_XPS()
 	make tEx
 	make lpath
 	make permF
+	# TODO: Get this consistent
+	# Usage: ../RMAT/driverForRmat <SCALE> <SC-WT> <a b c d> <Output filename>
+	# Details: SCALE = #Vertices = 2^SCALE  -- #Edges = 8*#Vertices
+	# SC-WT: Ramdom weights in the range zero to 2^SC-WT will be assigned
+	../RMAT/driverForRmat ${S} 5 0.57 0.19 0.19 0.05 "$DDIR/xps-rmat${S}.wel"
+	awk '{print $1 " " $2 " " int(rand()*100)}' "$DDIR/xps-rmat${S}.wel" > tmp
+	sort -n -k1 -k2 tmp > "$DDIR/xps-rmat${S}.wel" # XXX We don't want to have to sort this.
+	rm tmp
+
 	# Create the MST Tree and the Remaining Graph
+	# Create the RMAT file, scale ${S}	
 	# ./tEx <filename> <starts with 1 or 0>
-	./tEx.out "$DDIR/rmat18.wel" 0
+	./tEx.out "$DDIR/xps-rmat${S}.wel" $(awk '{print $1; exit}' "$DDIR/xps-rmat${S}.wel")
 	# This will create three files
 	# Graphall.txt (Original file, starting from 0, undirected)
 	# GraphC.txt  (the certificate files, MST/BFS)
 	# Graphdiff.txt  (remaining edges, not in certificate)
 
 	# Store the generated files with correct names
-	mkdir -p "$DDIR/XPS"
-	mv Graphall.txt "$DDIR/XPS/rmat18.wel"
-	mv GraphC.txt "$DDIR/XPS/rmat18.changes"
-	mv Graphdiff.txt "$DDIR/XPS/rmat18.diff"
+	mv Graphall.txt "$DDIR/XPS/rmat${S}.wel"
+	mv GraphC.txt "$DDIR/XPS/rmat${S}.changes"
+	mv Graphdiff.txt "$DDIR/XPS/rmat${S}.diff"
 
 	# Create set of changed Edges  (create_edgelist.cpp)
 	# ./cE.out <filename> <number of edges>
-	./cE.out "$DDIR/XPS/rmat18.wel" 500 > "$DDIR/XPS/changedrmat18_500"
+	./cE.out "$DDIR/XPS/rmat${S}.wel" 500 > "$DDIR/XPS/changedrmat${S}_500"
 
 	# Sort the edges for faster run
 	# sort -n -k1 <filename> > output
-	sort -n -k1 -k2 "$DDIR/XPS/changedrmat18_500" > "$DDIR/XPS/changedRMAT18_500S"
+	sort -n -k1 -k2 "$DDIR/XPS/changedrmat${S}_500" > "$DDIR/XPS/changedRMAT${S}_500S"
 
 	# The last step: actually run the update
 	# Run the update (main_code1.cpp)
