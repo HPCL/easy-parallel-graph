@@ -56,10 +56,9 @@ generate_data()
 		# Graphall.txt (Original file, starting from 0, undirected)
 		# GraphC.txt  (the certificate files, MST/BFS)
 		# Graphdiff.txt  (remaining edges, not in certificate)
-
 		# Store the generated files with correct names
 		mv Graphall.txt "$DDIR/rmat${S}.wel"
-		mv GraphC.txt "$DDIR/rmat${S}.changes"
+		mv GraphC.txt "$DDIR/rmat${S}.cert"
 		mv Graphdiff.txt "$DDIR/rmat${S}.diff"
 
 		# Create set of changed Edges  (create_edgelist.cpp)
@@ -68,7 +67,7 @@ generate_data()
 
 		# Sort the edges for faster run
 		# sort -n -k1 <filename> > output
-		sort -n -k1 -k2 "$DDIR/changedrmat${S}_500" > "$DDIR/changedRMAT${S}_500S"
+		sort -n -k1 -k2 "$DDIR/changedrmat${S}_500" > "$DDIR/changedrmat${S}_500S"
 		cd "$LIB_DIR/.."
 
 		# Make .weg (for PBBS)
@@ -77,8 +76,14 @@ generate_data()
 
 		# Make .gr file for Galois
 		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/rmat$S.wel" "$DDIR/rmat$S.gr"
-
 	done
+	echo "Downloading datasets. May take a while..." # LOG
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-lj.ungraph.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/wiki-Talk.txt.gz
+	wget -nc -P "$DDIR" http://string-db.org/download/protein.links.v10.txt.gz
 }
 
 build_autoperf()
@@ -129,7 +134,6 @@ build_XPS()
 	git clone https://github.com/HPCL/xpscode.git "$LIB_DIR/xpscode" # Requires authentication
 	cd "$XPS_DIR"
 	ESSENSPATH="$LIB_DIR/xpscode/ESSENS"
-	mkdir -p "$DDIR/XPS"
 	# Use vim syntax to edit the Makefile so it has the correct path to ESSENS
 	ex -s Makefile "+:%s?^ESSENS=.*?ESSENS=$ESSENSPATH?g" '+:wq' # XXX: Will the * cause problems?
 	make all # This only builds the mst update executable (a.out)
