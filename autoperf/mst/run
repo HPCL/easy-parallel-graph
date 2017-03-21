@@ -1,11 +1,11 @@
 #!/bin/bash
-# Runs autoperf experiments on Arya
+# Runs mst experiments on Arya
 # NOTE: You may need to execute
 #       . run build
 # To get the environment variables to stick.
 # TODO: Add editing of autoperf.cfg to shell script? Or can we just export DDIR and stuff and be okay?
 
-USAGE="usage: ./run generate_data|autoperf|all
+USAGE="usage: ./run generate_data|experiment|all
 	. run build <------ do this one first"
 
 # Parse command line options
@@ -49,7 +49,6 @@ generate_data()
 		rm tmp
 
 		# Create the MST Tree and the Remaining Graph
-		# Create the RMAT file, scale ${S}
 		# ./tEx <filename> <starts with 1 or 0>
 		./tEx.out "$DDIR/xps-rmat${S}.wel" $(awk '{print $1; exit}' "$DDIR/xps-rmat${S}.wel") # XXX: 2nd arg may not be 0 or 1 (but seems to be so with a=b=c=d=0.25 rmat parameters)
 		# This will create three files
@@ -153,6 +152,11 @@ run_autoperf()
 	autoperf
 }
 
+run_experiment()
+{
+	echo "Running the experiment..."
+}
+
 # Execute
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
 	generate_data
@@ -164,7 +168,8 @@ if [ "$cmd" = build -o "$cmd" = all ]; then
 	build_XPS
 	cd "$LIB_DIR/.."
 fi
-if [ "$cmd" = autoperf -o "$cmd" = all ]; then
-	run_autoperf
+if [ "$cmd" = experiment -o "$cmd" = all ]; then
+	# run_autoperf
+	run_experiment
 fi
 
