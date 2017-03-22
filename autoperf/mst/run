@@ -16,12 +16,15 @@ if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
 fi
 
 # Initialization
+# These should all be the same as what's available in autoperf.cfg.
+# This is why some are exported and you must source run build
 LIB_DIR="$(pwd)/lib"
 module load tau # Also loads PAPI
-export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-openmp"
+export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't think this is needed when sampling
 export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
-XPS_DIR="$LIB_DIR/xpscode/WorkingCode"
+XPS_DIR="$LIB_DIR/xpscode/MSTRooted"
+ROOTDIR="$(pwd)/output"
 SCALES="16 18 20" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
 # Define commands to be run
@@ -29,7 +32,8 @@ generate_data()
 {
 	for S in $SCALES; do
 		N_VERT=$(echo 2 ^ $S | bc)
-		M_EDGE=$(echo $N_VERT '* 8' | bc) # Graph500 spec is 16, XPS code has 8 by default
+		# TODO: Change from a default 8 to other values.
+		M_EDGE=$(echo $N_VERT '*' 8 | bc) # Graph500 spec is 16, XPS code has 8 by default
 		WEL_FILE="$DDIR/rmat$S.wel"
 		if [ -r "$WEL_FILE" ]; then
 			echo "files already exists at $DDIR/rmat$S.*, avoiding overwriting." # LOG
@@ -61,12 +65,14 @@ generate_data()
 		mv Graphdiff.txt "$DDIR/rmat${S}.diff"
 
 		# Create set of changed Edges  (create_edgelist.cpp)
-		# ./cE.out <filename> <number of edges>
-		./cE.out "$DDIR/rmat${S}.wel" 500 > "$DDIR/changedrmat${S}_500"
+		# ./cE.out <filename> <number of edges> <maximum weight of new edges> <Percentage of inserted edges (0 to 100)>
+		./cE.out "$DDIR/rmat${S}.wel" 500 100 80 > "$DDIR/changedrmat${S}_500"
 
 		# Sort the edges for faster run
 		# sort -n -k1 <filename> > output
 		sort -n -k1 -k2 "$DDIR/changedrmat${S}_500" > "$DDIR/changedrmat${S}_500S"
+		# Example update (what we are timing)
+		# ./a.out <diff_file> <certificate> <changed edges>  <max edge weight in complete graph> <num vertices>  <num threads>
 		cd "$LIB_DIR/.."
 
 		# Make .weg (for PBBS)
@@ -75,6 +81,7 @@ generate_data()
 
 		# Make .gr file for Galois
 		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/rmat$S.wel" "$DDIR/rmat$S.gr"
+		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/xps-rmat$S.wel" "$DDIR/xps-rmat$S.gr"
 	done
 	echo "Downloading datasets. May take a while..." # LOG
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
@@ -88,10 +95,11 @@ generate_data()
 build_autoperf()
 {
 	if [ -z "$SQLITE3" ]; then
-		echo "You may need SQLITE3 environment variable for autoperf. Trying to get it with dpkg."
+		echo "You may need SQLITE3 environment variable for autoperf. Trying to get it with dpkg..."
 		export SQLITE3=$(dirname $(dpkg -L libsqlite3-dev | grep .so)) # Needed for autoperf
 		if [ -z "$SQLITE3" ]; then
 			echo "Unable to find libsqlite3 shared object file"
+			echo "Try installing libsqlite3-dev or -devel"
 			return 1
 		fi
 	fi
@@ -138,28 +146,48 @@ build_XPS()
 	make all # This only builds the mst update executable (a.out)
 	make cE
 	make tEx
-	make lpath
-	make permF
-
-	# To actually run the update (will be pushed to autoperf)
-	# Run the update (main_code1.cpp)
-	# ./a.out <diff_file> <certificate> <set of changed edges>  <number of vertices>  <number of threads>
-	# ./a.out "$DDIR/XPS/rmat18.diff" "$DDIR/XPS/rmat18.changes" "$DDIR/XPS/changedrmat18_500S" 262144 4
 }
 
 run_autoperf()
 {
-	autoperf
+	AUTOPERF_SCALE=20
+	AUTOPERF_CHANGED_EDGES=500
+	AUTOPERF_MAX_WEIGHT=100
+	AUTOPERF_NUM_VERTICES=$(echo '2 ^ ' $AUTOPERF_SCALE | bc)
+	AUTOPERF_EDGES_PER_VERTEX=8 # XXX: Keep this at 8 for now
+	AUTOPERF_NUM_THREADS=4
+
+	# NOTE: When using ex you cannot also have that program open in vim or else it will hang
+	cp autoperf.cfg .autoperf.cfg # Autoperf searches for .autoperf.cfg first
+	ex -s .autoperf.cfg "+:%s/AUTOPERF_SCALE/$AUTOPERF_SCALE/g" '+:wq'
+	ex -s .autoperf.cfg "+:%s/AUTOPERF_CHANGED_EDGES/$AUTOPERF_CHANGED_EDGES/g" '+:wq'
+	ex -s .autoperf.cfg "+:%s/AUTOPERF_MAX_WEIGHT/$AUTOPERF_MAX_WEIGHT/g" '+:wq'
+	ex -s .autoperf.cfg "+:%s/AUTOPERF_NUM_VERTICES/$AUTOPERF_NUM_VERTICES/g" '+:wq'
+	ex -s .autoperf.cfg "+:%s/AUTOPERF_EDGES_PER_VERTEX/$AUTOPERF_EDGES_PER_VERTEX/g" '+:wq'
+	ex -s .autoperf.cfg "+:%s/AUTOPERF_NUM_THREADS/$AUTOPERF_NUM_THREADS/g" '+:wq'
+	# autoperf
 }
 
 run_experiment()
 {
 	echo "Running the experiment..."
+	cd "$ROOTDIR" # So we can just print output to cwd
+	# TODO: Loop over these
+	export OMP_NUM_THREADS=2
+	S=18
+	EPV=8 # Edges Per Vertex
+
+	# Run Galois
+	"$GALOIS_DIR/release/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat$S.gr"
+	
+	# Run XPS
+	# ./a.out <diff_file> <certificate> <set of changed edges>  <number of vertices>  <number of threads>
+	"$XPS_DIR/a.out" "$DDIR/rmat$S.diff" "$DDIR/rmat$S.cert" "$DDIR/changedrmat$S_500S" 65536 $OMP_NUM_THREADS
 }
 
-# Execute
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
 	generate_data
+	DIDSOMETHING=1
 fi
 if [ "$cmd" = build -o "$cmd" = all ]; then
 	build_autoperf
@@ -167,9 +195,17 @@ if [ "$cmd" = build -o "$cmd" = all ]; then
 	build_PBBS
 	build_XPS
 	cd "$LIB_DIR/.."
+	DIDSOMETHING=1
 fi
 if [ "$cmd" = experiment -o "$cmd" = all ]; then
-	# run_autoperf
-	run_experiment
+	run_autoperf
+	# run_experiment
+	DIDSOMETHING=1
+fi
+
+if [ -z "$DIDSOMETHING" ]; then
+	echo "Invalid command"
+	echo $USAGE
+	return 1
 fi
 
