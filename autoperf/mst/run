@@ -1,5 +1,6 @@
 #!/bin/bash
 # Runs mst experiments on Arya
+# This should be run in the easy-parallel-graph/autoperf/mst directory
 
 USAGE="usage: ./run generate_data|experiment|all
 	. run build <------ do this one first"
@@ -20,11 +21,12 @@ fi
 # These should all be the same as what's available in autoperf.cfg.
 # This is why some are exported and you must source run build
 LIB_DIR="$(pwd)/lib"
-module load tau # Also loads PAPI environment variable
+module load tau # Also loads the PAPI environment variable
+export POWER_PROFILING=1
 export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't think this is needed when sampling
 export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
-XPS_DIR="$LIB_DIR/xpscode/MSTRooted"
+XPS_DIR="$LIB_DIR/xpscode/MSTSC"
 ROOTDIR="$(pwd)/output"
 SCALES="16 18 20" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
@@ -170,7 +172,13 @@ build_XPS()
 	ESSENSPATH="$LIB_DIR/xpscode/ESSENS"
 	# Use vim syntax to edit the Makefile so it has the correct path to ESSENS
 	ex -s Makefile "+:%s?^ESSENS=.*?ESSENS=$ESSENSPATH?g" '+:wq' # XXX: Will the * cause problems?
-	make all # This only builds the mst update executable (a.out)
+	# Turn on power monitoring (CFLAGS is used in c++ code too in this makefile)
+	# XXX: May need to put -lpapi at the end
+	RAPL_DIR="$LIB_DIR/../../../power"
+	POWER_CFLAGS="-w -I$PAPI/include -I$RAPL_DIR -DPOWER_PROFILING=1"
+	RAPL_INC="power_rapl.o $RAPL_DIR/power_rapl.h -L$PAPI/lib -Wl,-rpath,$PAPI/lib -lpapi"
+	gcc -c $POWER_CFLAGS "$RAPL_DIR/power_rapl.c" -o power_rapl.o
+	make CFLAGS="$POWER_CFLAGS" RAPL_INC="$RAPL_INC" all # This only builds the mst update executable (a.out)
 	make cE
 	make tEx
 }
