@@ -9,11 +9,15 @@ void power_rapl_init(power_rapl_t* ps) {
 
     ps->num_events = 0;
 
-
     /* PAPI Initialization */
     retval = PAPI_library_init( PAPI_VER_CURRENT );
-    if ( retval != PAPI_VER_CURRENT ) {
-        fprintf(stderr,"PAPI_library_init failed\n");
+    if ( retval != PAPI_VER_CURRENT && retval > 0 ) {
+        fprintf(stderr,"PAPI_library_init failed, PAPI version mismatch\n");
+        exit(1);
+    } else if ( retval < 0 ) {
+        fprintf(stderr,
+                "retval=%d, PAPI_EINVAL=%d, PAPI_ENOMEM=%d, PAPI_ESBSTR=%d, PAPI_ESYS=%d",
+                retval, PAPI_EINVAL, PAPI_ENOMEM, PAPI_ESBSTR, PAPI_ESYS);
         exit(1);
     }
 

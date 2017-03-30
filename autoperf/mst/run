@@ -93,6 +93,13 @@ generate_data()
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/wiki-Talk.txt.gz
 	wget -nc -P "$DDIR" http://string-db.org/download/protein.links.v10.txt.gz
+
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat208_B.gr.gz
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat208_ER.gr.gz
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat208_G.gr.gz
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat218_B.gr.gz
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat218_ER.gr.gz
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat218_G.gr.gz
 }
 
 build_autoperf()
@@ -125,39 +132,44 @@ build_autoperf()
 build_Galois()
 {
 	# XXX: This probably won't work for anyone else.
+	#
+	# This must be included in the CMakeLists.txt:
+	# if(POWER_PROFILING)
+	#   message(STATUS "Compiling for power measurement using RAPL")
+	#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOWER_PROFILING=1 -L${PAPI}/lib -Wl,-rpath,${PAPI}/lib")
+	#   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPOWER_PROFILING=1 -L${PAPI}/lib -Wl,-rpath,${PAPI}/lib")
+	#   include_directories("${PAPI}/include")
+	# endif()
+	#
+	# Replace apps/boruvka/CMakeLists.txt with the following:
+	# app(boruvka Boruvka.cpp power_rapl.c power_rapl.h
+	#   EXTLIBS papi)
+	# app(boruvka-merge BoruvkaMerge.cpp)
+	
+	# Replace
 	# Assumes Galois is already downloaded and unzippeed into GALOIS_DIR
 	# This can be found at
 	# http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
 	GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
-    module load boost-1.63.0-gcc-4.8-hucoocn
+	# The newer the version of boost, the newer you must have of cmake
+    # module load boost-1.63.0-gcc-4.8-hucoocn
+	module load boost/boost_1_53_0_gcc-4.8
 	# Copy from easy-parallel-graph's RAPL wrappers.
-	cp -r "$LIB_DIR/../../../power" "$GALOIS_DIR"
-	# This must be included in the CMakeLists.txt:
-	# if(POWER_PROFILING)
-	# 	message(STATUS "Compiling for power measurement using RAPL")
-	# 	add_subdirectory(power)
-	# 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOWER_PROFILING=1")
-	# 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPOWER_PROFILING=1")
-	# endif()
-	# TODO: Get power profiling for Galois
-	# 	Should follow the guilde in easy-parallel-graph/power/README.md
-	# 	and then adjust it for Cmake (make sure to have proper -I and -L
-	# 	directories, as well as getting PAPI_HOME set)
+	cp "$LIB_DIR/../../../power/power_rapl.c" "$GALOIS_DIR/apps/boruvka"
+	cp "$LIB_DIR/../../../power/power_rapl.h" "$GALOIS_DIR/apps/boruvka"
     cd "$GALOIS_DIR/build"
-    # mkdir -p release
-    # cd release
 	mkdir -p power
 	cd power
-    cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -DPOWER_PROFILING=1 ../../ 
+    cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -DPOWER_PROFILING=1 -DPAPI="$PAPI" -Wno-dev ../../ 
 }
 
 build_PBBS()
 {
 	echo "building PBBS..."
 	mkdir -p "$PBBS_DIR"
-	wget -nc http://www.cs.cmu.edu/~pbbs/benchmarks/minSpanningForest.tar $PBBS_DIR
+	wget -nc -P "$PBBS_DIR" http://www.cs.cmu.edu/~pbbs/benchmarks/minSpanningForest.tar 
 	if [ ! -d minSpanningForest ]; then
-		tar -xvf minSpanningForest.tar
+		tar -xf minSpanningForest.tar
 	fi
 	cd minSpanningForest/parallelKruskal
 	make
