@@ -28,64 +28,64 @@ export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MSTSC"
 ROOTDIR="$(pwd)/output"
-SCALES="16 18 20" # Make sure to have SCALES be the same as what's in autoperf.cfg
+SCALES="20 21" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
 # Define commands to be run
 generate_data()
 {
-	for S in $SCALES; do
-		N_VERT=$(echo 2 ^ $S | bc)
-		# TODO: Change from a default 8 to other values.
-		M_EDGE=$(echo $N_VERT '*' 8 | bc) # Graph500 spec is 16, XPS code has 8 by default
-		WEL_FILE="$DDIR/rmat$S.wel"
-		if [ -r "$WEL_FILE" ]; then
-			echo "files already exists at $DDIR/rmat$S.*, avoiding overwriting." # LOG
-			continue
-		fi
-		# Make .wel (for XPS and conversion to .gr)
-		# Usage: ../RMAT/driverForRmat <SCALE> <SC-WT> <a b c d> <Output filename>
-		# Details: SCALE = #Vertices = 2^SCALE  -- #Edges = 8*#Vertices
-		# SC-WT: Random weights in the range zero to 2^SC-WT will be assigned
-		cd "$XPS_DIR"
-		echo "create RMAT with 2^$S vertices and ~8 x 2^$S edges at $DDIR/xps-rmat${S}.wel" # LOG
-		../RMAT/driverForRmat ${S} 6 0.25 0.25 0.25 0.25 "$DDIR/xps-rmat${S}.wel"
-
-		# tEx.out requires the first line to begin with 0 or 1
-		awk '{print $1 " " $2 " " int(rand()*100)}' "$DDIR/xps-rmat${S}.wel" > tmp
-		sort -n -k1 -k2 tmp > "$DDIR/xps-rmat${S}.wel" # XXX We don't want to have to sort this.
-		rm tmp
-
-		# Create the MST Tree and the Remaining Graph
-		# ./tEx <filename> <starts with 1 or 0>
-		./tEx.out "$DDIR/xps-rmat${S}.wel" $(awk '{print $1; exit}' "$DDIR/xps-rmat${S}.wel") # XXX: 2nd arg may not be 0 or 1 (but seems to be so with a=b=c=d=0.25 rmat parameters)
-		# This will create three files
-		# Graphall.txt (Original file, starting from 0, undirected)
-		# GraphC.txt  (the certificate files, MST/BFS)
-		# Graphdiff.txt  (remaining edges, not in certificate)
-		# Store the generated files with correct names
-		mv Graphall.txt "$DDIR/rmat${S}.wel"
-		mv GraphC.txt "$DDIR/rmat${S}.cert"
-		mv Graphdiff.txt "$DDIR/rmat${S}.diff"
-
-		# Create set of changed Edges  (create_edgelist.cpp)
-		# ./cE.out <filename> <number of edges> <maximum weight of new edges> <Percentage of inserted edges (0 to 100)>
-		./cE.out "$DDIR/rmat${S}.wel" 500 100 80 > "$DDIR/changedrmat${S}_500"
-
-		# Sort the edges for faster run
-		# sort -n -k1 <filename> > output
-		sort -n -k1 -k2 "$DDIR/changedrmat${S}_500" > "$DDIR/changedrmat${S}_500S"
-		# Example update (what we are timing)
-		# ./a.out <diff_file> <certificate> <changed edges>  <max edge weight in complete graph> <num vertices>  <num threads>
-		cd "$LIB_DIR/.."
-
-		# Make .weg (for PBBS)
-		echo -e "WeightedEdgeArray\n$(cat $DDIR/rmat$S.wel)" > "$DDIR/rmat$S.weg"
-		echo "saved to $DDIR/rmat$S.weg" # LOG
-
-		# Make .gr file for Galois
-		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/rmat$S.wel" "$DDIR/rmat$S.gr"
-		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/xps-rmat$S.wel" "$DDIR/xps-rmat$S.gr"
-	done
+#	for S in $SCALES; do
+#		N_VERT=$(echo 2 ^ $S | bc)
+#		# TODO: Change from a default 8 to other values.
+#		M_EDGE=$(echo $N_VERT '*' 8 | bc) # Graph500 spec is 16, XPS code has 8 by default
+#		WEL_FILE="$DDIR/rmat$S.wel"
+#		if [ -r "$WEL_FILE" ]; then
+#			echo "files already exists at $DDIR/rmat$S.*, avoiding overwriting." # LOG
+#			continue
+#		fi
+#		# Make .wel (for XPS and conversion to .gr)
+#		# Usage: ../RMAT/driverForRmat <SCALE> <SC-WT> <a b c d> <Output filename>
+#		# Details: SCALE = #Vertices = 2^SCALE  -- #Edges = 8*#Vertices
+#		# SC-WT: Random weights in the range zero to 2^SC-WT will be assigned
+#		cd "$XPS_DIR"
+#		echo "create RMAT with 2^$S vertices and ~8 x 2^$S edges at $DDIR/xps-rmat${S}.wel" # LOG
+#		../RMAT/driverForRmat ${S} 6 0.25 0.25 0.25 0.25 "$DDIR/xps-rmat${S}.wel"
+#
+#		# tEx.out requires the first line to begin with 0 or 1
+#		awk '{print $1 " " $2 " " int(rand()*100)}' "$DDIR/xps-rmat${S}.wel" > tmp
+#		sort -n -k1 -k2 tmp > "$DDIR/xps-rmat${S}.wel" # XXX We don't want to have to sort this.
+#		rm tmp
+#
+#		# Create the MST Tree and the Remaining Graph
+#		# ./tEx <filename> <starts with 1 or 0>
+#		./tEx.out "$DDIR/xps-rmat${S}.wel" $(awk '{print $1; exit}' "$DDIR/xps-rmat${S}.wel") # XXX: 2nd arg may not be 0 or 1 (but seems to be so with a=b=c=d=0.25 rmat parameters)
+#		# This will create three files
+#		# Graphall.txt (Original file, starting from 0, undirected)
+#		# GraphC.txt  (the certificate files, MST/BFS)
+#		# Graphdiff.txt  (remaining edges, not in certificate)
+#		# Store the generated files with correct names
+#		mv Graphall.txt "$DDIR/rmat${S}.wel"
+#		mv GraphC.txt "$DDIR/rmat${S}.cert"
+#		mv Graphdiff.txt "$DDIR/rmat${S}.diff"
+#
+#		# Create set of changed Edges  (create_edgelist.cpp)
+#		# ./cE.out <filename> <number of edges> <maximum weight of new edges> <Percentage of inserted edges (0 to 100)>
+#		./cE.out "$DDIR/rmat${S}.wel" 500 100 80 > "$DDIR/changedrmat${S}_500"
+#
+#		# Sort the edges for faster run
+#		# sort -n -k1 <filename> > output
+#		sort -n -k1 -k2 "$DDIR/changedrmat${S}_500" > "$DDIR/changedrmat${S}_500S"
+#		# Example update (what we are timing)
+#		# ./a.out <diff_file> <certificate> <changed edges>  <max edge weight in complete graph> <num vertices>  <num threads>
+#		cd "$LIB_DIR/.."
+#
+#		# Make .weg (for PBBS)
+#		echo -e "WeightedEdgeArray\n$(cat $DDIR/rmat$S.wel)" > "$DDIR/rmat$S.weg"
+#		echo "saved to $DDIR/rmat$S.weg" # LOG
+#
+#		# Make .gr file for Galois
+#		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/rmat$S.wel" "$DDIR/rmat$S.gr"
+#		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/xps-rmat$S.wel" "$DDIR/xps-rmat$S.gr"
+#	done
 	echo "Downloading datasets. May take a while..." # LOG
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
@@ -94,12 +94,22 @@ generate_data()
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/wiki-Talk.txt.gz
 	wget -nc -P "$DDIR" http://string-db.org/download/protein.links.v10.txt.gz
 
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat208_B.gr.gz
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat208_ER.gr.gz
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat208_G.gr.gz
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat218_B.gr.gz
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat218_ER.gr.gz
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat218_G.gr.gz
+	# Download or generate Mew MST graph files
+	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat{20..27}8_{B,G,ER}.gr.gz
+	for f in $(find $DDIR -maxdepth 1 -name 'rmat*.gr.gz'); do
+		gunzip -c "$f" | awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' > ${f%%.gr.gz}-orig.wel
+		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${f%%.gr.gz}-orig.wel" "${f%%.gr.gz}.gr"
+	done
+	cd "$XPS_DIR"
+	for S in $SCALES; do
+		./tEx.out "$DDIR/rmat${S}8_G-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}8_G-orig.wel")
+		mv "Graphall.txt" "$DDIR/rmat${S}8_G.wel"
+		mv "GraphC.txt" "$DDIR/rmat${S}8_G.cert"
+		mv "Graphdiff.txt" "$DDIR/rmat${S}8_G.diff"
+		./cE.out "$DDIR/rmat${S}8_G.wel" 500 100 50 > "$DDIR/changedrmat${S}8_G_500"
+		sort -n -k1 -k2 "$DDIR/changedrmat${S}8_G_500" > "$DDIR/changedrmat${S}8_G_500S"
+	done
+	cd "$LIB_DIR/.."
 }
 
 build_autoperf()
@@ -133,7 +143,7 @@ build_Galois()
 {
 	# XXX: This probably won't work for anyone else.
 	#
-	# This must be included in the CMakeLists.txt:
+	# This must be added to the CMakeLists.txt:
 	# if(POWER_PROFILING)
 	#   message(STATUS "Compiling for power measurement using RAPL")
 	#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOWER_PROFILING=1 -L${PAPI}/lib -Wl,-rpath,${PAPI}/lib")
@@ -167,7 +177,7 @@ build_PBBS()
 {
 	echo "building PBBS..."
 	mkdir -p "$PBBS_DIR"
-	wget -nc -P "$PBBS_DIR" http://www.cs.cmu.edu/~pbbs/benchmarks/minSpanningForest.tar 
+	wget -nc -P "$PBBS_DIR/.." http://www.cs.cmu.edu/~pbbs/benchmarks/minSpanningForest.tar 
 	if [ ! -d minSpanningForest ]; then
 		tar -xf minSpanningForest.tar
 	fi
@@ -221,18 +231,17 @@ run_experiment()
 {
 	echo "Running the experiment..."
 	cd "$ROOTDIR" # So we can just print output to cwd
-	# TODO: Loop over these
-	export OMP_NUM_THREADS=2
-	S=18
-	N_VERT=$(echo 2 ^ $S | bc)
+	export OMP_NUM_THREADS=72
 	EPV=8 # Edges Per Vertex
-
-	# Run Galois
-	"$GALOIS_DIR/release/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat$S.gr"
-	
-	# Run XPS
-	# ./a.out <diff_file> <certificate> <set of changed edges>  <number of vertices>  <number of threads>
-	"$XPS_DIR/a.out" "$DDIR/rmat$S.diff" "$DDIR/rmat$S.cert" "$DDIR/changedrmat${S}_500S" $N_VERT $OMP_NUM_THREADS
+	RT=G # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
+	for S in $SCALES; do
+		N_VERT=$(echo 2 ^ $S | bc)
+		# Run Galois
+		sudo "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr"	
+		# Run XPS
+		# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
+		sudo "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_500S" 100 $N_VERT $OMP_NUM_THREADS
+	done
 }
 
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
@@ -246,7 +255,7 @@ if [ "$cmd" = build -o "$cmd" = all ]; then
 	cd "$LIB_DIR/.."
 fi
 if [ "$cmd" = experiment -o "$cmd" = all ]; then
-	run_autoperf
-	# run_experiment
+	# run_autoperf
+	run_experiment
 fi
 
