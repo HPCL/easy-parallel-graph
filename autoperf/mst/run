@@ -28,7 +28,7 @@ export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MSTSC"
 ROOTDIR="$(pwd)/output"
-SCALES="20 21" # Make sure to have SCALES be the same as what's in autoperf.cfg
+SCALES="20 21 22 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
 # Define commands to be run
 generate_data()
@@ -236,12 +236,19 @@ run_experiment()
 	RT=G # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
 	for S in $SCALES; do
 		N_VERT=$(echo 2 ^ $S | bc)
-		# Run Galois
-		sudo "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr"	
-		# Run XPS
+		sudo "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr" > galois-${S}${EPV}_$RT.log
 		# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
-		sudo "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_500S" 100 $N_VERT $OMP_NUM_THREADS
+		sudo "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_500S" 100 $N_VERT $OMP_NUM_THREADS > mst-${S}${EPV}_$RT.log
 	done
+}
+
+parse_output()
+{
+	echo "Parsing output..."
+	cd "$ROOTDIR" # So we can just print output to cwd
+	export OMP_NUM_THREADS=72
+	EPV=8 # Edges Per Vertex
+	RT=G # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
 }
 
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
