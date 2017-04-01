@@ -27,8 +27,12 @@ export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't
 export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MSTSC"
+GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 ROOTDIR="$(pwd)/output"
-SCALES="20 21 22 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
+OMP_NUM_THREADS=72 
+export OMP_NUM_THREADS
+RT_TYPES="ER B G"
+SCALES="20 21" # 22 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
 # Define commands to be run
 generate_data()
@@ -96,18 +100,36 @@ generate_data()
 
 	# Download or generate Mew MST graph files
 	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat{20..27}8_{B,G,ER}.gr.gz
+	echo "Unzipping files..."
 	for f in $(find $DDIR -maxdepth 1 -name 'rmat*.gr.gz'); do
-		gunzip -c "$f" | awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' > ${f%%.gr.gz}-orig.wel
-		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${f%%.gr.gz}-orig.wel" "${f%%.gr.gz}.gr"
+		if [ ! -f "${f%%.gr.gz}-orig.wel" ]; then
+			gunzip -c "$f" | awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' > ${f%%.gr.gz}-orig.wel
+		fi
+		if [ ! -f "${f%%.gr.gz}.gr" ]; then
+			"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${f%%.gr.gz}-orig.wel" "${f%%.gr.gz}.gr"
+		fi
 	done
-	cd "$XPS_DIR"
-	for S in $SCALES; do
-		./tEx.out "$DDIR/rmat${S}8_G-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}8_G-orig.wel")
-		mv "Graphall.txt" "$DDIR/rmat${S}8_G.wel"
-		mv "GraphC.txt" "$DDIR/rmat${S}8_G.cert"
-		mv "Graphdiff.txt" "$DDIR/rmat${S}8_G.diff"
-		./cE.out "$DDIR/rmat${S}8_G.wel" 500 100 50 > "$DDIR/changedrmat${S}8_G_500"
-		sort -n -k1 -k2 "$DDIR/changedrmat${S}8_G_500" > "$DDIR/changedrmat${S}8_G_500S"
+	echo "Generating RMAT files..."
+	EPV=32
+	for RT in $RT_TYPES; do
+		for S in $SCALES; do
+			echo "Creating RMAT at scale $S" # LOG
+			if [ "$RT" = ER ]; then
+				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
+				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
+				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
+			fi
+			mv "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" tmp
+			awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
+			rm tmp
+			"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" "$DDIR/rmat${S}${EPV}_${RT}.gr"
+			"$XPS_DIR/tEx.out" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}${EPV}_${RT}-orig.wel")
+			mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
+			mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
+			mv "$XPS_DIR/Graphdiff.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
+			"$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" 500 100 50 > "$DDIR/changedrmat${S}${EPV}_${RT}_500"
+			sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_500" > "$DDIR/changedrmat${S}${EPV}_${RT}_500S"
+		done
 	done
 	cd "$LIB_DIR/.."
 }
@@ -160,7 +182,6 @@ build_Galois()
 	# Assumes Galois is already downloaded and unzippeed into GALOIS_DIR
 	# This can be found at
 	# http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
-	GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 	# The newer the version of boost, the newer you must have of cmake
     # module load boost-1.63.0-gcc-4.8-hucoocn
 	module load boost/boost_1_53_0_gcc-4.8
@@ -231,24 +252,37 @@ run_experiment()
 {
 	echo "Running the experiment..."
 	cd "$ROOTDIR" # So we can just print output to cwd
-	export OMP_NUM_THREADS=72
-	EPV=8 # Edges Per Vertex
-	RT=G # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
+	OMP_NUM_THREADS=72
+	export OMP_NUM_THREADS
+	EPV=32 # Edges Per Vertex
+	RT=ER # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
 	for S in $SCALES; do
 		N_VERT=$(echo 2 ^ $S | bc)
-		sudo "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr" > galois-${S}${EPV}_$RT.log
+		sudo "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr" | tee galois-${S}${EPV}_$RT.log
 		# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
-		sudo "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_500S" 100 $N_VERT $OMP_NUM_THREADS > mst-${S}${EPV}_$RT.log
+		sudo "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_500S" 100 $N_VERT $OMP_NUM_THREADS | tee mst-${S}${EPV}_$RT.log
+		sudo chown spollard mst-${S}${EPV}_$RT.log
+		sudo chown spollard galois-${S}${EPV}_$RT.log
 	done
+	cd "$LIB_DIR/.."
 }
 
 parse_output()
 {
 	echo "Parsing output..."
 	cd "$ROOTDIR" # So we can just print output to cwd
-	export OMP_NUM_THREADS=72
-	EPV=8 # Edges Per Vertex
-	RT=G # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
+	PFN="$ROOTDIR/parsed-power-$OMP_NUM_THREADS.txt"
+	EPV=32 # Edges Per Vertex
+	RT=ER # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
+	# Power Settings
+	PKG=2
+	awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST %s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t;t=0}else{t+=$3}}' mst-${S}${EPV}_$RT.log > "$PFN"
+	awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST %s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t;t=0}else{t+=$3}}' mst-${S}${EPV}_$RT.log > "$PFN"
+	awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST %s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' mst-${S}${EPV}_$RT.log >> "$PFN"
+
+	awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois %s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t;t=0}else{t+=$3}}' galois-${S}${EPV}_$RT.log >> "$PFN"
+	awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois %s_%s_%s,Average CPU Power (W),%s\n",S,EPV,RMT,t;t=0}else{t+=$3}}' galois-${S}${EPV}_$RT.log >> "$PFN"
+	awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "Galois %s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' galois-${S}${EPV}_$RT.log >> "$PFN"
 }
 
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
