@@ -228,6 +228,7 @@ build_XPS()
 	make CFLAGS="$POWER_CFLAGS" RAPL_INC="$RAPL_INC" all # This only builds the mst update executable (a.out)
 	make cE
 	make tEx
+	make bfs
 }
 
 run_autoperf()
@@ -285,6 +286,10 @@ parse_output()
 			awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,All,%s_%s_%s,Average CPU Power (W),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' mst-${S}${EPV}_$RT.log >> "$PFN"
 			awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,All,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' mst-${S}${EPV}_$RT.log >> "$PFN"
 		elif [ "$GRANULARITY" = WT ]; then
+			grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,create_tree,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+
 			grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
 			grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
 			grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,first_pass,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
