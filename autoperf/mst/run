@@ -314,7 +314,7 @@ fi
 if [ "$cmd" = build -o "$cmd" = all ]; then
 	build_autoperf
     build_Galois
-	build_PBBS
+	# build_PBBS
 	build_XPS
 	cd "$LIB_DIR/.."
 fi
