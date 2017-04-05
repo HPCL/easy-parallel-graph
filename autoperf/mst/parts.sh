@@ -1,5 +1,5 @@
 #!/bin/bash
-# usage: sudo -E ./parts.sh
+# usage: ./parts.sh
 # Assumes you've already done . run build
 LIB_DIR="$(pwd)/lib"
 module load tau # Also loads the PAPI environment variable
@@ -10,17 +10,16 @@ PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MSTSC"
 GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 ROOTDIR="$(pwd)/output"
-OMP_NUM_THREADS=72
-export OMP_NUM_THREADS
-PFN="$ROOTDIR/parsed-power-$OMP_NUM_THREADS-sunaft.txt"
+export OMP_NUM_THREADS=72
+PFN="$ROOTDIR/parsed-power-$OMP_NUM_THREADS.txt"
 PKG=2
 EPV=8
 RT_TYPES="ER B G"
 CVERTS=2000 # Changed vertices
 INS_PCT=50 # Percent insertions
 #NS='sudo -u spollard'
-SD='sudo'
 NS=''
+SD='sudo'
 
 # arguments: S, RT, INS_PCT
 run_experiment()
