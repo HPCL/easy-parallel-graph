@@ -2,7 +2,7 @@
 # Runs mst experiments on Arya
 # This should be run in the easy-parallel-graph/autoperf/mst directory
 
-USAGE="usage: ./run generate_data|experiment|all
+USAGE="usage: ./run generate_data|experiment|parse|all
 	. run build <------ do this one first"
 # source run build to get the environment variables to stick.
 
@@ -11,7 +11,7 @@ cmd="$1"
 if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
 	echo "$USAGE"
 	return 2
-elif [ "$cmd" != generate_data -a "$cmd" != experiment -a "$cmd" != build -a "$cmd" != all ]; then
+elif [ "$cmd" != generate_data -a "$cmd" != experiment -a "$cmd" != build -a "$cmd" != all -a "$cmd" != parse ]; then
 	echo "Invalid argument $cmd"
 	echo "$USAGE"
 	return 2
@@ -38,23 +38,6 @@ EPV=8 # Edges per vertex
 # Define commands to be run
 generate_data()
 {
-#	for S in $SCALES; do
-#		N_VERT=$(echo 2 ^ $S | bc)
-#		# TODO: Change from a default 8 to other values.
-#		M_EDGE=$(echo $N_VERT '*' 8 | bc) # Graph500 spec is 16, XPS code has 8 by default
-#		WEL_FILE="$DDIR/rmat$S.wel"
-#		if [ -r "$WEL_FILE" ]; then
-#			echo "files already exists at $DDIR/rmat$S.*, avoiding overwriting." # LOG
-#			continue
-#		fi
-#		# Make .wel (for XPS and conversion to .gr)
-#		# Usage: ../RMAT/driverForRmat <SCALE> <SC-WT> <a b c d> <Output filename>
-#		# Details: SCALE = #Vertices = 2^SCALE  -- #Edges = 8*#Vertices
-#		# SC-WT: Random weights in the range zero to 2^SC-WT will be assigned
-#		cd "$XPS_DIR"
-#		echo "create RMAT with 2^$S vertices and ~8 x 2^$S edges at $DDIR/xps-rmat${S}.wel" # LOG
-#		../RMAT/driverForRmat ${S} 6 0.25 0.25 0.25 0.25 "$DDIR/xps-rmat${S}.wel"
-#
 #		# tEx.out requires the first line to begin with 0 or 1
 #		awk '{print $1 " " $2 " " int(rand()*100)}' "$DDIR/xps-rmat${S}.wel" > tmp
 #		sort -n -k1 -k2 tmp > "$DDIR/xps-rmat${S}.wel" # XXX We don't want to have to sort this.
@@ -87,10 +70,6 @@ generate_data()
 #		echo -e "WeightedEdgeArray\n$(cat $DDIR/rmat$S.wel)" > "$DDIR/rmat$S.weg"
 #		echo "saved to $DDIR/rmat$S.weg" # LOG
 #
-#		# Make .gr file for Galois
-#		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/rmat$S.wel" "$DDIR/rmat$S.gr"
-#		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/xps-rmat$S.wel" "$DDIR/xps-rmat$S.gr"
-#	done
 	echo "Downloading datasets. May take a while..." # LOG
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
@@ -100,16 +79,15 @@ generate_data()
 	wget -nc -P "$DDIR" http://string-db.org/download/protein.links.v10.txt.gz
 
 	# Download or generate Mew MST graph files
-	wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat{20..27}8_{B,G,ER}.gr.gz
-	echo "Unzipping files..."
-	for f in $(find $DDIR -maxdepth 1 -name 'rmat*.gr.gz'); do
-		if [ ! -f "${f%%.gr.gz}-orig.wel" ]; then
-			gunzip -c "$f" | awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' > ${f%%.gr.gz}-orig.wel
-		fi
-		if [ ! -f "${f%%.gr.gz}.gr" ]; then
-			"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${f%%.gr.gz}-orig.wel" "${f%%.gr.gz}.gr"
-		fi
-	done
+	# Right now we just generate them on the fly
+	# wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat{20..27}8_{B,G,ER}.gr.gz
+	# echo "Unzipping files..."
+	# for RT in $RT_TYPES; do
+	# 	for S in $SCALES; do
+	# 		gunzip -c "$DDIR/rmat${S}${EPV}_${RT}.gr.gz" | awk '{printf "%d %d %d\n",$1,$2,int(rand()*100)}' > "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
+	# 		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
+	# 	done
+	# done
 	echo "Generating RMAT files..."
 	for RT in $RT_TYPES; do
 		for S in $SCALES; do
@@ -220,7 +198,6 @@ build_XPS()
 	# Use vim syntax to edit the Makefile so it has the correct path to ESSENS
 	ex -s Makefile "+:%s?^ESSENS=.*?ESSENS=$ESSENSPATH?g" '+:wq' # XXX: Will the * cause problems?
 	# Turn on power monitoring (CFLAGS is used in c++ code too in this makefile)
-	# XXX: May need to put -lpapi at the end
 	RAPL_DIR="$LIB_DIR/../../../power"
 	POWER_CFLAGS="-w -I$PAPI/include -I$RAPL_DIR -DPOWER_PROFILING=1"
 	RAPL_INC="power_rapl.o $RAPL_DIR/power_rapl.h -L$PAPI/lib -Wl,-rpath,$PAPI/lib -lpapi"
@@ -318,6 +295,11 @@ if [ "$cmd" = build -o "$cmd" = all ]; then
 	build_XPS
 	cd "$LIB_DIR/.."
 fi
+
+if [ "$cmd" = parse -o "$cmd" = all ]; then
+	parse_output
+fi
+
 if [ "$cmd" = experiment -o "$cmd" = all ]; then
 	# run_autoperf
 	run_experiment
