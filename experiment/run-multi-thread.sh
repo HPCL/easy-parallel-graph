@@ -6,6 +6,6 @@ if [ -z "$S" ]; then
 	exit 2
 fi
 for T in $(echo 1 2 4 8 16 32 64 72); do
-	./run-experiment.sh $S $T >> out${S}-${T}.log 2>> out${S}-${T}.err
+	./run-experiment --ddir=$HOME/graphalytics/all-datasets --libdir=$HOME/graphalytics $S $T >> out${S}-${T}.log 2>> out${S}-${T}.err
 done
 

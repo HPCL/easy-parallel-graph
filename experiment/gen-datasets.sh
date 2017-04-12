@@ -14,22 +14,47 @@
 #     vertex.csv
 #     edge.csv
 
-# NOTE: These must be set before you run this script
-# It is also assumed these are all built.
-# The building instructions are available in the respective repositories.
-GRAPH500DIR=
-GRAPHMATDIR=
-GAPDIR=
-DDIR= # Dataset directory
-
-USAGE="gen-datasets.sh <scale>"
-S=$1
-BASE_FN="kron-$S"
+# NOTE: It is assumed the libraries in LIBDIR are already built.
+#       This requires Graph500, GraphMat, and GAP
+USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] <scale>
+	--libdir: repositories directory. Default: ./lib
+	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
 if [ -z "$1" ]; then
 	echo $USAGE
 	echo 'You may also need to set the variables *DIR in gen-datasets.sh'
 	exit 2
 fi
+DDIR="$(pwd)/datasets" # Dataset directory
+LIBDIR="$(pwd)/lib"
+for arg in "$@"; do
+	case $arg in
+	--libdir=*)
+		LIBDIR=${arg#*=}
+		shift
+	;;
+	--ddir=*)
+		DDIR=${arg#*=}
+		shift
+	;;
+	-h|--help|-help)
+		echo "$USAGE"
+		exit 2
+	;;
+	*)	# Default
+		# Do nothing
+	esac
+done
+if [ "$#" -lt 1 ]; then
+	echo 'Please provide <scale>'
+	echo $USAGE
+	exit 2
+fi
+S=$1
+GAPDIR="$LIBDIR/gapbs"
+GRAPH500DIR="$LIBDIR/graph500"
+GRAPHMATDIR="$LIBDIR/GraphMat"
+BASE_FN="kron-$S"
+
 # Generate graph (Graph500 can only save to its binary format)
 "$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$BASE_FN.graph500" -r "$DDIR/$BASE_FN.roots"
 # Convert to GAP format (edgelist)

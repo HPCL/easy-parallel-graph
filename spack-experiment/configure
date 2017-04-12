@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download and build graph processing systems.
-USAGE="./configure [--prefix /path/to/install (default: $HOME/epg)]"
+USAGE="./configure [--prefix /path/to/install (default: ./epglib)]"
 
 ## Dependencies:
 ### Spack
@@ -12,7 +12,7 @@ if [ "$1" = "-h" -o "$1" = "--help" ]; then
 	echo $USAGE
 	exit 0
 elif [ -z $1 ]; then
-	PREFIX="$HOME/epg"
+	PREFIX="$(pwd)/epglib"
 else
 	PREFIX="$1"
 fi
@@ -23,7 +23,7 @@ if [ -z "$SPACK_ROOT" ]; then
 	echo -e "This can be done using\n"
 	echo "export SPACK_ROOT=$HOME/spack"
 	echo "git clone https://github.com/LLNL/spack.git $SPACK_ROOT"
-	echo -e "\nsetting SPACK_ROOT as you wish"
+	echo -e "\nYou can use any SPACK_ROOT you wish"
 	exit 2
 fi
 # This adds spack to PATH and enables environment modules

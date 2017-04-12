@@ -8,45 +8,14 @@
 # Recommended usage for bash
 #   ./run-experiment $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
 #   disown %<jobnum> # This can be found out using jobs
-USAGE="usage: run-experiment <scale> <num-threads>" # 2^{<scale>} = Number of vertices.
+USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
+	--libdir: repositories directory. Default: ./lib
+	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
 
-# Say where the packages are located
-# NOTE: YOU MUST SET THE REPOSITORY LOCATIONS AND MODULES TO LOAD
 # It is assumed these are all built and the gen-dataset.sh script has been run.
-# The building instructions are available in the respective repositories.
-# Here, edge factor (number of edges per vertex) is the default of 16.
-DDIR= # Dataset directory
-GAPDIR=
-GRAPHBIGDIR=
-GRAPH500DIR=
-GRAPHMATDIR=
-POWERGRAPHDIR=
-
-# Set some other variables used throughout the experiment
-# PageRank is usually represented as a 32-bit float,
-# so ~6e-8*nvertices is the minimum absolute error detectable
-# We set alpha = 0.15 in the respective source codes.
-# NOTE: GraphMat doesn't seem to compute iterations in the same way.
-MAXITER=50 # Maximum iterations for PageRank
-TOL=0.00000006
-NRT=32 # Number of roots
-export SKIP_VALIDATION=1
-S=$1
-if [ -z $S -o -z "$DDIR" ]; then
-	echo 'Please provide S and T and set parameters of the form *DIR in run-experiment.sh'
-	echo "$USAGE"
-	exit 2
-fi
-if [ "$#" -ne 2 -o "$1" = "-h" -o "$1" = "--help" ]; then
-	echo "$USAGE"
-	exit 2
-fi
-export OMP_NUM_THREADS=$2
-
-# Load all the modules here
-module load intel/17
-
-# Build notes for arya:
+# The edge factor (number of edges per vertex) is the default of 16.
+# Build notes for each system
+# cd $LIBDIR
 # GAP:
 # 	git clone https://github.com/sampollard/gapbs.git
 # 	cd gapbs; make
@@ -79,6 +48,53 @@ module load intel/17
 # 	module load boost/boost_1_62_0_gcc-5
 # 	mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
 # 	export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
+
+DDIR="$(pwd)/datasets" # Dataset directory
+LIBDIR="$(pwd)/lib"
+for arg in "$@"; do
+	case $arg in
+	--libdir=*)
+		LIBDIR=${arg#*=}
+		shift
+	;;
+	--ddir=*)
+		DDIR=${arg#*=}
+		shift
+	;;
+	-h|--help|-help)
+		echo "$USAGE"
+		exit 2
+	;;
+	*)	# Default
+		# Do nothing
+	esac
+done
+if [ "$#" -lt 2 ]; then
+	echo 'Please provide <scale> and <num_threads>'
+	echo $USAGE
+	exit 2
+fi
+# Set variables based on the command line arguments
+S=$1
+export OMP_NUM_THREADS=$2
+GAPDIR="$LIBDIR/gapbs"
+GRAPHBIGDIR="$LIBDIR/graphBIG"
+GRAPH500DIR="$LIBDIR/graph500"
+GRAPHMATDIR="$LIBDIR/GraphMat"
+POWERGRAPHDIR="$LIBDIR/PowerGraph"
+
+# Set some other variables used throughout the experiment
+# PageRank is usually represented as a 32-bit float,
+# so ~6e-8*nvertices is the minimum absolute error detectable
+# We set alpha = 0.15 in the respective source codes.
+# NOTE: GraphMat doesn't seem to compute iterations in the same way.
+MAXITER=50 # Maximum iterations for PageRank
+TOL=0.00000006
+NRT=32 # Number of roots
+export SKIP_VALIDATION=1
+
+# Load all the modules here
+module load intel/17
 
 # qsub scheduling options
 #PBS -N graph_experiments

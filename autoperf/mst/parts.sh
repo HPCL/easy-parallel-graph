@@ -49,8 +49,8 @@ run_experiment()
 		mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
 		rm "$XPS_DIR/Graphdiff.txt" # Empty
 		mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
-		$NS "$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${S}${EPV}_${RT}_${CVERTS}"
-		sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_${CVERTS}" > "$DDIR/changedrmat${S}${EPV}_${RT}_${CVERTS}S"
+		$NS "$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+		sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}" > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S"
 		$NS "$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}.wel" "$DDIR/rmat${S}${EPV}_${RT}.gr"
 #	fi
     N_VERT=$(echo 2 ^ $S | bc)
@@ -59,7 +59,7 @@ run_experiment()
     # Run experiment
     $SD "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr" |& tee "$ROOTDIR/galois-${S}${EPV}_$RT.log"
     # ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
-    $SD "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_${CVERTS}S" 100 $N_VERT $OMP_NUM_THREADS |& tee "$ROOTDIR/mst-${S}${EPV}_$RT.log"
+    $SD "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" 100 $N_VERT $OMP_NUM_THREADS |& tee "$ROOTDIR/mst-${S}${EPV}_$RT.log"
     chown spollard "$ROOTDIR/mst-${S}${EPV}_$RT.log"
     chown spollard "$ROOTDIR/galois-${S}${EPV}_$RT.log"
     
