@@ -21,10 +21,10 @@ awk '/bfs_time\[/{print "Graph500,BFS,Time," $2}' "$FN"
 # GraphBIG
 echo -n 'GraphBIG,BFS,File reading,'
 grep -A 7 "Benchmark: BFS" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}'
-grep -A 7 "Benchmark: BFS" "$FN" | awk -v T=1 '/time/{if(T%2==0){print "GraphBIG,BFS,Time," $3} T++}'
+grep -A $((4 * $NRT + 4)) "Benchmark: BFS" "$FN" | tail -n+5 | awk '/time/{print "GraphBIG,BFS,Time," $3}'
 echo -n 'GraphBIG,SSSP,File reading,'
 grep -A 7 'Benchmark: sssp' "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}'
-grep -A 7 'Benchmark: sssp' "$FN" | awk -v T=1 '/time/{if(T%2==0){print "GraphBIG,SSSP,Time," $3} T++}'
+grep -A $((2 * $NRT + 4)) 'Benchmark: sssp' "$FN" | tail -n+5 | awk '/time/{print "GraphBIG,SSSP,Time," $3}'
 echo -n 'GraphBIG,PageRank,File reading,'
 grep -A 7 "Degree Centrality" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}'
 grep 'iteration #' "$FN" | awk '{print "GraphBIG,PageRank,Iterations," $4}'

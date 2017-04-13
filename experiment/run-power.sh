@@ -8,17 +8,48 @@
 # Set some parameters and environment variables
 # CHECK THAT THESE ARE CORRECT ON YOUR OWN SYSTEM!
 # NOTE: on Arya, graph500, GraphBIG, and GAP must be recompiled.
-module load intel/17
-module load papi/git
-DDIR= # Dataset directory
-GAPDIR=
-GRAPH500DIR=
-GRAPHMATDIR=
-GRAPHBIGDIR=
-S=22
+USAGE="usage: run-power.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
+	--libdir: repositories directory. Default: ./powerlib
+	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
+DDIR="$(pwd)/datasets" # Dataset directory
+LIBDIR="$(pwd)/powerlib"
+for arg in "$@"; do
+	case $arg in
+	--libdir=*)
+		LIBDIR=${arg#*=}
+		shift
+	;;
+	--ddir=*)
+		DDIR=${arg#*=}
+		shift
+	;;
+	-h|--help|-help)
+		echo "$USAGE"
+		exit 2
+	;;
+	*)	# Default
+		# Do nothing
+	esac
+done
+if [ "$#" -lt 2 ]; then
+	echo 'Please provide <scale> and <num_threads>'
+	echo $USAGE
+	exit 2
+fi
+# Set parameters based on commmand line
+S=$1
+export OMP_NUM_THREADS=$2
+GAPDIR="$LIBDIR/gapbs"
+GRAPHBIGDIR="$LIBDIR/graphBIG"
+GRAPH500DIR="$LIBDIR/graph500"
+GRAPHMATDIR="$LIBDIR/GraphMat"
+POWERGRAPHDIR="$LIBDIR/PowerGraph"
+
+# Set other parameters and load computer-specific modules
 NRT=32 # Number of roots that we did BFS on. GraphBIG has issues with >32.
 PKG=2 # The number of physical chips
-export OMP_NUM_THREADS=32
+module load intel/17
+module load papi/git
 
 # Set variables used by the script
 export SKIP_VALIDATION=1 # Graph500 by default verifies the BFS

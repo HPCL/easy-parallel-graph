@@ -124,9 +124,11 @@ done
 
 # Run the GraphBIG BFS
 # For this, one needs a vertex.csv file and and an edge.csv.
-for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
-done
+# for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
+# 	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
+# done
+head -n $NRT "$DDIR/kron-${S}-roots.v" > "$DDIR/kron-${S}-${NRT}roots.v"
+"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
 
 # Run the GraphMat BFS
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
@@ -140,9 +142,10 @@ for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
 done
 
 # Run the GraphBIG SSSP
-for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
-done
+# for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
+# 	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
+# done
+"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
 
 # Run the GraphMat SSSP
 for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
