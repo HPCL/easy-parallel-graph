@@ -54,9 +54,9 @@ module load papi/git
 # Set variables used by the script
 export SKIP_VALIDATION=1 # Graph500 by default verifies the BFS
 T=$OMP_NUM_THREADS
-FN="out${S}-${T}-power.log"
-ERRFN="out${S}-${T}-power.err"
-PFN="parsed${S}-${T}-power.csv"
+FN="output/out${S}-${T}-power.log"
+ERRFN="output/out${S}-${T}-power.err"
+PFN="output/parsed${S}-${T}-power.csv"
 
 # Run experiments
 # GAP BFS
@@ -73,9 +73,8 @@ for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
 	#"$GRAPHMATDIR/bin/BFS" "$DDIR/kron-${S}.graphmat" "$ROOT"
 done >> "$FN" 2>> "$ERRFN"
 # GraphBIG BFS
-for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-	sudo "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
-done >> "$FN" 2>> "$ERRFN"
+head -n $NRT "$DDIR/kron-${S}-roots.v" > "$DDIR/kron-${S}-${NRT}roots.v"
+"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "$FN" 2>> "$ERRFN"
 
 # Baseline (do nothing, just sleep)
 sudo "$GAPDIR"/sleep_baseline >> "$FN" 2>> "$ERRFN"
@@ -96,6 +95,7 @@ grep -A 29 'RAPL on Graph500 BFS' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENE
 grep -A 29 'RAPL on GraphMat BFS' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphMat,BFS,Average CPU Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 grep -A 29 'RAPL on GraphMat BFS' "$FN" | awk -v PKG=$PKG '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphMat,BFS,Total CPU Energy (J)," t;t=0}else{t+=$3}}' >> "$PFN"
 # GraphBIG
+# TODO: GraphBIG changed so this may not be correct anymore
 grep -A 29 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphBIG,BFS,Average CPU Power (W)," t;t=0}else{t+=$3}}' >> "$PFN"
 grep -A 29 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "GraphBIG,BFS,Total CPU Energy (J)," t;t=0}else{t+=$3}}' >> "$PFN"
 # Baseline

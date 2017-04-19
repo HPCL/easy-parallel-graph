@@ -6,7 +6,7 @@
 # Current platforms:
 #   GraphBIG, Graph500, GAP, GraphMat, PowerGraph (SSSP & PR only)
 # Recommended usage for bash
-#   ./run-experiment $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
+#   ./run-experiment.sh $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
 #   disown %<jobnum> # This can be found out using jobs
 USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
 	--libdir: repositories directory. Default: ./lib
@@ -96,14 +96,6 @@ export SKIP_VALIDATION=1
 # Load all the modules here
 module load intel/17
 
-# qsub scheduling options
-#PBS -N graph_experiments
-#PBS -q generic
-#PBS -l nodes=1:ppn=12,mem=32gb
-#PBS -o /home8/spollard/compare/graph_experiments.out
-#PBS -e /home8/spollard/compare/graph_exeriments.err
-# Other options: -M email, -m when to send email- abe, -X X11 forwarding
-
 echo Starting experiment at $(date)
 
 # Run the Graph500 BFS: OpenMP
@@ -124,9 +116,6 @@ done
 
 # Run the GraphBIG BFS
 # For this, one needs a vertex.csv file and and an edge.csv.
-# for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-# 	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --root $ROOT --threadnum $OMP_NUM_THREADS
-# done
 head -n $NRT "$DDIR/kron-${S}-roots.v" > "$DDIR/kron-${S}-${NRT}roots.v"
 "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
 

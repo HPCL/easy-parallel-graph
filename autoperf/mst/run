@@ -38,38 +38,6 @@ EPV=8 # Edges per vertex
 # Define commands to be run
 generate_data()
 {
-#		# tEx.out requires the first line to begin with 0 or 1
-#		awk '{print $1 " " $2 " " int(rand()*100)}' "$DDIR/xps-rmat${S}.wel" > tmp
-#		sort -n -k1 -k2 tmp > "$DDIR/xps-rmat${S}.wel" # XXX We don't want to have to sort this.
-#		rm tmp
-#
-#		# Create the MST Tree and the Remaining Graph
-#		# ./tEx <filename> <starts with 1 or 0>
-#		./tEx.out "$DDIR/xps-rmat${S}.wel" $(awk '{print $1; exit}' "$DDIR/xps-rmat${S}.wel") # XXX: 2nd arg may not be 0 or 1 (but seems to be so with a=b=c=d=0.25 rmat parameters)
-#		# This will create three files
-#		# Graphall.txt (Original file, starting from 0, undirected)
-#		# GraphC.txt  (the certificate files, MST/BFS)
-#		# Graphdiff.txt  (remaining edges, not in certificate)
-#		# Store the generated files with correct names
-#		mv Graphall.txt "$DDIR/rmat${S}.wel"
-#		mv GraphC.txt "$DDIR/rmat${S}.cert"
-#		mv Graphdiff.txt "$DDIR/rmat${S}.diff"
-#
-#		# Create set of changed Edges  (create_edgelist.cpp)
-#		# ./cE.out <filename> <number of edges> <maximum weight of new edges> <Percentage of inserted edges (0 to 100)>
-#		./cE.out "$DDIR/rmat${S}.wel" 500 100 80 > "$DDIR/changedrmat${S}_500"
-#
-#		# Sort the edges for faster run
-#		# sort -n -k1 <filename> > output
-#		sort -n -k1 -k2 "$DDIR/changedrmat${S}_500" > "$DDIR/changedrmat${S}_500S"
-#		# Example update (what we are timing)
-#		# ./a.out <diff_file> <certificate> <changed edges>  <max edge weight in complete graph> <num vertices>  <num threads>
-#		cd "$LIB_DIR/.."
-#
-#		# Make .weg (for PBBS)
-#		echo -e "WeightedEdgeArray\n$(cat $DDIR/rmat$S.wel)" > "$DDIR/rmat$S.weg"
-#		echo "saved to $DDIR/rmat$S.weg" # LOG
-#
 	echo "Downloading datasets. May take a while..." # LOG
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
 	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
