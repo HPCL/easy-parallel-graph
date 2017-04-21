@@ -14,6 +14,7 @@ export OMP_NUM_THREADS=72
 PFN="$ROOTDIR/parsed-power-$OMP_NUM_THREADS.txt"
 PKG=2
 EPV=8
+ENSURE_CONNECTED='no'
 RT_TYPES="ER B G"
 CVERTS=2000 # Changed vertices
 INS_PCT=50 # Percent insertions
@@ -29,8 +30,8 @@ run_experiment()
     INS_PCT=$3
     # Generate Dataset
     cd "$XPS_DIR"
-#	if [ ! -f "$DDIR/rmat${S}${EPV}_${RT}.wel" ]; then
-		echo "Creating RMAT at scale $S, $EPV, $RT" # LOG
+#	if [ ! -f "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}" ]; then
+		echo -e "~~~~~\nGenerating scale $S, $EPV edges per vertex, RMAT $RT, $INS_PCT% insertions, $CVERTS changed vertices\n~~~~~" # LOG
 		if [ "$RT" = G ]; then
 			$NS "$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
 		elif [ "$RT" = ER ]; then
@@ -42,50 +43,59 @@ run_experiment()
 		$NS awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
 		rm tmp
 		$NS "$XPS_DIR/tEx.out" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}${EPV}_${RT}-orig.wel")
-		$NS "$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
-		rm "$XPS_DIR/Graphallx.txt" # May not be connected
-		mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
-		rm "$XPS_DIR/GraphCx.txt" # Duplicate
-		mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
-		rm "$XPS_DIR/Graphdiff.txt" # Empty
+		# tEx.out generates Graph*x.txt, bfs.out generates Graph*.txt
+		if [ "$ENSURE_CONNECTED" = 'yes' ]; then
+			"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
+			rm "$XPS_DIR/Graphallx.txt" # May not be connected
+			mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
+			rm "$XPS_DIR/GraphCx.txt" # Duplicate
+			mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
+			rm "$XPS_DIR/Graphdiff.txt" # Empty
+		else	
+			mv "$XPS_DIR/Graphallx.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
+			mv "$XPS_DIR/GraphCx.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
+		fi
 		mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
 		$NS "$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
 		sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}" > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S"
-		$NS "$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}.wel" "$DDIR/rmat${S}${EPV}_${RT}.gr"
+		awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" "$DDIR/rmat${S}${EPV}_${RT}.wel" > "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel"
+		$NS "$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel" "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.gr"
 #	fi
     N_VERT=$(echo 2 ^ $S | bc)
 	#N_VERT=$(awk '{printf "%s\n%s\n",$1,$2}' "$DDIR/rmat${S}${EPV}_${RT}.wel" | sort -n | uniq | wc -l)
 
     # Run experiment
-    $SD "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr" |& tee "$ROOTDIR/galois-${S}${EPV}_$RT.log"
+	MSTLOG="$ROOTDIR/mst-${S}${EPV}_$RT-${INS_PCT}i_${CVERTS}.log"
+	GALOISLOG="$ROOTDIR/galois-${S}${EPV}_$RT-${INS_PCT}i_${CVERTS}.log"
+    $SD "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.gr" |& tee "$GALOISLOG"
     # ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
-    $SD "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" 100 $N_VERT $OMP_NUM_THREADS |& tee "$ROOTDIR/mst-${S}${EPV}_$RT.log"
-    chown spollard "$ROOTDIR/mst-${S}${EPV}_$RT.log"
-    chown spollard "$ROOTDIR/galois-${S}${EPV}_$RT.log"
+    $SD "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" 100 $N_VERT $OMP_NUM_THREADS |& tee "$MSTLOG"
+    chown spollard "$MSTLOG"
+    chown spollard "$GALOISLOG"
     
     # Print data about the experiment
     echo "CVERTS=$CVERTS,INS_PCT=$INS_PCT,OMP_NUM_THREADS=$OMP_NUM_THREADS " >> "$PFN"
     # Parse
     cd "$ROOTDIR"
-    grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,create_tree,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+    grep -A 30 'Starting create_tree' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -A 30 'Starting create_tree' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -A 30 'Starting create_tree' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,create_tree,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
 
-    grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,first_pass,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+    grep -A 30 'Starting first_pass' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -A 30 'Starting first_pass' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -A 30 'Starting first_pass' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,first_pass,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
 
-    grep -A 30 'Starting process_insertions' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -A 30 'Starting process_insertions' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -A 30 'Starting process_insertions' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_insertions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+    grep -A 30 'Starting process_insertions' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -A 30 'Starting process_insertions' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -A 30 'Starting process_insertions' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_insertions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
 
-    grep -B 31 'Time for Deletion' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -B 31 'Time for Deletion' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-    grep -B 31 'Time for Deletion' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_deletions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+    grep -B 31 'Time for Deletion' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -B 31 'Time for Deletion' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+    grep -B 31 'Time for Deletion' "$MSTLOG" | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_deletions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
 
-    awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' galois-${S}${EPV}_$RT.log >> "$PFN"
-    awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s_%s_%s,Average CPU Power (W),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' galois-${S}${EPV}_$RT.log >> "$PFN"
-    awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' galois-${S}${EPV}_$RT.log >> "$PFN"
+    awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' "$GALOISLOG" >> "$PFN"
+    awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s_%s_%s,Average CPU Power (W),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' "$GALOISLOG" >> "$PFN"
+    awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' "$GALOISLOG" >> "$PFN"
 
 }
 

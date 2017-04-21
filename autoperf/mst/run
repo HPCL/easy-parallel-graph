@@ -31,9 +31,12 @@ GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 ROOTDIR="$(pwd)/output"
 OMP_NUM_THREADS=72 
 export OMP_NUM_THREADS
-RT_TYPES="ER B G"
-SCALES="20 21 22" # 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
 EPV=8 # Edges per vertex
+ENSURE_CONNECTED='no' # yes if you want to run bfs.out
+RT_TYPES="ER B G"
+INS_PCTAGES="10 25 50 75 90 100"
+CHANGED_VERTICES="1000 2000 5000"
+SCALES="20" # 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
 
 # Define commands to be run
 generate_data()
@@ -56,29 +59,41 @@ generate_data()
 	# 		"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
 	# 	done
 	# done
+	cd "$XPS_DIR"
 	echo "Generating RMAT files..."
-	for RT in $RT_TYPES; do
-		for S in $SCALES; do
-			echo "Creating RMAT at scale $S" # LOG
-			if [ "$RT" = ER ]; then # Just do this once
-				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
-				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
-				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
-			fi
-			mv "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" tmp
-			awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
-			rm tmp
-			"$XPS_DIR/tEx.out" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}${EPV}_${RT}-orig.wel")
-			"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
-			rm "$XPS_DIR/Graphallx.txt" # May not be connected
-			mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
-			rm "$XPS_DIR/GraphCx.txt" # Duplicate
-			mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
-			rm "$XPS_DIR/Graphdiff.txt" # Empty
-			mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
-			"$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" 500 100 50 > "$DDIR/changedrmat${S}${EPV}_${RT}_500"
-			sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_500" > "$DDIR/changedrmat${S}${EPV}_${RT}_500S"
-			"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}.wel" "$DDIR/rmat${S}${EPV}_${RT}.gr"
+	for INS_PCT in $INS_PCTAGES; do
+		for CVERTS in $CHANGED_VERTICES; do
+			for RT in $RT_TYPES; do
+				for S in $SCALES; do
+					echo -e "~~~~~\nGenerating scale $S, $EPV edges per vertex, RMAT $RT, $INS_PCT% insertions, $CVERTS changed vertices\n~~~~~" # LOG
+					if [ "$RT" = ER ]; then # Just do this once
+						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
+						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
+						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
+					fi
+					mv "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" tmp
+					awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
+					rm tmp
+					"$XPS_DIR/tEx.out" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}${EPV}_${RT}-orig.wel")
+					# tEx.out generates Graph*x.txt, bfs.out generates Graph*.txt
+					if [ "$ENSURE_CONNECTED" = 'yes' ]; then
+						"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
+						rm "$XPS_DIR/Graphallx.txt" # May not be connected
+						mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
+						rm "$XPS_DIR/GraphCx.txt" # Duplicate
+						mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
+						rm "$XPS_DIR/Graphdiff.txt" # Empty
+					else	
+						mv "$XPS_DIR/Graphallx.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
+						mv "$XPS_DIR/GraphCx.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
+					fi
+					mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
+					"$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+					sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}" > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S"
+					awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" "$DDIR/rmat${S}${EPV}_${RT}.wel" > "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel"
+					"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel" "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.gr"
+				done
+			done
 		done
 	done
 	cd "$LIB_DIR/.."
@@ -198,6 +213,7 @@ run_autoperf()
 	# autoperf
 }
 
+# FIXME Does not take into account CVERTS nor INS_PCT
 run_experiment()
 {
 	echo "Running the experiment..."
