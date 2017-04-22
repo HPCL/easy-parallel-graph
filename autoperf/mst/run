@@ -61,37 +61,39 @@ generate_data()
 	# done
 	cd "$XPS_DIR"
 	echo "Generating RMAT files..."
-	for INS_PCT in $INS_PCTAGES; do
-		for CVERTS in $CHANGED_VERTICES; do
-			for RT in $RT_TYPES; do
-				for S in $SCALES; do
-					echo -e "~~~~~\nGenerating scale $S, $EPV edges per vertex, RMAT $RT, $INS_PCT% insertions, $CVERTS changed vertices\n~~~~~" # LOG
-					if [ "$RT" = ER ]; then # Just do this once
-						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
-						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
-						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
-					fi
-					mv "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" tmp
-					awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${S}${EPV}_${RT}-orig.wel"
-					rm tmp
-					"$XPS_DIR/tEx.out" "$DDIR/rmat${S}${EPV}_${RT}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${S}${EPV}_${RT}-orig.wel")
-					# tEx.out generates Graph*x.txt, bfs.out generates Graph*.txt
-					if [ "$ENSURE_CONNECTED" = 'yes' ]; then
-						"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
-						rm "$XPS_DIR/Graphallx.txt" # May not be connected
-						mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
-						rm "$XPS_DIR/GraphCx.txt" # Duplicate
-						mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
-						rm "$XPS_DIR/Graphdiff.txt" # Empty
-					else	
-						mv "$XPS_DIR/Graphallx.txt" "$DDIR/rmat${S}${EPV}_${RT}.wel"
-						mv "$XPS_DIR/GraphCx.txt" "$DDIR/rmat${S}${EPV}_${RT}.cert"
-					fi
-					mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
-					"$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
-					sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}" > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S"
-					awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" "$DDIR/rmat${S}${EPV}_${RT}.wel" > "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel"
-					"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel" "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.gr"
+	for RT in $RT_TYPES; do
+		for S in $SCALES; do
+			echo -e "~~~~~\nGenerating scale $S, $EPV edges per vertex, RMAT $RT, $INS_PCT% insertions, $CVERTS changed vertices\n~~~~~" # LOG
+			PART_SUFFIX="${S}${EPV}_${RT}"
+			if [ "$RT" = ER ]; then # Just do this once
+				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
+				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
+				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
+			fi
+			mv "$DDIR/rmat${PART_SUFFIX}-orig.wel" tmp
+			awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${PART_SUFFIX}-orig.wel"
+			rm tmp
+			"$XPS_DIR/tEx.out" "$DDIR/rmat${PART_SUFFIX}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${PART_SUFFIX}-orig.wel")
+			# tEx.out generates Graph*x.txt, bfs.out generates Graph*.txt
+			if [ "$ENSURE_CONNECTED" = 'yes' ]; then
+				"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
+				rm "$XPS_DIR/Graphallx.txt" # May not be connected
+				mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${PART_SUFFIX}.wel"
+				rm "$XPS_DIR/GraphCx.txt" # Duplicate
+				mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
+				rm "$XPS_DIR/Graphdiff.txt" # Empty
+			else	
+				mv "$XPS_DIR/Graphallx.txt" "$DDIR/rmat${PART_SUFFIX}.wel"
+				mv "$XPS_DIR/GraphCx.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
+			fi
+			mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${PART_SUFFIX}.diff"
+			for INS_PCT in $INS_PCTAGES; do
+				for CVERTS in $CHANGED_VERTICES; do	
+					FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+					"$XPS_DIR/cE.out" "$DDIR/rmat${PART_SUFFIX}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${FULL_SUFFIX}"
+					sort -n -k1 -k2 "$DDIR/changedrmat${FULL_SUFFIX}" > "$DDIR/changedrmat${FULL_SUFFIX}S"
+					awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${FULL_SUFFIX}S" "$DDIR/rmat${PART_SUFFIX}.wel" > "$DDIR/rmat${FULL_SUFFIX}.wel"
+					"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${FULL_SUFFIX}.wel" "$DDIR/rmat${FULL_SUFFIX}.gr"
 				done
 			done
 		done

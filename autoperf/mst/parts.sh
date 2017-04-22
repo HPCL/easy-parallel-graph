@@ -58,15 +58,15 @@ run_experiment()
 		mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${S}${EPV}_${RT}.diff"
 		$NS "$XPS_DIR/cE.out" "$DDIR/rmat${S}${EPV}_${RT}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
 		sort -n -k1 -k2 "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}" > "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S"
-		awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" "$DDIR/rmat${S}${EPV}_${RT}.wel" > "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel"
-		$NS "$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.wel" "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.gr"
+		awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" "$DDIR/rmat${S}${EPV}_${RT}.wel" > "$DDIR/rmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}.wel"
+		$NS "$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}.wel" "$DDIR/rmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}.gr"
 #	fi
     N_VERT=$(echo 2 ^ $S | bc)
 	#N_VERT=$(awk '{printf "%s\n%s\n",$1,$2}' "$DDIR/rmat${S}${EPV}_${RT}.wel" | sort -n | uniq | wc -l)
 
     # Run experiment
-	MSTLOG="$ROOTDIR/mst-${S}${EPV}_$RT-${INS_PCT}i_${CVERTS}.log"
-	GALOISLOG="$ROOTDIR/galois-${S}${EPV}_$RT-${INS_PCT}i_${CVERTS}.log"
+	MSTLOG="$ROOTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}.log"
+	GALOISLOG="$ROOTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}.log"
     $SD "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}-${INS_PCT}i_${CVERTS}.gr" |& tee "$GALOISLOG"
     # ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
     $SD "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}S" 100 $N_VERT $OMP_NUM_THREADS |& tee "$MSTLOG"
