@@ -215,21 +215,26 @@ run_autoperf()
 	# autoperf
 }
 
-# FIXME Does not take into account CVERTS nor INS_PCT
 run_experiment()
 {
 	echo "Running the experiment..."
 	cd "$ROOTDIR" # So we can just print output to cwd
-	OMP_NUM_THREADS=72
-	export OMP_NUM_THREADS
+	# Adjust parameters
+	export OMP_NUM_THREADS=72
 	RT=ER # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
+	SD='sudo'
 	for S in $SCALES; do
 		N_VERT=$(echo 2 ^ $S | bc)
-		sudo "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${S}${EPV}_${RT}.gr" | tee "$ROOTDIR/galois-${S}${EPV}_$RT.log"
+		FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+		PART_SUFFIX="${S}${EPV}_${RT}"
+		MSTLOG="$ROOTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+		GALOISLOG="$ROOTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+
+		"$SD" "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" | tee "$GALOISLOG"
 		# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
-		sudo "$XPS_DIR/a.out" "$DDIR/rmat${S}${EPV}_${RT}.diff" "$DDIR/rmat${S}${EPV}_${RT}.cert" "$DDIR/changedrmat${S}${EPV}_${RT}_500S" 100 $N_VERT $OMP_NUM_THREADS | tee "$ROOTDIR/mst-${S}${EPV}_$RT.log"
-		sudo chown spollard "$ROOTDIR/mst-${S}${EPV}_$RT.log"
-		sudo chown spollard "$ROOTDIR/galois-${S}${EPV}_$RT.log"
+		"$SD" "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $OMP_NUM_THREADS | tee "$MSTLOG"
+		"$SD" chown spollard "$MSTLOG"
+		"$SD" chown spollard "$GALOISLOG"
 	done
 	cd "$LIB_DIR/.."
 }
