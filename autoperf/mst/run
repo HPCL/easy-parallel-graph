@@ -2,11 +2,22 @@
 # Runs mst experiments on Arya
 # This should be run in the easy-parallel-graph/autoperf/mst directory
 
-USAGE="usage: ./run generate_data|experiment|parse|all
-	. run build <------ do this one first"
+# TODO: Compile for power
+USAGE="usage: ./run [--power] generate_data|experiment|parse|all
+	. run [--power] build <------ do this one first"
 # source run build to get the environment variables to stick.
 
 # Parse command line options
+for arg in "$@"; do
+	case $arg in
+	--power)
+		export POWER_PROFILING=1
+		shift
+	;;
+	*)	# Default
+		unset POWER_PROFILING
+	esac
+done
 cmd="$1"
 if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
 	echo "$USAGE"
@@ -22,13 +33,12 @@ fi
 # This is why some are exported and you must source run build
 LIB_DIR="$(pwd)/lib"
 module load tau # Also loads the PAPI environment variable
-export POWER_PROFILING=1
 export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't think this is needed when sampling
 export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MSTSC"
 GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
-ROOTDIR="$(pwd)/output"
+OUTPUTDIR="$(pwd)/output"
 OMP_NUM_THREADS=72 
 export OMP_NUM_THREADS
 EPV=8 # Edges per vertex
@@ -37,6 +47,7 @@ RT_TYPES="ER B G"
 INS_PCTAGES="10 25 50 75 90 100"
 CHANGED_VERTICES="1000 2000 5000"
 SCALES="20" # 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
+THREADS="1 2 4 8 16 32 48 64 72"
 
 # Define commands to be run
 generate_data()
@@ -146,19 +157,25 @@ build_Galois()
 	# app(boruvka-merge BoruvkaMerge.cpp)
 	
 	# Replace
-	# Assumes Galois is already downloaded and unzippeed into GALOIS_DIR
+	# Assumes Galois is already downloaded and unzipped into GALOIS_DIR
 	# This can be found at
 	# http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
 	# The newer the version of boost, the newer you must have of cmake
     # module load boost-1.63.0-gcc-4.8-hucoocn
 	module load boost/boost_1_53_0_gcc-4.8
 	# Copy from easy-parallel-graph's RAPL wrappers.
-	cp "$LIB_DIR/../../../power/power_rapl.c" "$GALOIS_DIR/apps/boruvka"
-	cp "$LIB_DIR/../../../power/power_rapl.h" "$GALOIS_DIR/apps/boruvka"
     cd "$GALOIS_DIR/build"
-	mkdir -p power
-	cd power
-    cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -DPOWER_PROFILING=1 -DPAPI="$PAPI" -Wno-dev ../../ 
+	if [ "$POWER_PROFILING" = "1" ]; then
+		mkdir -p power
+		cd power
+		cp "$LIB_DIR/../../../power/power_rapl.c" "$GALOIS_DIR/apps/boruvka"
+		cp "$LIB_DIR/../../../power/power_rapl.h" "$GALOIS_DIR/apps/boruvka"
+		cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -DPOWER_PROFILING=1 -DPAPI="$PAPI" -Wno-dev ../../ 
+	else
+		mkdir -p release
+		cd release
+		cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -Wno-dev ../../ 
+	fi
 }
 
 build_PBBS()
@@ -183,11 +200,15 @@ build_XPS()
 	# Use vim syntax to edit the Makefile so it has the correct path to ESSENS
 	ex -s Makefile "+:%s?^ESSENS=.*?ESSENS=$ESSENSPATH?g" '+:wq' # XXX: Will the * cause problems?
 	# Turn on power monitoring (CFLAGS is used in c++ code too in this makefile)
-	RAPL_DIR="$LIB_DIR/../../../power"
-	POWER_CFLAGS="-w -I$PAPI/include -I$RAPL_DIR -DPOWER_PROFILING=1"
-	RAPL_INC="power_rapl.o $RAPL_DIR/power_rapl.h -L$PAPI/lib -Wl,-rpath,$PAPI/lib -lpapi"
-	gcc -c $POWER_CFLAGS "$RAPL_DIR/power_rapl.c" -o power_rapl.o
-	make CFLAGS="$POWER_CFLAGS" RAPL_INC="$RAPL_INC" all # This only builds the mst update executable (a.out)
+	if [ "$POWER_PROFILING" = "1" ]; then
+		RAPL_DIR="$LIB_DIR/../../../power"
+		POWER_CFLAGS="-w -I$PAPI/include -I$RAPL_DIR -DPOWER_PROFILING=1"
+		RAPL_INC="power_rapl.o $RAPL_DIR/power_rapl.h -L$PAPI/lib -Wl,-rpath,$PAPI/lib -lpapi"
+		gcc -c $POWER_CFLAGS "$RAPL_DIR/power_rapl.c" -o power_rapl.o
+		make CFLAGS="$POWER_CFLAGS" RAPL_INC="$RAPL_INC" all # This only builds the mst update executable (a.out)
+	else
+		make all
+	fi
 	make cE
 	make tEx
 	make bfs
@@ -197,6 +218,7 @@ run_autoperf()
 {
 	# FOR EXAMPLE...
 	# TODO: Loop over these in a reasonable way, make AUTOPERF_NUM_THREADS actually done in autoperf.
+	echo "CAUTION: Incomplete."
 	AUTOPERF_SCALE=20
 	AUTOPERF_CHANGED_EDGES=500
 	AUTOPERF_MAX_WEIGHT=100
@@ -218,19 +240,24 @@ run_autoperf()
 run_experiment()
 {
 	echo "Running the experiment..."
-	cd "$ROOTDIR" # So we can just print output to cwd
+	cd "$OUTPUTDIR" # So we can just print output to cwd
+	# TODO: more parameters and more loop levels
 	# Adjust parameters
 	export OMP_NUM_THREADS=72
-	RT=ER # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
 	SD='sudo'
+	if [ "$POWER_PROFILING" = "1" ]; then
+		GALOIS_MST="$GALOIS_DIR/build/power/apps/boruvka/boruvka"
+	else
+		GALOIS_MST="$GALOIS_DIR/build/release/apps/boruvka/boruvka"
+		SD=''
+	fi
 	for S in $SCALES; do
 		N_VERT=$(echo 2 ^ $S | bc)
 		FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
 		PART_SUFFIX="${S}${EPV}_${RT}"
-		MSTLOG="$ROOTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
-		GALOISLOG="$ROOTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
-
-		"$SD" "$GALOIS_DIR/build/power/apps/boruvka/boruvka" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" | tee "$GALOISLOG"
+		MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+		GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+		"$SD" "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" | tee "$GALOISLOG"
 		# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
 		"$SD" "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $OMP_NUM_THREADS | tee "$MSTLOG"
 		"$SD" chown spollard "$MSTLOG"
@@ -239,43 +266,79 @@ run_experiment()
 	cd "$LIB_DIR/.."
 }
 
+# parse_output helper function: parse one output file
+# Expects the following variables to be set:
+# PKG DATA_FORMAT GALOISLOG MSTLOG PFN
+parse_one()
+{
+	if [ "$POWER_PROFILING" = "1" ]; then
+		# Galois
+		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${GALOISLOG}" >> "$PFN"
+		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${GALOISLOG}" >> "$PFN"
+		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s,RAPL Time (s),%s\n",INFO,$1;exit}' ${GALOISLOG} >> "$PFN"
+		# MST
+		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,All,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${MSTLOG}" >> "$PFN"
+		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,All,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${MSTLOG}" >> "$PFN"
+		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/^[0-9]+\.[0-9]+ s/{printf "MST,%s,All,RAPL Time (s),%s\n",INFO,$1;exit}' "${MSTLOG}" >> "$PFN"
+	fi
+	# Galois
+	awk -F ',' -v INFO="$DATA_FORMAT" '/,Time,/{printf "Galois,All,%s,Time (ms),%s\n",INFO,$5}' "${GALOISLOG}" >> "$PFN"
+	# MST
+	awk -v INFO="$DATA_FORMAT" '/Time for First Pass/{printf "MST,first pass,%s,Time (s),%s\n",INFO,$5}' "${MSTLOG}" >> "$PFN"
+	awk -v INFO="$DATA_FORMAT" '/Time for Insertion/{printf "MST,insertion,%s,Time (s),%s\n",INFO,$4}' "${MSTLOG}" >> "$PFN"
+	awk -v INFO="$DATA_FORMAT" '/Time for Deletion/{printf "MST,deletion,%s,Time (s),%s\n",INFO,$4}' "${MSTLOG}" >> "$PFN"
+	awk -v INFO="$DATA_FORMAT" '/Time for Updating/{printf "MST,All,%s,Time (s),%s\n",INFO,$6}' "${MSTLOG}" >> "$PFN"
+}
+
 parse_output()
 {
 	echo "Parsing output..."
-	cd "$ROOTDIR" # So we can just print output to cwd
-	PFN="$ROOTDIR/parsed-power-$OMP_NUM_THREADS.txt"
+	if [ "$POWER_PROFILING" = "1" ]; then
+		PFN="$OUTPUTDIR/parsed-power-aggregate.txt"
+	else
+		PFN="$OUTPUTDIR/parsed-aggregate.txt"
+	fi
 	RT=ER # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
 	PKG=2
-	GRANULARITY=WT # Options: WT or Main
-	# Only using main, less to parse
-	for S in $SCALES; do
-		if [ "$GRANULARITY" = Main ]; then
-			awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,All,%s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' mst-${S}${EPV}_$RT.log >> "$PFN"
-			awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,All,%s_%s_%s,Average CPU Power (W),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' mst-${S}${EPV}_$RT.log >> "$PFN"
-			awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,All,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' mst-${S}${EPV}_$RT.log >> "$PFN"
-		elif [ "$GRANULARITY" = WT ]; then
-			grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -A 30 'Starting create_tree' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,create_tree,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
-
-			grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -A 30 'Starting first_pass' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,first_pass,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
-
-			grep -A 30 'Starting process_insertions' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -A 30 'Starting process_insertions' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -A 30 'Starting process_insertions' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_insertions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
-
-			grep -B 31 'Time for Deletion' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -B 31 'Time for Deletion' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
-			grep -B 31 'Time for Deletion' mst-${S}${EPV}_$RT.log | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_deletions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
-		fi
-		awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s_%s_%s,Total CPU Energy (J),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' galois-${S}${EPV}_$RT.log >> "$PFN"
-		awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s_%s_%s,Average CPU Power (W),%s\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' galois-${S}${EPV}_$RT.log >> "$PFN"
-		awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' galois-${S}${EPV}_$RT.log >> "$PFN"
+	# Print the header. XXX: Should this be > instead of >>?
+	echo 'algorithm,scale,edges per vertex,RMAT type,insertion percent,changed vertices,threads,execution phase,measurement,value' >> "$PFN"
+	for RT in $RT_TYPES; do
+		for S in $SCALES; do
+			for INS_PCT in $INS_PCTAGES; do
+				for CVERTS in $CHANGED_VERTICES; do	
+					for T in $THREADS; do
+						for S in $SCALES; do
+							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+							DATA_FORMAT="$S,$EPV,$RT,$INS_PCT,$CVERTS,$OMP_NUM_THREADS"
+							parse_one
+						done
+					done
+				done
+			done
+		done
 	done
 }
+# Old parse output
+# The extra steps for grep are unnecessary since we save each run in a different file.
+			# grep -A 30 'Starting create_tree' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,create_tree,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -A 30 'Starting create_tree' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,create_tree,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
 
+			# grep -A 30 'Starting first_pass' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -A 30 'Starting first_pass' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,first_pass,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -A 30 'Starting first_pass' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,first_pass,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+
+			# grep -A 30 'Starting process_insertions' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -A 30 'Starting process_insertions' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_insertions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -A 30 'Starting process_insertions' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_insertions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+
+			# grep -B 31 'Time for Deletion' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Total CPU Energy (J),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -B 31 'Time for Deletion' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,process_deletions,%s_%s_%s,Average CPU Power (W),%f\n",S,EPV,RMT,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+			# grep -B 31 'Time for Deletion' ${MSTLOG} | awk -v PKG=$PKG -v S=$S -v EPV=$EPV -v RMT=$RT '/^[0-9]+\.[0-9]+ s/{printf "MST,process_deletions,%s_%s_%s,Time (s),%s\n",S,EPV,RMT,$1;exit}' >> "$PFN"
+
+###
+# "Main"
+###
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
 	generate_data
 fi
