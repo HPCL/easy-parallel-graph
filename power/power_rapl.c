@@ -99,7 +99,7 @@ void power_rapl_start(power_rapl_t* ps) {
     ps->before_time = PAPI_get_real_nsec();
     int retval = PAPI_start(ps->EventSet);
     if (retval != PAPI_OK) {
-		// http://icl.cs.utk.edu/projects/papi/wiki/Error_Handling
+		// An explanation is available using papi_error_codes
         fprintf(stderr,"PAPI_start() failed with %d\n", retval);
         exit(1);
     }
@@ -118,7 +118,7 @@ void power_rapl_end(power_rapl_t* ps) {
 }
 
 /* Units for Energy are nJ. You can check others with
- * sudo papi_naitve_avail -i rapl
+ * sudo papi_native_avail -i rapl
  */
 void power_rapl_print(power_rapl_t* ps) {
     int i;
