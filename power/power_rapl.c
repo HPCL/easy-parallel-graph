@@ -99,7 +99,8 @@ void power_rapl_start(power_rapl_t* ps) {
     ps->before_time = PAPI_get_real_nsec();
     int retval = PAPI_start(ps->EventSet);
     if (retval != PAPI_OK) {
-        fprintf(stderr,"PAPI_start() failed\n");
+		// http://icl.cs.utk.edu/projects/papi/wiki/Error_Handling
+        fprintf(stderr,"PAPI_start() failed with %d\n", retval);
         exit(1);
     }
 }
