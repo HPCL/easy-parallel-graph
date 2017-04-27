@@ -52,3 +52,10 @@ cd PowerGraph
 cd release/toolkits/graph_analytics
 make -j4
 cd "$LIBDIR"
+
+# Others (maybe added later)
+# PBGL: (not used here)
+# 	module load boost/boost_1_62_0_gcc-5
+# 	mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
+# 	export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
+

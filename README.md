@@ -6,10 +6,14 @@ The general workflow could consist of the following steps. Each script is explai
 
 0. cd experiment
 1. Download the systems and build them with `./get-libraries.sh`. You may also supply a location where the libraries should be installed but the default is `./lib`.
-2. Select a scale and number of threads and run the experiment with `run-experiment.sh`
-3. Parse the log files to get a .csv using `parse-output.sh`
+2. Generate some synthetic datasets with `./get-datasets.sh 20`. The 20 here will generate an RMAT matrix to the Graph500 specifications with 2^20 = 1,048,576 vertices with an average of 16 edges per vertex.
+4. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g. `./run-experiment.sh 20 4`
+5. Parse the log files to get a .csv using `parse-output.sh`
 	* Note: `run-power.sh` also parses the log files.
-4. Download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
+6. TODO: Generate some figures and analyze the data with `plot_data.R`.
+
+### Graphalytics
+You can download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
 
 ### Power and Energy
 If you want to build for power measurement, you may use `power/build-power.sh`

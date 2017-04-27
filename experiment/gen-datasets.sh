@@ -67,6 +67,7 @@ real*)
 ;;
 esac
 
+mkdir -p "$DDIR"
 export OMP_NUM_THREADS=32
 GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
@@ -100,30 +101,31 @@ if [ "$REAL" = 'yes' ]; then
 else # synthetic
 	# Generate graph (Graph500 can only save to its binary format)
 	d="$DATA_PREFIX"
-	mkdir -p "$DDIR/$BASE_FN"
-	"$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$BASE_FN.graph500" -r "$DDIR/$BASE_FN.roots"
+	mkdir -p "$DDIR/$d"
+	"$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$d.graph500" -r "$DDIR/$d.roots"
 	# Convert to GAP format (edgelist)
-	"$GRAPH500DIR/graph5002el" "$DDIR/$BASE_FN.graph500" "$DDIR/$BASE_FN.roots" "$DDIR/$BASE_FN.el" "$DDIR/${BASE_FN}-roots.v"
+	"$GRAPH500DIR/graph5002el" "$DDIR/$d.graph500" "$DDIR/$d.roots" "$DDIR/$d.el" "$DDIR/${d}-roots.v"
 	# Sort the roots (mitigate that weird issue with GraphBIG not working for root > # vertices read)
-	cat "$DDIR/${BASE_FN}-roots.v" | sort -n > tmp.txt
-	cp tmp.txt "$DDIR/${BASE_FN}-roots.v"
+	cat "$DDIR/${d}-roots.v" | sort -n > tmp.txt
+	cp tmp.txt "$DDIR/${d}-roots.v"
 	rm tmp.txt
 
 	# Symmetrize (make undirected)
-	"$GAPDIR/converter" -f "$DDIR/${BASE_FN}.el" -s -e "$DDIR/${BASE_FN}-undir.el"
+	"$GAPDIR/converter" -f "$DDIR/${d}.el" -s -e "$DDIR/${d}-undir.el"
 	# Convert to GraphBIG format
-	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/${BASE_FN}-undir.el" > "$DDIR/$BASE_FN/edge.csv"
-	echo ID > "$DDIR/$BASE_FN/vertex.csv"
-	cat "$DDIR/${BASE_FN}-undir.el" | tr ' ' '\n' | sort -n | uniq >> "$DDIR/$BASE_FN/vertex.csv"
+	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/${d}-undir.el" > "$DDIR/$d/edge.csv"
+	echo ID > "$DDIR/$d/vertex.csv"
+	cat "$DDIR/${d}-undir.el" | tr ' ' '\n' | sort -n | uniq >> "$DDIR/$d/vertex.csv"
 
 	# Convert to GraphMat format
 	# GraphMat requires edge weights---Just make them all 1 for the .1wel format
 	# XXX: What happens when you remove selfloops and duplicated edges.
-	awk '{printf "%d %d %d\n", ($1+1), ($2+1), 1}' "$DDIR/${BASE_FN}.el" > "$DDIR/$BASE_FN.1wel"
-	awk '{printf "%d\n", ($1+1)}' "$DDIR/${BASE_FN}-roots.v" > "$DDIR/${BASE_FN}-roots.1v"
-	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 --nvertices $(cat $DDIR/${BASE_FN}.1wel | wc -l) "$DDIR/$BASE_FN.1wel" "$DDIR/$BASE_FN.graphmat"
+	awk '{printf "%d %d %d\n", ($1+1), ($2+1), 1}' "$DDIR/${d}.el" > "$DDIR/$d.1wel"
+	awk '{printf "%d\n", ($1+1)}' "$DDIR/${d}-roots.v" > "$DDIR/${d}-roots.1v"
+	# TODO: Do we really want it weighted?
+	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 --nvertices $(cat $DDIR/${d}.1wel | wc -l) "$DDIR/$d.1wel" "$DDIR/$d.graphmat"
 fi
 
 # TEST: Convert back to non-binary, see what we get
-# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 0 --outputformat 1 --inputheader 1 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$BASE_FN.graphmat" "$DDIR/$BASE_FN.test.1wel"
+# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 0 --outputformat 1 --inputheader 1 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$d.graphmat" "$DDIR/$d.test.1wel"
 
