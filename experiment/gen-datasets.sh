@@ -1,7 +1,7 @@
 #!/bin/bash
-# Generate an unweighted, undirected Kronecker graph in the file formats for
-# graph500, GraphMat, GraphBIG, and GAP
-# for BFS [add other algorithms when ready]
+# Generate an unweighted, undirected Kronecker (RMAT) graph in the file formats
+# for graph500, GraphMat, GraphBIG, and GAP
+# for BFS, SSSP, and PageRank
 # This only needs to be done once per scale.
 # For example, with S=20 the structure will look like
 # $DDIR/

@@ -1,18 +1,19 @@
 # Simplifying Parallel Graph Processing
 
-This project is aimed at simplifying aspects of parallel graph processing starting with providing a framework for analyzing performance and energy usage for a given system. I am attempting to keep the README updated but the most up to date information is usually inside the comments of the various shell scripts.
+This project is aimed at simplifying aspects of parallel graph processing starting with providing a framework for analyzing performance and energy usage for a given system.
 
 The general workflow could consist of the following steps. Each script is explained in further detail in the following sections.
 
-1. Download the systems and build them following the instructions in `experiment/run-experiment.sh` 
-2. Download the systems and build them with power monitoring by calling `build-power.sh`
-3. Select a scale and number of threads and run the experiment with `run-experiment.sh`
-4. Parse the log files to get a .csv using `experiment/parse-output.sh`
-5. Download and build the systems with power monitoring using `build-power.sh`
-7. Run the experiments and monitor power using `experiment/run-power.sh`. Requires root permissions.
+0. cd experiment
+1. Download the systems and build them with `./get-libraries.sh`. You may also supply a location where the libraries should be installed but the default is `./lib`.
+2. Select a scale and number of threads and run the experiment with `run-experiment.sh`
+3. Parse the log files to get a .csv using `parse-output.sh`
 	* Note: `run-power.sh` also parses the log files.
-8. Download and build the systems for Graphalytics, package them, and run them with `get-graphalytics.sh`.
+4. Download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
 
+### Power and Energy
+If you want to build for power measurement, you may use `power/build-power.sh`
+Run the experiments and monitor power using `experiment/run-power.sh`. Requires root permissions.
 Below are some relevant scripts.
 
 ## "Easy Parallel Graph" Approach

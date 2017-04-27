@@ -12,43 +12,7 @@ USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-thr
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
 
-# It is assumed these are all built and the gen-dataset.sh script has been run.
 # The edge factor (number of edges per vertex) is the default of 16.
-# Build notes for each system
-# cd $LIBDIR
-# GAP:
-# 	git clone https://github.com/sampollard/gapbs.git
-# 	cd gapbs; make
-# GraphBIG: 
-# 	git clone https://github.com/sampollard/graphBIG.git
-#   cd graphBIG; make
-# 	cd GraphBIG/benchmark
-# 	make clean all
-# GraphMat:
-# 	module load intel/17
-# 	git clone https://github.com/sampollard/GraphMat.git
-# 	cd GraphMat; make 
-# Graph500:
-# 	git clone https://github.com/sampollard/graph500.git
-#   cd graph500; make
-# PowerGraph:
-#	# NOTE: Shared memory only!
-# 	NUM_CORES=$(grep -c ^processor /proc/cpuinfo)
-# 	if [ "$NUM_CORES" -gt 64 ]; then
-# 	    export GRAPHLAB_THREADS_PER_WORKER=64
-# 	else
-# 	    export GRAPHLAB_THREADS_PER_WORKER=$NUM_CORES
-# 	fi
-# 	git clone https://github.com/sampollard/PowerGraph
-# 	cd PowerGraph
-# 	./configure --no_jvm
-#   cd release/toolkits/graph_analytics
-#   make -j4
-# PBGL: (not used here)
-# 	module load boost/boost_1_62_0_gcc-5
-# 	mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
-# 	export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
-
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
 for arg in "$@"; do
