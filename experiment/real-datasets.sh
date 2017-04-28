@@ -1,5 +1,5 @@
 #!/bin/bash
-USAGE="usage: real-datasets.sh [--libdir=<dir>] [--ddir=<dir>] <num_threads>
+USAGE="usage: real-datasets.sh [--libdir=<dir>] [--ddir=<dir>] <filename> <num_threads>
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets"
 
@@ -24,24 +24,23 @@ for arg in "$@"; do
 	esac
 done
 if [ "$#" -lt 1 ]; then
-	echo 'Please provide <num_threads>'
+	echo 'Please provide <filename> or the prefix of the filename'
 	echo $USAGE
 	exit 2
 fi
-
-# Choose the datasets. This is a space-separated list.
-DATA="dota-league cit-Patents"
+FILE="$1"
+FILE_PREFIX=$(basename ${FILE%.*})
 
 # The reasoning behind these values are explained in run-experiment.sh
 MAXITER=50 # Maximum iterations for PageRank
 TOL=0.00000006
 NRT=32 # Number of roots
 export SKIP_VALIDATION=1
-if [ "$#" -ne 1 -o "$1" = "-h" -o "$1" = "--help" ]; then
+if [ "$#" -ne 2 -o "$1" = "-h" -o "$1" = "--help" ]; then
 	echo "$USAGE"
 	exit 2
 fi
-export OMP_NUM_THREADS=$1
+export OMP_NUM_THREADS=$2
 GAPDIR="$LIBDIR/gapbs"
 GRAPHBIGDIR="$LIBDIR/graphBIG"
 GRAPH500DIR="$LIBDIR/graph500"
@@ -51,37 +50,32 @@ POWERGRAPHDIR="$LIBDIR/PowerGraph"
 # icpc required for GraphMat
 module load intel/17
 
-# GraphMat doesn't currently work
-# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --edgeweighttype 1 --inputedgeweights 1 --outputedgeweights 1 "$DDIR/$DATA.wel" "$DDIR/$DATA.graphmat"
-# # Run GraphMat PageRank
-# # PageRank stops when none of the vertices change
-# # GraphMat has been modified so alpha = 0.15
-# for ROOT in $(head -n $NRT "$DDIR/$DATA-roots.v"); do
-# 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/$DATA.graphmat"
-# done
-# 
-# # Run the GraphMat SSSP
-# for ROOT in $(head -n $NRT "$DDIR/$DATA-roots.v"); do
-# 	echo "SSSP root: $ROOT"
-# 	"$GRAPHMATDIR/bin/SSSP" "$DDIR/$DATA.graphmat" $ROOT
-# done
-# 
-# # Run the GraphMat BFS
-# for ROOT in $(head -n $NRT "$DDIR/$DATA-roots.v"); do
-# 	echo "BFS root: $ROOT"
-# 	"$GRAPHMATDIR/bin/BFS" "$DDIR/$DATA.graphmat" $ROOT
-# done
-# 
-# # Run PowerGraph PageRank
-# for ROOT in $(head -n $NRT "$DDIR/$DATA-roots.v"); do
-# 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$DATA.wel" --tol "$TOL" --format tsv
-# done
+# Run GraphMat PageRank
+# PageRank stops when none of the vertices change
+# GraphMat has been modified so alpha = 0.15
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat"
+done
+
+# Run the GraphMat SSSP
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	echo "SSSP root: $ROOT"
+	"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT
+done
+
+# Run the GraphMat BFS
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	echo "BFS root: $ROOT"
+	"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT
+done
+
+# Run PowerGraph PageRank
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$DATA.wel" --tol "$TOL" --format tsv
+done
 
 echo Starting experiment at $(date)
-d="cit-Patents"
-# TODO: for d in $DATA; do
-# ...
-# done
+d="$FILE_PREFIX" # For convenience
 if [ -f "$DDIR/$d/${d}.wel" ]; then
 	EDGELISTFILE="$DDIR/$d/${d}.wel"
 elif [ -f "$DDIR/$d/${d}.el" ]; then

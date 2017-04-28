@@ -7,6 +7,7 @@ The general workflow could consist of the following steps. Each script is explai
 0. cd experiment
 1. Download the systems and build them with `./get-libraries.sh`. You may also supply a location where the libraries should be installed but the default is `./lib`.
 2. Generate some synthetic datasets with `./gen-datasets.sh 20`. The 20 here will generate an RMAT matrix to the Graph500 specifications with 2^20 = 1,048,576 vertices with an average of 16 edges per vertex.
+	* Alternatively, you could run `./gen-datasets -f=<your_file>`. Currently, this only supports files of the `.el` and `.wel` forms. These are explained [here](https://gist.github.com/sampollard/f9169c4eb04669390a834884682c080d). It should accept any graph file you can find from [SNAP Dataset](https://snap.stanford.edu/data/index.html) too.
 4. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g. `./run-experiment.sh 20 4`
 5. Parse the log files to get a .csv using `parse-output.sh`
 	* Note: `run-power.sh` also parses the log files.

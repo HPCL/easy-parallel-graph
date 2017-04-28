@@ -35,6 +35,7 @@ cd graph500
 echo "Building assuming you have gcc with OpenMP support."
 cp make-incs/make.inc-gcc make.inc
 ex -s make.inc "+:%s/gcc-4.6/gcc/g" "+:%s/# BUILD_OPENMP/BUILD_OPENMP/g" "+:%s/# CFLAGS_OPENMP/CFLAGS_OPENMP/g"  '+:x'
+ex -s Makefile "+:%s/BUILD_RAPL = Yes/BUILD_RAPL = No/g" '+:x'
 make
 
 # PowerGraph:
