@@ -51,9 +51,6 @@ POWERGRAPHDIR="$LIBDIR/PowerGraph"
 # icpc required for GraphMat
 module load intel/17
 
-# Build notes for arya:
-# see run-experiment.sh
-
 # GraphMat doesn't currently work
 # "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --edgeweighttype 1 --inputedgeweights 1 --outputedgeweights 1 "$DDIR/$DATA.wel" "$DDIR/$DATA.graphmat"
 # # Run GraphMat PageRank
@@ -81,51 +78,60 @@ module load intel/17
 # done
 
 echo Starting experiment at $(date)
+d="cit-Patents"
 # TODO: for d in $DATA; do
 # ...
 # done
+if [ -f "$DDIR/$d/${d}.wel" ]; then
+	EDGELISTFILE="$DDIR/$d/${d}.wel"
+elif [ -f "$DDIR/$d/${d}.el" ]; then
+	EDGELISTFILE="$DDIR/$d/${d}.el"
+else
+	echo "Please put an edge-list or weighted edge-list file at $DDIR/$d/$d.{wel,el}"
+	exit 2
+fi
 # Run for GAP BFS
 # It would be nice if you could read in a file for the roots
-# Just do one trial to be the same as the rest of the experiments
-for ROOT in $(head -n $NRT "$DDIR/$d/${d}-roots.v"); do
-	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/$d/${d}.wel" -n 1
+head -n $NRT "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-${NRT}roots.v"
+for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
+	"$GAPDIR"/bfs -r $ROOT -f $EDGELISTFILE -n 1
 done
 
 # Run the GraphBIG BFS
 # For this, one needs a vertex.csv file and and an edge.csv.
-head -n $NRT "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-${NRT}roots.v"
 "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
 
 # Run the GAP SSSP for each root
-for ROOT in $(head -n $NRT "$DDIR/$d/${d}.v"); do
-	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/$d/${d}.wel" -n 1
+for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
+	"$GAPDIR"/sssp -r $ROOT -f $EDGELISTFILE -n 1
 done
 
 # Run the GraphBIG SSSP
 "$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
 
 # Run PowerGraph SSSP
+# TODO: This has been updated in the code to 128
 if [ "$OMP_NUM_THREADS" -gt 64 ]; then
     export GRAPHLAB_THREADS_PER_WORKER=64
 	echo "WARNING: PowerGraph does not work with > 64 threads. Running on 64 threads."
 else
     export GRAPHLAB_THREADS_PER_WORKER=$OMP_NUM_THREADS
 fi
-for ROOT in $(head -n $NRT "$DDIR/$d/${d}-roots.v"); do
-	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/${d}.wel" --format tsv --source $ROOT
+for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$EDGELISTFILE" --format tsv --source $ROOT
 done
 
 # PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 # Run GAP PageRank
 # error = sum(|newPR - oldPR|)
-for ROOT in $(head -n $NRT "$DDIR/$d/${d}-roots.v"); do
-	"$GAPDIR"/pr -f "$DDIR/$d/${d}.wel" -i $MAXITER -t $TOL -n 1
+for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
+	"$GAPDIR"/pr -f $EDGELISTFILE -i $MAXITER -t $TOL -n 1
 done
 
 # Run GraphBIG PageRank
 # The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-for ROOT in $(head -n $NRT "$DDIR/$d/${d}-roots.v"); do
+for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
 	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS
 done
 

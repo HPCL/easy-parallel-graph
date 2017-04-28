@@ -9,6 +9,7 @@
 #   ./run-experiment.sh $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
 #   disown %<jobnum> # This can be found out using jobs
 USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
+	scale: 2^scale = number of vertices
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
 

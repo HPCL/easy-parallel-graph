@@ -67,8 +67,27 @@ real*)
 ;;
 esac
 
+# Steps to do this yourself (with a custom file)
+# d=<your_prefix>
+# Save your file to $DDIR/$d.e
+# If it's a weighted edge list or edge list, that's fine.
+# if [ $(awk '{print NF; exit}' "$DDIR/$d.e") -eq 2 ]; then
+# 	echo "SRC,DEST" > "$DDIR/$d/edge.csv"
+# 	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d.e" > "$DDIR/$d/$d.el"
+# elif [ $(awk '{print NF; exit}' "$DDIR/$d.e") -eq 3 ]; then
+# 	echo "SRC,DEST,WEIGHT" > "$DDIR/$d/edge.csv"
+# 	awk '{printf "%d %d\n", ($1+1), ($2+1) $3}' "$DDIR/$d.e" > "$DDIR/$d/$d.wel"
+# else
+# 	echo "File format not recognized"
+# 	exit 1
+# fi
+# sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
+# echo "ID" > "$DDIR/$d/vertex.csv"
+# sed 's/[:space:]+/,/' "$DDIR/$d.v" >> "$DDIR/$d/vertex.csv"
+
 mkdir -p "$DDIR"
 export OMP_NUM_THREADS=32
+NRT=64
 GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
@@ -78,25 +97,30 @@ if [ "$REAL" = 'yes' ]; then
 		mkdir -p "$DDIR/$d"
 		# We convert to an integer because some systems store weights that way
 		# We add 1 for GraphMat to ensure it's 1-indexed (adding 1 won't hurt)
-		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d.e" > "$DDIR/$d/$d.1wel"
+		# TODO: SNAP format
+		# Same as .el format, but lines beginning with # are comments.
+		# Just do one trial to be the same as the rest of the experiments
 		if [ $(awk '{print NF; exit}' "$DDIR/$d.e") -eq 2 ]; then
 			echo "SRC,DEST" > "$DDIR/$d/edge.csv"
+			awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d.e" > "$DDIR/$d/$d.el"
+			# Get the roots by running SSSP and making sure you can visit a good
+			# number of vertices
+			"$GAPDIR/sssp" -f "$DDIR/$d/$d.el" -n $(($NRT*2)) > tmp.log
+			# GAP output is e.g. "took 382 iterations".
+			# We don't want it to take 1 iteration.
 		elif [ $(awk '{print NF; exit}' "$DDIR/$d.e") -eq 3 ]; then
 			echo "SRC,DEST,WEIGHT" > "$DDIR/$d/edge.csv"
+			awk '{printf "%d %d\n", ($1+1), ($2+1) $3}' "$DDIR/$d.e" > "$DDIR/$d/$d.wel"
+			"$GAPDIR/sssp" -f "$DDIR/$d/$d.wel" -n $(($NRT*2)) > tmp.log
 		else
 			echo "File format not recognized"
 			exit 1
 		fi
+		awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$d/$d-roots.v"
+		rm tmp.log
 		sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
 		echo "ID" > "$DDIR/$d/vertex.csv"
 		sed 's/[:space:]+/,/' "$DDIR/$d.v" >> "$DDIR/$d/vertex.csv"
-		# Get the roots by running SSSP and making sure you can visit a good
-		# number of vertices
-		"$GAPDIR/sssp" -f "$DDIR/$d/$d.1wel" -n $(($NRT*2)) > tmp.log
-		# GAP output is e.g. "took 382 iterations".
-		# We don't want it to take 1 iteration.
-		awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$d/$d-roots.v"
-		rm tmp.log
 	done
 else # synthetic
 	# Generate graph (Graph500 can only save to its binary format)
