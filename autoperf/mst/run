@@ -2,7 +2,6 @@
 # Runs mst experiments on Arya
 # This should be run in the easy-parallel-graph/autoperf/mst directory
 
-# TODO: Compile for power
 USAGE="usage: ./run [--power] generate_data|experiment|parse|all
 	. run [--power] build <------ do this one first"
 # source run build to get the environment variables to stick.
@@ -40,15 +39,21 @@ PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MSTSC"
 GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 OUTPUTDIR="$(pwd)/output"
-OMP_NUM_THREADS=72 
-export OMP_NUM_THREADS
 EPV=8 # Edges per vertex
 ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 RT_TYPES="ER B G"
 INS_PCTAGES="10 25 50 75 90 100"
 CHANGED_VERTICES="1000 2000 5000"
-SCALES="20 21 22 23" # 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
+SCALES="21" # 23 24 25 26 27" # Make sure to have SCALES be the same as what's in autoperf.cfg
 THREADS="32"
+
+# FIXME: Change these for multiple run_experiments
+# Default settings (right now run experiment doesn't loop through them all)
+RT=ER
+INS_PCT=75
+CVERTS=2000
+S=21
+export OMP_NUM_THREADS=32
 
 # Define commands to be run
 generate_data()
@@ -248,7 +253,6 @@ run_experiment()
 	cd "$OUTPUTDIR" # So we can just print output to cwd
 	# TODO: more parameters and more loop levels
 	# Adjust parameters
-	export OMP_NUM_THREADS=72
 	SD='sudo'
 	if [ "$POWER_PROFILING" = "1" ]; then
 		GALOIS_MST="$GALOIS_DIR/build/power/apps/boruvka/boruvka"
@@ -265,8 +269,8 @@ run_experiment()
 		"$SD" "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" | tee "$GALOISLOG"
 		# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices>  <number of threads>
 		"$SD" "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $OMP_NUM_THREADS | tee "$MSTLOG"
-		"$SD" chown spollard "$MSTLOG"
-		"$SD" chown spollard "$GALOISLOG"
+		"$SD" chown $USER "$MSTLOG"
+		"$SD" chown $USER "$GALOISLOG"
 	done
 	cd "$LIB_DIR/.."
 }
@@ -313,9 +317,9 @@ parse_output()
 				for CVERTS in $CHANGED_VERTICES; do	
 					for T in $THREADS; do
 						for S in $SCALES; do
-							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
-							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
-							DATA_FORMAT="$S,$EPV,$RT,$INS_PCT,$CVERTS,$OMP_NUM_THREADS"
+							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${T}t.log"
+							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${T}t.log"
+							DATA_FORMAT="$S,$EPV,$RT,$INS_PCT,$CVERTS,$T"
 							parse_one
 						done
 					done

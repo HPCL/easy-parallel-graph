@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs mst
 
-POWER_PROFILING=1
+POWER_PROFILING=0
 SAMPLING=0
 if [ "$POWER_PROFILING" = '1' -a $(whoami) != 'root' ]; then
 	echo "You must be root to run power measurement"
