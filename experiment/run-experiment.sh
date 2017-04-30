@@ -83,29 +83,16 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-$S/kron-${S}.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
 done
 
-echo "Running GraphBIG BFS"
-# For this, one needs a vertex.csv file and and an edge.csv.
-head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
-"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-$S/kron-${S}" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
-
-echo "Running GraphMat BFS"
-for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
-	echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
-	"$GRAPHMATDIR/bin/BFS" "$DDIR/kron-$S/kron-${S}.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
-done
-
 echo "Running GAP SSSP"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
 done
 
-echo "Running GraphBIG SSSP"
-"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-$S/kron-${S}" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
-
-echo "Running GraphMat SSSP"
-for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
-	echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
-	"$GRAPHMATDIR/bin/SSSP" "$DDIR/kron-$S/kron-${S}.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+echo "Running GAP PageRank"
+# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
+# error = sum(|newPR - oldPR|)
+for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.el" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
 done
 
 echo "Running PowerGraph SSSP"
@@ -120,18 +107,21 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/kron-$S/kron-${S}.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
 done
 
-echo "Running GAP PageRank"
-# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
-# error = sum(|newPR - oldPR|)
+echo "Running PowerGraph PageRank"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.el" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-$S/kron-${S}.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
 done
 
-echo "Running GraphBIG PageRank"
-# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
-# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-$S/kron-${S}" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
+echo "Running GraphMat BFS"
+for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
+	echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+	"$GRAPHMATDIR/bin/BFS" "$DDIR/kron-$S/kron-${S}.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+done
+
+echo "Running GraphMat SSSP"
+for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
+	echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+	"$GRAPHMATDIR/bin/SSSP" "$DDIR/kron-$S/kron-${S}.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
 done
 
 echo "Running GraphMat PageRank"
@@ -141,9 +131,19 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
 done
 
-echo "Running PowerGraph PageRank"
+echo "Running GraphBIG BFS"
+# For this, one needs a vertex.csv file and and an edge.csv.
+head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
+"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
+
+echo "Running GraphBIG SSSP"
+"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
+
+echo "Running GraphBIG PageRank"
+# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
+# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-$S/kron-${S}.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
+	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-$S" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
 done
 
 echo Finished experiment at $(date)
