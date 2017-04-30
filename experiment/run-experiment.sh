@@ -134,10 +134,10 @@ done
 echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
 head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
-"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
+"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
 
 echo "Running GraphBIG SSSP"
-"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
+"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
 
 echo "Running GraphBIG PageRank"
 # The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
