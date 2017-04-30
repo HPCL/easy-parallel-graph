@@ -46,35 +46,12 @@ GRAPHBIGDIR="$LIBDIR/graphBIG"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 POWERGRAPHDIR="$LIBDIR/PowerGraph"
+OUTPUT_PREFIX="$(pwd)/output/${FILE_PREFIX}/${OMP_NUM_THREADS}t"
+mkdir -p "$(pwd)/output/${FILE_PREFIX}"
 
 # icpc required for GraphMat
 module load intel/17
 
-# Run GraphMat PageRank
-# PageRank stops when none of the vertices change
-# GraphMat has been modified so alpha = 0.15
-for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-	"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat"
-done
-
-# Run the GraphMat SSSP
-for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-	echo "SSSP root: $ROOT"
-	"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT
-done
-
-# Run the GraphMat BFS
-for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-	echo "BFS root: $ROOT"
-	"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT
-done
-
-# Run PowerGraph PageRank
-for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$DATA.wel" --tol "$TOL" --format tsv
-done
-
-echo Starting experiment at $(date)
 d="$FILE_PREFIX" # For convenience
 if [ -f "$DDIR/$d/${d}.wel" ]; then
 	EDGELISTFILE="$DDIR/$d/${d}.wel"
@@ -84,49 +61,75 @@ else
 	echo "Please put an edge-list or weighted edge-list file at $DDIR/$d/$d.{wel,el}"
 	exit 2
 fi
-# Run for GAP BFS
+echo Starting experiment at $(date)
+
+echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 head -n $NRT "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-${NRT}roots.v"
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
-	"$GAPDIR"/bfs -r $ROOT -f $EDGELISTFILE -n 1
+	"$GAPDIR"/bfs -r $ROOT -f $EDGELISTFILE -n 1 >> "${OUTPUT_PREFIX}-GAP-BFS.out"
 done
 
-# Run the GraphBIG BFS
+echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
-"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
+"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
 
-# Run the GAP SSSP for each root
-for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
-	"$GAPDIR"/sssp -r $ROOT -f $EDGELISTFILE -n 1
+echo "Running GraphMat BFS"
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+	"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
 done
 
-# Run the GraphBIG SSSP
-"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS
+echo "Running GAP SSSP"
+for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
+	"$GAPDIR"/sssp -r $ROOT -f $EDGELISTFILE -n 1 >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+done
 
-# Run PowerGraph SSSP
-# TODO: This has been updated in the code to 128
-if [ "$OMP_NUM_THREADS" -gt 64 ]; then
-    export GRAPHLAB_THREADS_PER_WORKER=64
-	echo "WARNING: PowerGraph does not work with > 64 threads. Running on 64 threads."
+echo "Running GraphBIG SSSP"
+"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
+
+echo "Running GraphMat SSSP"
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+	"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+done
+
+echo "Running PowerGraph SSSP"
+# Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
+if [ "$OMP_NUM_THREADS" -gt 128 ]; then
+    export GRAPHLAB_THREADS_PER_WORKER=128
+	echo "WARNING: PowerGraph does not work with > 128 threads. Running on 128 threads."
 else
     export GRAPHLAB_THREADS_PER_WORKER=$OMP_NUM_THREADS
 fi
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
-	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$EDGELISTFILE" --format tsv --source $ROOT
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$EDGELISTFILE" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
 done
 
+echo "Running GAP PageRank"
 # PageRank Note: ROOT is a dummy variable to ensure the same # of trials
-# Run GAP PageRank
 # error = sum(|newPR - oldPR|)
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
-	"$GAPDIR"/pr -f $EDGELISTFILE -i $MAXITER -t $TOL -n 1
+	"$GAPDIR"/pr -f $EDGELISTFILE -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out" 
 done
 
-# Run GraphBIG PageRank
+echo "Running GraphBIG PageRank"
 # The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
-	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS
+	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out" 
+done
+
+echo "Running Graphmat PageRank"
+# PageRank stops when none of the vertices change
+# GraphMat has been modified so alpha = 0.15
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
+done
+
+echo "Running PowerGraph PageRank"
+for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$EDGELISTFILE" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
 done
 
 echo Finished experiment at $(date)

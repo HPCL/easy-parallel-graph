@@ -119,7 +119,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.el" -n $(($NRT*2)) > tmp.log
 		# XXX: Right now GraphMat doesn't write out to an unweighted graph. So we just create unit weights.
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices=$nvertices "$d/$d.el" "$d/$d.graphmat"
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 "$d/$d.el" "$d/$d.graphmat"
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
