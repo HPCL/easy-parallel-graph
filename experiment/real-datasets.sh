@@ -1,4 +1,7 @@
 #!/bin/bash
+# Runs a real dataset given either a filename or a prefix of a filename.
+# e.g. if you called gen-datasets.sh -f=data.out then you could specify
+# either data or data.out as the first argument.
 USAGE="usage: real-datasets.sh [--libdir=<dir>] [--ddir=<dir>] <filename> <num_threads>
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets"

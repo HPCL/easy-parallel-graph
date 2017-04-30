@@ -1,22 +1,73 @@
 #!/bin/bash
-# Parse the output from run-experiment.sh
-# Assumes the experiment is run $NRT times ($NRT roots or $NRT PageRanks)
-NRT=32
-FN=$1
-ERRFN=$2 # Needed for PowerGraph
-if [ -z "$FN" ]; then
-	echo "usage: parse-output.sh <output_file>"
-	exit 2
-elif [ -z "$ERRFN" ]; then
-	>&2 echo "WARNING: No error filename specified. May cause issues with PowerGraph."
+# Parse the output from run-experiment.sh or real-datasets.sh
+# and save to <outdir>/parsed-<fn>.csv
+# If <fn> is provided then this script searches for the directory <fn>
+# without the filename extension, e.g. -f=datasets/data.out causes this to
+# search <outdir>/data and 20 causes this to search in <outdir>/kron-20." 
+USAGE="usage: parse-output.sh [--outdir=<dir>] -f=<fn>|<scale>
+	<fn> is a filename or prefix which real-datasets.sh has been run.
+	<scale> may be an integer between 1 and 99 inclusive.
+	--outdir: directory where the data is stored. default: ./output"
+
+OUTPUTDIR="$(pwd)/output"
+for arg in "$@"; do
+	case $arg in
+	--outdir=*)
+		OUTPUTDIR=${arg#*=}
+		shift
+	;;
+	-f=*)
+		FILE=${arg#*=}
+		FILE_PREFIX=$(basename ${FILE%.*})
+		shift
+	;;
+	-h|--help|-help)
+		echo "$USAGE"
+		exit 0
+	;;
+	*)	# Default
+		# Do nothing
+	esac
+done
+if [ -z "$FILE" ]; then
+	if [ "$#" -lt 1 ]; then
+		echo 'Please provide <scale> or -f=<filename>'
+		echo "$USAGE"
+		exit 2
+	fi
+	case $1 in
+	[1-9]|[1-9][0-9]*) # scale between 1--99 is robust enough
+		S=$1
+		FILE_PREFIX="kron-$S"
+	;;
+	*) # Default
+		echo "<scale> must be between 1--99"
+		exit 2
+	;;
+	esac
 fi
 
-# Graph500
-echo -n 'Graph500,BFS,graph generation,'
-echo $(grep "generation_time" "$FN" | awk '{print $2}')
-echo -n 'Graph500,BFS,Data structure build,'
-echo $(grep "construction_time" "$FN" | awk '{print $2}') 
-awk '/bfs_time\[/{print "Graph500,BFS,Time," $2}' "$FN"
+OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX.csv"
+LOG_DIR="$OUTPUTDIR/$FILE_PREFIX"
+# Assumes the experiment is run $NRT times ($NRT roots or $NRT PageRanks)
+NRT=32
+
+echo "Benchmark,Algorithm,Threads,Phase,Value" > "$OUTFN"
+echo -n "Parsing Graph500 for threadcounts"
+for f in $(find "$LOG_DIR" -maxdepth 1 -name '*t-Graph500-BFS.out'); do
+	FN=$(basename $f)
+	T=${FN%%t[^0-9]*}
+	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	echo -n " $T"
+
+	echo -n "Graph500,BFS,graph generation," >> "$OUTFN"
+	echo $(grep "generation_time" "$f" | awk '{print $2}') >> "$OUTFN"
+	echo -n 'Graph500,BFS,Data structure build,' >> "$OUTFN"
+	echo $(grep "construction_time" "$f" | awk '{print $2}') >> "$OUTFN"
+	awk '/bfs_time\[/{print "Graph500,BFS,Time," $2}' "$f" >> "$OUTFN"
+done
+echo #\n
+exit 0
 
 # GraphBIG
 echo -n 'GraphBIG,BFS,File reading,'
