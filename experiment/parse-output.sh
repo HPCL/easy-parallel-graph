@@ -30,7 +30,7 @@ for arg in "$@"; do
 	esac
 done
 if [ -z "$FILE" ]; then
-	if [ "$#" -lt 1 ]; then
+	if [ "$#" -lt 1 -o "$#" -gt 1 ]; then
 		echo 'Please provide <scale> or -f=<filename>'
 		echo "$USAGE"
 		exit 2
@@ -79,7 +79,7 @@ done
 echo #\n
 
 echo -n "Parsing Graph500 for BFS, threadcounts"
-for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-Graph500-*.out'); do
+for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-Graph500-BFS.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
 	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
@@ -94,7 +94,6 @@ done
 echo #\n
 
 echo -n "Parsing GraphMat for"
-# XXX: GraphMat is buggy
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphMat-*.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
