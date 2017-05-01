@@ -93,7 +93,7 @@ NRT=64
 GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
-# Real world datasets as provided by Graphalytics
+### Real world datasets as provided by Graphalytics
 if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	d="$FILE_PREFIX" # For convenience
 	mkdir -p "$DDIR/$d"
@@ -106,6 +106,8 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		echo "Creating $d.v..."
 		cat  "$d.e" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
 	fi
+	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
+	nvertices=$(( $(sort -n "$d.v" | tail -n 1) + 1))
 	# nvertices=$(wc -l $d.v | awk '{print $1}') # Graphmat requires nvertices >= largest index
 	echo -n  "Checking whether weighted or unweighted..."
 	if [ $(awk '{print NF; exit}' "$d.e") -eq 2 ]; then
@@ -118,15 +120,16 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# We don't want it to take 1 iteration.
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.el" -n $(($NRT*2)) > tmp.log
-		# XXX: Right now GraphMat doesn't write out to an unweighted graph. So we just create unit weights.
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 "$d/$d.el" "$d/$d.graphmat"
+		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
 		awk '{printf "%d %d\n", ($1+1), ($2+1) $3}' "$d.e" > "$d/$d.wel"
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.wel" -n $(($NRT*2)) > tmp.log
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 1 "$d/$d.wel" "$d/$d.graphmat"
+		# We make no assumptions so we output double precision edge weights
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 1 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
 	else
 		echo "File format not recognized"
 		exit 1
@@ -136,7 +139,8 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
 	echo "ID" > "$DDIR/$d/vertex.csv"
 	sed 's/[:space:]+/,/' "$DDIR/$d.v" >> "$DDIR/$d/vertex.csv"
-else # synthetic
+### Synthetic datasets to the Graph500 specification
+else
 	# Generate graph (Graph500 can only save to its binary format)
 	d="$FILE_PREFIX"
 	mkdir -p "$DDIR/$d"
@@ -160,8 +164,9 @@ else # synthetic
 	# XXX: What happens when you remove selfloops and duplicated edges.
 	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}.el" > "$DDIR/$d/$d.1el"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
-	# nvertices=$(wc -l $DDIR/$d/vertex.csv | awk '{print ($1 - 1)}') # Graphmat requires nvertices >= largest index
-	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$d/$d.1el" "$DDIR/$d/$d.graphmat"
+	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
+	nvertices=$(( $(sort -n "$DDIR/$d/vertex.csv" | tail -n 1) + 1 ))
+	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$DDIR/$d/$d.1el" "$DDIR/$d/$d.graphmat"
 fi
 cd "$OLDPWD"
 

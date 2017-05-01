@@ -8,10 +8,11 @@ The general workflow could consist of the following steps. Each script is explai
 1. Download the systems and build them with `./get-libraries.sh`. You may also supply a location where the libraries should be installed but the default is `./lib`.
 2. Generate some synthetic datasets with `./gen-datasets.sh 20`. The 20 here will generate an RMAT matrix to the Graph500 specifications with 2^20 = 1,048,576 vertices with an average of 16 edges per vertex.
 	* Alternatively, you could run `./gen-datasets -f=<your_file>`. Currently, this only supports files of the `.el` and `.wel` forms. These are explained [here](https://gist.github.com/sampollard/f9169c4eb04669390a834884682c080d). It should accept any graph file you can find from [SNAP Dataset](https://snap.stanford.edu/data/index.html) too.
-4. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g. `./run-experiment.sh 20 4`
-5. Parse the log files to get a .csv using `parse-output.sh`
+3. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g. `./run-experiment.sh 20 4`
+4. Parse the log files to get a .csv using `parse-output.sh`
 	* Note: `run-power.sh` also parses the log files.
-6. TODO: Generate some figures and analyze the data with `plot_data.R`.
+5. Analyze the data. Some examples can be found in `papers/publication/plot_data.R`
+	* TODO: A sample workflow. The figures in the paper were generated using example-workflow.sh
 
 ### Graphalytics
 You can download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
@@ -19,13 +20,6 @@ You can download and build the systems for Graphalytics, package them, and run t
 ### Power and Energy
 If you want to build for power measurement, you may use `power/build-power.sh`
 Run the experiments and monitor power using `experiment/run-power.sh`. Requires root permissions.
-Below are some relevant scripts.
-
-## "Easy Parallel Graph" Approach
-`experiment/gen-datasets.sh` This script generates the dataset based on the Graph500 specification and executable, then converts the data into the correct formats for GAP, GraphBIG, and GraphMat. It requires GraphMat and Graph500 repositories to be built and their paths set as variables in the script. usage: `gen-datasets.sh <S>` where 2^S is the number of vertices.
-
-`experiment/run-experiment.sh` This script takes no arguments, but several variables must be set inside of it. It also expects `gen-datasets.sh` has been run at the given scale. There are comments inside this script on how to get each system built.
-usage: `run-experiment <S> <num-threads>`
 
 ## Other Scripts
 `graphalytics/get-graphalytics.sh`: This script gathers, installs, and runs various
@@ -39,6 +33,7 @@ usage: `run-experiment <S> <num-threads>`
 	Specifically, `sudo lshw > lshw.txt` for Linux and `sudo dmidecode > dmidecode.txt` for Mac.
 
 ## Dependencies
+### experiment Directory
 ### get-graphalytics.sh
 1. Bash
 2. Perl
