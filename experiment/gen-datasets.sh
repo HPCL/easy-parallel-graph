@@ -99,7 +99,9 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	mkdir -p "$DDIR/$d"
 	echo Converting $FILE into the correct formats...
 	# If it's from SNAP then there may be some comments
-	awk '!/^#/{print}' "$FILE" > "$DDIR/$d.e"
+	if [ ! -f "$DDIR/$d.e" ]; then
+		awk '!/^#/{print}' "$FILE" > "$DDIR/$d.e"
+	fi
 	OLDPWD=$(pwd)
 	cd $DDIR
 	if [ ! -f "$d.v" ]; then
@@ -109,7 +111,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$d.v" | tail -n 1) + 1))
 	# nvertices=$(wc -l $d.v | awk '{print $1}') # Graphmat requires nvertices >= largest index
-	echo -n  "Checking whether weighted or unweighted..."
+	echo -n  "Checking whether $d.e is weighted or unweighted..."
 	if [ $(awk '{print NF; exit}' "$d.e") -eq 2 ]; then
 		echo " unweighted."
 		echo "SRC,DEST" > "$d/edge.csv"
