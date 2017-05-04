@@ -66,6 +66,8 @@ else
 fi
 echo Starting experiment at $(date)
 
+echo "Cleaning $OUTPUT_PREFIX"
+rm -f "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR}.out"
 echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 head -n $NRT "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-${NRT}roots.v"

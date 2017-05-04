@@ -11,11 +11,13 @@
 USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
 	scale: 2^scale = number of vertices
 	--libdir: repositories directory. Default: ./lib
-	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
+	--ddir: dataset directory. Default: ./datasets
+	--outdir: output directory. Default: ./output"
 
 # The edge factor (number of edges per vertex) is the default of 16.
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
+OUTDIR="$(pwd)/output"
 for arg in "$@"; do
 	case $arg in
 	--libdir=*)
@@ -24,6 +26,13 @@ for arg in "$@"; do
 	;;
 	--ddir=*)
 		DDIR=${arg#*=}
+		shift
+	;;
+	--outdir=*)
+		OUTDIR=${arg#*=}
+		if [ ${OUTDIR:0:1} != '/' ]; then # Relative
+			OUTDIR="$(pwd)/$OUTDIR"
+		fi
 		shift
 	;;
 	-h|--help|-help)
@@ -47,8 +56,8 @@ GRAPHBIGDIR="$LIBDIR/graphBIG"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 POWERGRAPHDIR="$LIBDIR/PowerGraph"
-OUTPUT_PREFIX="$(pwd)/output/kron-$S/${OMP_NUM_THREADS}t"
-mkdir -p "$(pwd)/output/kron-$S"
+OUTPUT_PREFIX="$OUTDIR/kron-$S/${OMP_NUM_THREADS}t"
+mkdir -p "$OUTDIR/kron-$S"
 
 # Set some other variables used throughout the experiment
 # PageRank is usually represented as a 32-bit float,
@@ -62,6 +71,9 @@ export SKIP_VALIDATION=1
 
 # Load all the modules here
 module load intel/17
+
+echo "Cleaning $OUTPUT_PREFIX-*.out"
+rm -f "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR}.out"
 
 echo Starting experiment at $(date)
 
@@ -80,19 +92,19 @@ echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 # Just do one trial to be the same as the rest of the experiments
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-$S/kron-${S}.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
+	"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-$S/kron-${S}.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
 done
 
 echo "Running GAP SSSP"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
 done
 
 echo "Running GAP PageRank"
 # PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 # error = sum(|newPR - oldPR|)
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.el" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
+	"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
 done
 
 echo "Running PowerGraph SSSP"

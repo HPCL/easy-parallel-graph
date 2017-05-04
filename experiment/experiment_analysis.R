@@ -35,3 +35,12 @@ for (t in threads) {
 	dev.off()
 }
 
+# Weak scaling
+ws_scales <-  c(18,19,20,21,22,23,24)
+ws_threads <- c(1, 2, 4, 8, 16,32,64)
+for (t in ws_threads) {
+	for (s in wc_scales) {
+		filename <- paste0("./output/parsed-","kron-",scale,"-",t,".csv")
+	}
+}
+

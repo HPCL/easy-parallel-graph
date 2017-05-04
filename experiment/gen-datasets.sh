@@ -5,7 +5,7 @@ USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<fn>|<scale>
 		<edge1> <edge2> one per line OR
 		<edge1> <edge2> <weight> with an optional comment lines beginning with #
 	--libdir: repositories directory. Default: ./lib
-	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
+	--ddir: dataset directory. Default: ./datasets"
 # Generate an unweighted, undirected Kronecker (RMAT) graph in the file formats
 # for graph500, GraphMat, GraphBIG, and GAP
 # for BFS, SSSP, and PageRank
@@ -122,14 +122,18 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# We don't want it to take 1 iteration.
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.el" -n $(($NRT*2)) > tmp.log
+		"$GAPDIR/converter" -s -f "$d/$d.el" -b "$d/$d.sg"
 		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
+		# We write a serialized graph to speed up GAP
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
 		awk '{printf "%d %d\n", ($1+1), ($2+1) $3}' "$d.e" > "$d/$d.wel"
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.wel" -n $(($NRT*2)) > tmp.log
+		# TODO: Use this in real-datasets, change WeightT to float if need be and recompile GAPBS
+		"$GAPDIR/converter" -s -f "$d/$d.wel" -b "$d/$d.wsg"
 		# We make no assumptions so we output double precision edge weights
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 1 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
 	else
@@ -146,6 +150,7 @@ else
 	# Generate graph (Graph500 can only save to its binary format)
 	d="$FILE_PREFIX"
 	mkdir -p "$DDIR/$d"
+	# FIXME: make-edgelist only generates files at most 2.0Gb
 	"$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
 	# Convert to GAP format (edgelist)
 	"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v"

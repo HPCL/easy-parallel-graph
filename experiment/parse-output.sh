@@ -9,11 +9,14 @@ USAGE="usage: parse-output.sh [--outdir=<dir>] -f=<fn>|<scale>
 	<scale> may be an integer between 1 and 99 inclusive.
 	--outdir: directory where the data is stored. default: ./output"
 
-OUTPUTDIR="$(pwd)/output"
+OUTDIR="$(pwd)/output"
 for arg in "$@"; do
 	case $arg in
 	--outdir=*)
-		OUTPUTDIR=${arg#*=}
+		OUTDIR=${arg#*=}
+		if [ ${OUTDIR:0:1} != '/' ]; then # Relative
+			OUTDIR="$(pwd)/$OUTDIR"
+		fi
 		shift
 	;;
 	-f=*)
@@ -47,17 +50,20 @@ if [ -z "$FILE" ]; then
 	esac
 fi
 
-OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX.csv"
-LOG_DIR="$OUTPUTDIR/$FILE_PREFIX"
+OUTFN="$OUTDIR/parsed-$FILE_PREFIX.csv"
+LOG_DIR="$OUTDIR/$FILE_PREFIX"
 # Assumes the experiment is run $NRT times ($NRT roots or $NRT PageRanks)
 NRT=32
 # Header: Sys,Algo,Metric,Time
 
 echo -n "Parsing GraphBIG for"
+echo "Clearing $OUTFN"
+rm -f "$OUTFN"
+
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
-	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	OUTFN="$OUTDIR/parsed-$FILE_PREFIX-$T.csv"
 	ALGO=$(expr match "${f%.out}" '.*\(-.*\)')
 	ALGO=${ALGO#-}
 	echo -n "; $ALGO $T threads"
@@ -82,7 +88,7 @@ echo -n "Parsing Graph500 for BFS, threadcounts"
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-Graph500-BFS.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
-	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	OUTFN="$OUTDIR/parsed-$FILE_PREFIX-$T.csv"
 	echo -n " $T"
 
 	echo -n "Graph500,BFS,graph generation," >> "$OUTFN"
@@ -97,7 +103,7 @@ echo -n "Parsing GraphMat for"
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphMat-*.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
-	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	OUTFN="$OUTDIR/parsed-$FILE_PREFIX-$T.csv"
 	ALGO=$(expr match "${f%.out}" '.*\(-.*\)')
 	ALGO=${ALGO#-}
 	echo -n "; $ALGO $T threads"
@@ -129,7 +135,7 @@ echo -n "Parsing GAP for"
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GAP-*.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
-	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	OUTFN="$OUTDIR/parsed-$FILE_PREFIX-$T.csv"
 	ALGO=$(expr match "${f%.out}" '.*\(-.*\)')
 	ALGO=${ALGO#-}
 	echo -n "; $ALGO $T threads"
@@ -157,7 +163,7 @@ echo -n "Parsing PowerGraph for"
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-PowerGraph-*.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
-	OUTFN="$OUTPUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	OUTFN="$OUTDIR/parsed-$FILE_PREFIX-$T.csv"
 	ERRFN="${FN%.out}.err"
 	ALGO=$(expr match "${f%.out}" '.*\(-.*\)')
 	ALGO=${ALGO#-}
