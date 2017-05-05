@@ -161,6 +161,7 @@ else
 
 	# Symmetrize (make undirected)
 	"$GAPDIR/converter" -f "$DDIR/$d/${d}.el" -s -e "$DDIR/$d/${d}-undir.el"
+	"$GAPDIR/converter" -s -f "$DDIR/$d/$d.el" -b "$DDIR/$d/$d.sg"
 	# Convert to GraphBIG format
 	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$d/${d}-undir.el" > "$DDIR/$d/edge.csv"
 	echo ID > "$DDIR/$d/vertex.csv"

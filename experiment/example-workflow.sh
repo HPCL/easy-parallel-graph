@@ -5,7 +5,7 @@
 # the experiments will just append to existing log files.
 # IF YOU STOP AN EXPERIMENT HALFWAY DELETE THE LOG FILES
 # they are stored in output/kron-$S
-THREADS="2 4 8 16 32"
+THREADS="1 2 4 8 16 32"
 S=13
 ./get-libraries.sh
 ./gen-datasets.sh $S

@@ -45,7 +45,7 @@ for arg in "$@"; do
 done
 if [ "$#" -lt 2 ]; then
 	echo 'Please provide <scale> and <num_threads>'
-	echo $USAGE
+	echo "$USAGE"
 	exit 2
 fi
 # Set variables based on the command line arguments
@@ -82,12 +82,14 @@ echo -n "Running Graph500 BFS"
 #omp-csr/omp-csr -s $S -o "$DDIR/kron-$S/kron-${S}.graph500" -r "$DDIR/kron-$S/kron-${S}.roots"
 if [ "$OMP_NUM_THREADS" -gt 1 ]; then
 	echo " with OpenMP"
-	"$GRAPH500DIR/omp-csr/omp-csr" -s $S >> "${OUTPUT_PREFIX}-Graph500-BFS.out"
+	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 else
 	echo " sequentially"
-	"$GRAPH500DIR/seq-csr/seq-csr" -s $S >> "${OUTPUT_PREFIX}-Graph500-BFS.out"
+	"$GRAPH500DIR/seq-csr/seq-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 fi
 
+# GAP
+rm -f "${OUTPUT_PREFIX}-GAP-{BFS,SSSP,PR}.out"
 echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 # Just do one trial to be the same as the rest of the experiments
@@ -97,7 +99,8 @@ done
 
 echo "Running GAP SSSP"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+	# Currently, SSSP throws an error when you try to use sg and not wsg file format.
+	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
 done
 
 echo "Running GAP PageRank"
@@ -107,6 +110,8 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
 done
 
+# PowerGraph
+rm -f "${OUTPUT_PREFIX}-PowerGraph-{SSSP,PR}.{out,err}"
 echo "Running PowerGraph SSSP"
 # Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
 if [ "$OMP_NUM_THREADS" -gt 128 ]; then
@@ -124,6 +129,8 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-$S/kron-${S}.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
 done
 
+# GraphMat
+rm -f "${OUTPUT_PREFIX}-GraphMat-{BFS,SSSP,PR}.out"
 echo "Running GraphMat BFS"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
 	echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
@@ -143,6 +150,8 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
 done
 
+# GraphBIG
+rm -f "${OUTPUT_PREFIX}-GraphBIG-{BFS,SSSP,PR}.out"
 echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
 head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
