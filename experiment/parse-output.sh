@@ -57,8 +57,8 @@ NRT=32
 # Header: Sys,Algo,Metric,Time
 
 echo -n "Parsing GraphBIG for"
-echo "Clearing $OUTFN"
-rm -f "$OUTFN"
+echo "Removing old parsed files and starting fresh..."
+rm -f "$OUTDIR"/parsed-$FILE_PREFIX-*.csv
 
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 	f=$(basename $FN)
