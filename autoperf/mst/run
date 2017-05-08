@@ -46,22 +46,30 @@ EPV=8 # Edges per vertex
 NUM_TRIALS=8
 
 # The datasets have been generated for these values.
-RT_TYPES="ER B G"
-INS_PCTAGES="10 25 50 75 90 100"
+# RT_TYPES="ER B G"
+# INS_PCTAGES="10 25 50 75 90 100"
 # CHANGED_VERTICES="1000 2000 5000"
 # SCALES="20 21 22 23 24"
 
 # Custom Settings
 THREADS="1 2 4 8 16 32 48 64 72"
-CHANGED_VERTICES="2000 5000"
-SCALES="23"
+#CHANGED_VERTICES="5000 10000 15000"
+INS_PCTAGES="25 50 75 100"
+RT_TYPES="ER B"
 
-# These will get overwritten; useful for one off scripts
-export OMP_NUM_THREADS=32 # If any generator is multithreaded
+# For batches:
+CHANGED_VERTICES="10000"
+INS_PCTAGES="75"
+SCALES="23"
+RT_TYPES="ER B"
+NUM_BATCHES=10
+
+# These will get overwritten; useful for one-off scripts
+export OMP_NUM_THREADS=64 # If any generator is multithreaded
 RT=ER
 INS_PCT=75
-CVERTS=5000
-S=20
+CVERTS=10000
+S=14
 
 # Define commands to be run
 generate_data()
@@ -88,41 +96,60 @@ generate_data()
 	echo "Generating RMAT files..."
 	for RT in $RT_TYPES; do
 		for S in $SCALES; do
-			echo -e "~~~~~\nGenerating scale $S, $EPV edges per vertex, RMAT $RT\n~~~~~" # LOG
-			PART_SUFFIX="${S}${EPV}_${RT}"
-			if [ "$RT" = ER ]; then # Just do this once
-				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
-				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
-				"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
-			fi
-			mv "$DDIR/rmat${PART_SUFFIX}-orig.wel" tmp
-			awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${PART_SUFFIX}-orig.wel"
-			rm tmp
-			"$XPS_DIR/tEx.out" "$DDIR/rmat${PART_SUFFIX}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${PART_SUFFIX}-orig.wel")
-			# tEx.out generates Graph*x.txt, bfs.out generates Graph*.txt
-			if [ "$ENSURE_CONNECTED" = 'yes' ]; then
-				echo "WARNING: ENSURE_CONNECTED may not be supported anymore"
-				"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
-				rm "$XPS_DIR/Graphallx.txt" # May not be connected
-				mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${PART_SUFFIX}.wel"
-				rm "$XPS_DIR/GraphCx.txt" # Duplicate
-				mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
-				rm "$XPS_DIR/Graphdiff.txt" # Empty
-				mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${PART_SUFFIX}.diff"
-			else	
-				mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${PART_SUFFIX}.wel"
-				mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
-				mv "$XPS_DIR/Graphdiff.txt" "$DDIR/rmat${PART_SUFFIX}.diff"
-			fi
-			for INS_PCT in $INS_PCTAGES; do
-				for CVERTS in $CHANGED_VERTICES; do	
-					echo -e "~~~\n$INS_PCT% insertions, $CVERTS changed vertices\n~~~" # LOG
-					FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
-					"$XPS_DIR/cE.out" "$DDIR/rmat${PART_SUFFIX}.wel" ${CVERTS} 100 $INS_PCT > "$DDIR/changedrmat${FULL_SUFFIX}"
-					sort -n -k1 -k2 "$DDIR/changedrmat${FULL_SUFFIX}" > "$DDIR/changedrmat${FULL_SUFFIX}S"
-					awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${FULL_SUFFIX}S" "$DDIR/rmat${PART_SUFFIX}.wel" > "$DDIR/rmat${FULL_SUFFIX}.wel"
-					"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${FULL_SUFFIX}.wel" "$DDIR/rmat${FULL_SUFFIX}.gr"
-				done
+			for B in $(seq 0 $NUM_BATCHES); do
+				PART_SUFFIX="${S}${EPV}_${RT}"
+				if [ "$B" -eq 0 ]; then
+					echo -e "~~~~~\nGenerating scale $S, $EPV edges per vertex, RMAT $RT\n~~~~~" # LOG
+					if [ "$RT" = ER ]; then # Just do this once
+						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.45 0.15 0.15 0.25 "$DDIR/rmat${S}${EPV}_G-orig.wel"
+						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.55 0.15 0.15 0.15 "$DDIR/rmat${S}${EPV}_B-orig.wel"
+						"$XPS_DIR/../RMAT/driverForRmat" $S 6 $EPV 0.25 0.25 0.25 0.25 "$DDIR/rmat${S}${EPV}_ER-orig.wel"
+					fi
+					mv "$DDIR/rmat${PART_SUFFIX}-orig.wel" tmp
+					awk '{printf "%d %d %d\n", $1, $2, int(rand()*100)}' tmp > "$DDIR/rmat${PART_SUFFIX}-orig.wel"
+					rm tmp
+					"$XPS_DIR/tEx.out" "$DDIR/rmat${PART_SUFFIX}-orig.wel" $(awk '{print $1; exit}' "$DDIR/rmat${PART_SUFFIX}-orig.wel")
+					# tEx.out generates Graph*x.txt, bfs.out generates Graph*.txt
+					if [ "$ENSURE_CONNECTED" = 'yes' ]; then
+						echo "WARNING: ENSURE_CONNECTED is not be supported anymore"
+						"$XPS_DIR/bfs.out" "$XPS_DIR/GraphCx.txt" $(awk '{print $1; exit}' "$XPS_DIR/GraphCx.txt")
+						rm "$XPS_DIR/Graphallx.txt" # May not be connected
+						mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${PART_SUFFIX}.wel"
+						rm "$XPS_DIR/GraphCx.txt" # Duplicate
+						mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
+						rm "$XPS_DIR/Graphdiff.txt" # Empty
+						mv "$XPS_DIR/Graphdiffx.txt" "$DDIR/rmat${PART_SUFFIX}.diff"
+					else	
+						mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${PART_SUFFIX}.wel"
+						mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
+						mv "$XPS_DIR/Graphdiff.txt" "$DDIR/rmat${PART_SUFFIX}.diff"
+					fi
+				else
+					for INS_PCT in $INS_PCTAGES; do
+						for CVERTS in $CHANGED_VERTICES; do	
+							BATCH_SIZE=$(( $CVERTS / $NUM_BATCHES ))
+							TOTAL_CHANGED=$(( $B * $BATCH_SIZE ))
+							echo -e "~~~\nBatch $B, $TOTAL_CHANGED of $CVERTS changed vertices, $INS_PCT% insertions\n~~~" # LOG
+							PREV_BATCH_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_$(( $B - 1 ))b"
+							FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${B}b"
+							if [ "$B" -eq 1 ]; then
+								"$XPS_DIR/cE.out" "$DDIR/rmat${PART_SUFFIX}.wel" $BATCH_SIZE 100 $INS_PCT > "$DDIR/changedrmat${FULL_SUFFIX}"
+								sort -n -k1 -k2 "$DDIR/changedrmat${FULL_SUFFIX}" > "$DDIR/changedrmat${FULL_SUFFIX}S"
+								awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${FULL_SUFFIX}S" "$DDIR/rmat${PART_SUFFIX}.wel" > "$DDIR/rmat${FULL_SUFFIX}.wel"
+								"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${FULL_SUFFIX}.wel" "$DDIR/rmat${FULL_SUFFIX}.gr"
+							else
+								"$XPS_DIR/tEx.out" "$DDIR/rmat${PREV_BATCH_SUFFIX}.wel" 1
+								mv "$XPS_DIR/Graphall.txt" "$DDIR/rmat${FULL_SUFFIX}.wel"
+								mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${FULL_SUFFIX}.cert"
+								mv "$XPS_DIR/Graphdiff.txt" "$DDIR/rmat${FULL_SUFFIX}.diff"
+								"$XPS_DIR/cE.out" "$DDIR/rmat${PREV_BATCH_SUFFIX}.wel" $BATCH_SIZE 100 $INS_PCT > "$DDIR/changedrmat${FULL_SUFFIX}"
+								sort -n -k1 -k2 "$DDIR/changedrmat${FULL_SUFFIX}" > "$DDIR/changedrmat${FULL_SUFFIX}S"
+								awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${FULL_SUFFIX}S" "$DDIR/rmat${PREV_BATCH_SUFFIX}.wel" > "$DDIR/rmat${FULL_SUFFIX}.wel"
+								"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${FULL_SUFFIX}.wel" "$DDIR/rmat${FULL_SUFFIX}.gr"
+							fi
+						done
+					done
+				fi
 			done
 		done
 	done
@@ -288,19 +315,22 @@ run_experiment()
 			for INS_PCT in $INS_PCTAGES; do
 				for CVERTS in $CHANGED_VERTICES; do
 					for OMP_NUM_THREADS in $THREADS; do
-						for dummy in $(seq $NUM_TRIALS); do
-							export OMP_NUM_THREADS
-							N_VERT=$(echo 2 ^ $S | bc)
-							FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
-							PART_SUFFIX="${S}${EPV}_${RT}"
-							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
-							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
-							echo "Running ${FULL_SUFFIX}_${OMP_NUM_THREADS}t" # LOG
-							$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" >> "$GALOISLOG"
-							# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices> <batch size> <number of threads>
-							$SD "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $CVERTS $OMP_NUM_THREADS >> "$MSTLOG"
-							$SD chown $USER "$MSTLOG"
-							$SD chown $USER "$GALOISLOG"
+						for B in $(seq $NUM_BATCHES); do
+							for dummy in $(seq $NUM_TRIALS); do
+								export OMP_NUM_THREADS
+								N_VERT=$(echo 2 ^ $S | bc)
+								#FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+								FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${B}b"
+								PART_SUFFIX="${S}${EPV}_${RT}"
+								MSTLOG="$OUTPUTDIR/mst-${FULL_SUFFIX}_${OMP_NUM_THREADS}t.log"
+								GALOISLOG="$OUTPUTDIR/galois-${FULL_SUFFIX}_${OMP_NUM_THREADS}t.log"
+								echo "Running ${FULL_SUFFIX}_${OMP_NUM_THREADS}t" # LOG
+								$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" >> "$GALOISLOG"
+								# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices> <batch size> <number of threads>
+								$SD "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $CVERTS $OMP_NUM_THREADS >> "$MSTLOG"
+								$SD chown $USER "$MSTLOG"
+								$SD chown $USER "$GALOISLOG"
+							done
 						done
 					done
 				done
