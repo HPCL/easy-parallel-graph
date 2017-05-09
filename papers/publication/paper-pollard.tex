@@ -29,7 +29,7 @@
 }
 \maketitle
 \begin{abstract}
-The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph frameworks: GraphMat, the Graph500, the Graph Algorithm Platform Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world\todo{actual real-world. (i) Michael LeBeane et al, Supercomputing (SC 15), Data Partitioning Strategies for Graph Workloads on Heterogeneous Clusters (ii) Shuang Song et al,  ICPP 2016, Proxy-Guided Load Balancing of Graph Processing Workloads on Heterogeneous Clusters.} datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms\todo{more algorithms, justify why these algorithms}: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
+The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph processing packages: GraphMat, the Graph500, the Graph Algorithm Platform Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world\todo{actual real-world. (i) Michael LeBeane et al, Supercomputing (SC 15), Data Partitioning Strategies for Graph Workloads on Heterogeneous Clusters (ii) Shuang Song et al,  ICPP 2016, Proxy-Guided Load Balancing of Graph Processing Workloads on Heterogeneous Clusters.} datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms\todo{more algorithms, justify why these algorithms}: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
 \end{abstract}
 
 \section{Introduction}
@@ -47,20 +47,13 @@ While leaderboards can indicate computational milestones, they are not particula
 
 To address these issues, we present \emph{easy-parallel-graph\mbox{-\textasteriskcentered}}
 % Here, \textasteriskcentered\ could be \emph{processing}, \emph{performance-analysis}, or \emph{algorithm-comparison})
-\footnote{Available at \url{https://github.com/HPCL/easy-parallel-graph}}
-which simplifies the installation, comparison, and performance analysis of the three most widely implemented graph algorithm building blocks: breadth first search (BFS), single source shortest paths (SSSP), and PageRank (PR). With this tool we select a small number of graph processing libraries over which we homogenize all aspects of execution to fairly compare performance. Additionally, we present an example of this framework via analysis of the performance, energy consumption, and scalability results to enable algorithm designers to select high performance reference implementations with which they can compare their improvements. To be clear, we are not proposing a new benchmark suite or providing any reference implementations. We provide a framework to compare existing software packages without requiring the user to be familiar with them.
+\footnote{Available at \url{https://github.com/HPCL/easy-parallel-graph}}, a utility which simplifies the installation, comparison, and performance analysis of the three most widely implemented graph algorithm building blocks: breadth first search (BFS), single source shortest paths (SSSP), and PageRank (PR). With this tool we select a small number of graph processing libraries over which we homogenize all aspects of execution to fairly compare performance. Additionally, we present an example of this framework via analysis of the performance, energy consumption, and scalability results to enable algorithm designers to select high performance reference implementations with which they can compare their improvements. To be clear, we are not proposing a new benchmark suite or providing any reference implementations. We provide a framework to compare existing software packages without requiring the user to be familiar with them.
 
 \section{Related Work}
 \todo{There's a large number of qualitative. Most third party comparisons are qualitative and just describe the overview instead of actual runtimes. This isn't a level playing field.}
 Most performance analysis of graph processing systems come from the empirical results of each new library designer's publications. For example, GraphMat \cite{Sundaram:2015:GraphMat}, PowerGraph \cite{Gonzalez:2012:Powergraph}, and GraphBIG \cite{Nai:2015:Graphbig} present a comparison of performance between their system and a selection of other software packages.
 
-Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and \cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model.
-
-Lifeng Nai et al.~\cite{Nai:2016:architectural} provide a detailed performance analysis using GraphBIG as their reference implementation, profile Intel hardware counters, and measure the bottlenecks to measure scalability, computational efficiency for a variety of datasets.
-
-Beyond this plethora of performance data, the Graph Algorithm Platform Benchmark Suite (GAP) \cite{Beamer:2015:GAPBench}, GraphBIG, and the Graph500 \cite{Murphy:2010:Graph500} consider themselves reference implementations or benchmark suites next to which other implementations can be compared. If no fewer than three software packages call themselves, ``reference implementations,'' which one are we to trust? Our belief is choosing a single reference implementation cannot capture the complexities inherent with graph processing.
-
-There do exist some performance analyses not tied to any particular library. The most prominent example is Graphalytics \cite{Capota:2015:Graphalytics} which like our work also automates the setup and execution of graph packages for performance analysis. However, in order for Graphalytics to analyze a graph processing system---Graphalytics calls these platforms---a programmer must implement Java classes as wrappers to call the particular implementations, satisfy dependencies, and set the correct shell commands to execute. These all require some knowledge of the inner workings of each system in addition to familiarity with the Graphalytics API and involve a nontrivial amount of programming.
+The most prominent example of a graph processing performance analysis tool not tied to a particular iplementation is Graphalytics \cite{Capota:2015:Graphalytics}. Like our work, Graphalytics also automates the setup and execution of graph packages for performance analysis. Graphalyics relies on Apache Maven and Java to wrap each graph processing software package---Graphalytics calls these platforms---and requires configuration files for each dataset.\todo{What am I saying with this?}
 
 Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.96 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, other performance-relevant details, such as the number of iterations run for PageRank, are not easily available using Graphalytics.
 %We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
@@ -92,7 +85,13 @@ With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula}, one can e
 
 As with Graphalytics, the initial development effort is high but Granula paired with Graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis but without requiring a performance and execution model for each system.
 
-Our contribution strikes a balance between the highly detailed analysis of a single implementation such as those presented by Nai \cite{Nai:2016:architectural} (more depth of analysis) and Graphalytics which focuses on the runtimes of several implementations and several platforms (more breadth of analysis). This allows us to greatly simplify deployment and allows the user to make his or her own decisions.
+Nai et al.~\cite{Nai:2016:architectural} provide a detailed performance analysis using GraphBIG as their reference implementation, profile Intel hardware counters, and measure the bottlenecks to measure scalability, computational efficiency for a variety of datasets.
+
+Beyond this plethora of performance data, the Graph Algorithm Platform Benchmark Suite (GAP) \cite{Beamer:2015:GAPBench}, GraphBIG, and the Graph500 \cite{Murphy:2010:Graph500} consider themselves reference implementations or benchmark suites next to which other implementations can be compared. If no fewer than three software packages call themselves, ``reference implementations,'' which one are we to trust? Our belief is choosing a single reference implementation cannot capture the complexities inherent with graph processing.
+
+Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and \cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model.
+
+Our contribution strikes a balance between the highly detailed analysis of a single implementation such as those presented by Nai \cite{Nai:2016:architectural} (greater depth of analysis) and Graphalytics which focuses on the runtimes of several implementations and several platforms (more breadth of analysis). This allows us to greatly simplify deployment and allows the user to make his or her own decisions.
 
 In addition, we analyze  power and energy consumption as well as details such as the number of iterations or the time to construct the data structures. Moreover, our approach requires little knowledge of the inner workings of each system; the data are collected using either hardware counter sampling of model-specific registers (for power) or through parsing log files (for execution time). This allows arbitrary datasets to be included as long as they are in the same, simple format as those in the Stanford Network Analysis Project (SNAP) datasets \cite{snapnets}.
 
@@ -103,39 +102,42 @@ In addition, we analyze  power and energy consumption as well as details such as
 % In addition to libraries with associated APIs there has also been a propagation of ``reference implementations'' which implement the most common graph algorithms such as \cite{Beamer:2015:GAPBench, Nai:2015:Graphbig}. Thus, even selecting a standard and a benchmark over which to compare various implementations is nontrivial. To quote Andrew Tanenbaum, ``The nice thing about standards is that you have so many to choose from.''
 
 \section{Methodology}
-Automation of the installation\todo{This is sort of done in the repository, but not really explained in the paper}, configuration, and dataset conversion to ensure the experiments execute in the same manner.
+\todo{Start with dataset subsection, write new intro to methodology, move this into inputs. We're comparing algorithms not applications. Understand those since they're the building blocks. Not comparing architectural details (cite that Nai paper). Important paragraph.}
+Our utility is broken down into five principal phases indicated in \figurename~\ref{fig:epg-overview}, each of which requires no more than a single shell command. The five phases are as follows:
+\begin{enumerate}
+	\item Installing modified, stable forks of each software package to ensure homogeneity.
+	\item Given a synthetic problem size or a real-world graph file, generate the files necessary to run each software package.
+	\item Given a graph and the number of threads, run each algorithm using each software package multiple times.
+	\item Parse through the log files to compress the output into a CSV.
+	\item Analyze the data using the provided R scripts to generate plots.
+\end{enumerate}
+
+\begin{figure*}
+	\centering
+		% trim=left lower right upper
+		\includegraphics[width=\linewidth, trim=0 144pt 0pt 156pt, clip]{graphics/overview.eps}
+	\caption{Overview of \emph{easy-parallel-graph-\textasteriskcentered}. Each orange box corresponds to a single shell script in the package while the green ellipses correspond to generated files.}
+	\label{fig:epg-overview}
+\end{figure*}
+
+\subsection{Installing Libraries}
+The libraries are stable forks of the given repositories which are configured to ensure the experiments execute in the same manner. Similarly, multiple copies of the datasets are stored to ensure the datasets are formatted correctly. For example, the roots for BFS are selected such that they are part of a nontrivial connected component.
 
 %% How do we address these issues?
-Our experiments use the author-provided implementations with modifications only to insert performance analysis hooks or to ensure homogeneous stopping criteria; we assume the developers of each system will provide the best performing implementation. While this limits the scope of the experiments it mitigates the bias inherent in our programming skills.\todo{Should I talk about how library designers are biased?}
+Our experiments use the author-provided implementations with modifications only to insert performance analysis hooks or to ensure homogeneous stopping criteria; we assume the developers of each system will provide the best performing implementation. While this limits the scope of the experiments it mitigates the bias inherent in our programming skills in addition to the bias of library designers' performance analysis; a given library designer will understand his or her source code better than any other implementation.
 
+\subsection{Datasets}
+Some software packages provide serialized file formats to speed up file IO. Homogenizing the datasets creates extra copies of the graph files.
 
-\todo{Start with dataset subsection, write new intro to methodology, move this into inputs. We're comparing algorithms not applications. Understand those since they're the building blocks. Not comparing architectural details (cite that Nai paper). Important paragraph.}
-We refer to a graph's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. \todo{Say 2 to the S = 2351501351035923} The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
+We refer to a graph's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. For example, many of our experiments were run with $2^{22} = 4,194,304$ vertices and an average of 16 edges per vertex. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
 
 Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times. We plot many of the results as box plots with an implied 32 data points per box.
 
-When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously. The Graph500 builds the graph once and performs the BFS on each root in turn, speeding up experimentation but only giving a single data point for the dataset construction.
+When possible, we measure the dataset construction time as the time to translate from the unstructured file data in RAM to the graph representation on which the algorithm can be performed. This is not possible for PowerGraph and GraphBIG because they read in the input file and build a graph simultaneously.
 
-\subsection{Machine Specifications}
-We performed experiments on our 36-core Intel Haswell server whose specifications are outlined below.
-%Table~\ref{tab:specs} shows the specifications of the server on which we performed all experiments.
-%\begin{table}[h!tb]
-%	\centering
-%	\caption{
-The operating system is GNU/Linux version 4.4.0-22. The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.
-\begin{center}
-	% For arya I deleted Max RAM Freq	2133MHz
-	\pgfplotstabletypeset[
-	header=false,
-	col sep=tab,
-	string type,
-	every head row/.style={output empty row, before row=\bottomrule},
-	columns/0/.style={column type={|p{1in}|}},
-	columns/1/.style={column type={p{3.2in}|}},
-	every last row/.style={after row=\toprule},
-	]{../report/specs.csv}
-	%\label{tab:specs}
-\end{center}
+We use the Graph500 synthetic graph generator which creates a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$ and set the average degree of a vertex as 16. Hence, a Kronecker graph with scale $S$ has $2^S$ vertices and approximately $16 \times 2^S$ edges.
+
+The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset\todo{One reviewer confused this dataset with the Kronecker.}. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset comes from the Game Trace Archive\cite{Guo:2012:GTA} and is modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}. This dataset is useful because it is both weighted and more dense than the usual real-world dataset with an average out-degree of 824.
 
 \subsection{Graph Processing Systems}
 
@@ -155,7 +157,6 @@ Our approach is not specific or limited to these graph packages and can be exten
 
 \subsection{Algorithms}\label{sec:algs}
 
-
 We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, although not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
 
 We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500 \cite{Murphy:2010:Graph500}. The advantage of the Graph500 is that it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
@@ -168,10 +169,25 @@ PageRank is selected because of its popularity; most libraries provide reference
 
 This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms.
 
-\subsection{Datasets}\label{sec:datasets}
-We use the Graph500 synthetic graph generator which creates a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$ and set the average degree of a vertex as 16. Hence, a Kronecker graph with scale $S$ has $2^S$ vertices and approximately $16 \times 2^S$ edges.
+\subsection{Parsing and Data Analysis}
+The example workflow provided in our implementation yields the figures generated in this paper.
 
-The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset\todo{One reviewer confused this dataset with the Kronecker.}. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset comes from the Game Trace Archive\cite{Guo:2012:GTA} and is modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}. This dataset is useful because it is both weighted and more dense than the usual real-world dataset with an average out-degree of 824.
+\subsection{Machine Specifications}
+We performed experiments on our 36-core (72 thread) Intel Haswell server with 256GB DDR4 RAM, with two Intel Xeon E5-2699 v3 CPUs. The operating system is GNU/Linux version 4.4.0-22.
+%The disparity between the CPU's advertised clock speed and the ``CPU Clock'' row is a result of the Turbo Boost technology which can increase the clock speed to a limit. We use the manufacturer's published maximum clock speeds which can be found at \url{http://ark.intel.com}.
+%\begin{center}
+%	% For arya I deleted Max RAM Freq	2133MHz
+%	\pgfplotstabletypeset[
+%	header=false,
+%	col sep=tab,
+%	string type,
+%	every head row/.style={output empty row, before row=\bottomrule},
+%	columns/0/.style={column type={|p{1in}|}},
+%	columns/1/.style={column type={p{3.2in}|}},
+%	every last row/.style={after row=\toprule},
+%	]{../report/specs.csv}
+%	%\label{tab:specs}
+%\end{center}
 
 \section{Performance Analysis}\label{sec:perf}
 
