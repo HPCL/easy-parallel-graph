@@ -53,6 +53,12 @@ To address these issues, we present \emph{easy-parallel-graph\mbox{-\textasteris
 \todo{There's a large number of qualitative. Most third party comparisons are qualitative and just describe the overview instead of actual runtimes. This isn't a level playing field.}
 Most performance analysis of graph processing systems come from the empirical results of each new library designer's publications. For example, GraphMat \cite{Sundaram:2015:GraphMat}, PowerGraph \cite{Gonzalez:2012:Powergraph}, and GraphBIG \cite{Nai:2015:Graphbig} present a comparison of performance between their system and a selection of other software packages.
 
+Nai et al.~\cite{Nai:2016:architectural} provide a detailed performance analysis using GraphBIG as their reference implementation. Their approach also compares GraphBIG to the GraphLab and Pregel execution models. Their analysis considers architectural performance measurements such as cache miss rates to measure bottlenecks and computational efficiency for a variety of datasets. While incredibly thorough, these analyses focus on covering a wide range of datasets and appear difficult to apply to a new approach. For example, GraphMat reduce computation to sparse matrix operations which may not suffer from the same memory bottlenecks indicated in the results of Nai et al.
+
+Beyond the aforementioned performance results there are a number of existing reports on performance analysis not tied to a particular software package we presently describe.
+
+Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and \cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model. These implementations are hand tuned and provides recommendations for future improvements.
+
 The most prominent example of a graph processing performance analysis tool not tied to a particular iplementation is Graphalytics \cite{Capota:2015:Graphalytics}. Like our work, Graphalytics also automates the setup and execution of graph packages for performance analysis. Graphalyics relies on Apache Maven and Java to wrap each graph processing software package---Graphalytics calls these platforms---and requires configuration files for each dataset.\todo{What am I saying with this?}
 
 Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.96 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, other performance-relevant details, such as the number of iterations run for PageRank, are not easily available using Graphalytics.
@@ -85,11 +91,7 @@ With a plugin to Graphalytics called Granula \cite{Ngai:2015:Granula}, one can e
 
 As with Graphalytics, the initial development effort is high but Granula paired with Graphalytics allows automatic execution and compilation of performance results. Likewise, our approach provides automatic execution and performance analysis but without requiring a performance and execution model for each system.
 
-Nai et al.~\cite{Nai:2016:architectural} provide a detailed performance analysis using GraphBIG as their reference implementation, profile Intel hardware counters, and measure the bottlenecks to measure scalability, computational efficiency for a variety of datasets.
-
 Beyond this plethora of performance data, the Graph Algorithm Platform Benchmark Suite (GAP) \cite{Beamer:2015:GAPBench}, GraphBIG, and the Graph500 \cite{Murphy:2010:Graph500} consider themselves reference implementations or benchmark suites next to which other implementations can be compared. If no fewer than three software packages call themselves, ``reference implementations,'' which one are we to trust? Our belief is choosing a single reference implementation cannot capture the complexities inherent with graph processing.
-
-Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and \cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model.
 
 Our contribution strikes a balance between the highly detailed analysis of a single implementation such as those presented by Nai \cite{Nai:2016:architectural} (greater depth of analysis) and Graphalytics which focuses on the runtimes of several implementations and several platforms (more breadth of analysis). This allows us to greatly simplify deployment and allows the user to make his or her own decisions.
 
@@ -121,7 +123,7 @@ Our utility is broken down into five principal phases indicated in \figurename~\
 \end{figure*}
 
 \subsection{Installing Libraries}
-The libraries are stable forks of the given repositories which are configured to ensure the experiments execute in the same manner. Similarly, multiple copies of the datasets are stored to ensure the datasets are formatted correctly. For example, the roots for BFS are selected such that they are part of a nontrivial connected component.
+The libraries are stable forks of the given repositories which are configured to ensure the experiments execute in the same manner.
 
 %% How do we address these issues?
 Our experiments use the author-provided implementations with modifications only to insert performance analysis hooks or to ensure homogeneous stopping criteria; we assume the developers of each system will provide the best performing implementation. While this limits the scope of the experiments it mitigates the bias inherent in our programming skills in addition to the bias of library designers' performance analysis; a given library designer will understand his or her source code better than any other implementation.
@@ -129,7 +131,7 @@ Our experiments use the author-provided implementations with modifications only 
 \subsection{Datasets}
 Some software packages provide serialized file formats to speed up file IO. Homogenizing the datasets creates extra copies of the graph files.
 
-We refer to a graph's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. For example, many of our experiments were run with $2^{22} = 4,194,304$ vertices and an average of 16 edges per vertex. The datasets are described further in Sect.~\ref{sec:datasets}. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
+We refer to a graph's \emph{scale} when describing the size of the graph. Specifically, a graph with scale $S$ has $2^S$ vertices. For example, many of our experiments were run with $2^{22} = 4,194,304$ vertices and an average of 16 edges per vertex. We measure strong scaling and speedup by varying the number of threads from one to the total number of threads on our server, 72.
 
 Each experiment uses 32 roots per graph. As with the Graph500, each root is selected to have a degree greater than 1. For PageRank, we simply run the algorithm 32 times. We plot many of the results as box plots with an implied 32 data points per box.
 
@@ -137,7 +139,8 @@ When possible, we measure the dataset construction time as the time to translate
 
 We use the Graph500 synthetic graph generator which creates a Kronecker graph \cite{Leskovec:2010:Kronecker} with initial parameters of $A = 0.57, B = 0.19, C = 0.19,$ and $D = 1-(A+B+C) = 0.05$ and set the average degree of a vertex as 16. Hence, a Kronecker graph with scale $S$ has $2^S$ vertices and approximately $16 \times 2^S$ edges.
 
-The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League dataset\todo{One reviewer confused this dataset with the Kronecker.}. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset comes from the Game Trace Archive\cite{Guo:2012:GTA} and is modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}. This dataset is useful because it is both weighted and more dense than the usual real-world dataset with an average out-degree of 824.
+\todo{More real world datasets}
+The Graphalytics results in Table~\ref{tab:graphalytics} were performed on the Dota-League datasets. This dataset contains 61,670 vertices and 50,870,313 edges. This dataset comes from the Game Trace Archive\cite{Guo:2012:GTA} and is modified for Graphalytics\footnote{This dataset is available at \url{https://atlarge.ewi.tudelft.nl/graphalytics/}.}. This dataset is useful because it is both weighted and more dense than the usual real-world dataset with an average out-degree of 824.
 
 \subsection{Graph Processing Systems}
 
@@ -165,12 +168,12 @@ Our work aims to add similar rigor to other graph algorithms by borrowing heavil
 
 We select SSSP because of the straightforward extension from BFS; we need not modify the graph nor the root vertices from BFS.
 
-PageRank is selected because of its popularity; most libraries provide reference implementations. One challenge with using PageRank is the stopping criterion; this is addressed in Sect.~\ref{sec:perf}. Verification of the PageRank results is beyond the scope of this paper, although this may explain some of the large performance discrepancies.\todo{Better explain why these were selected. They're the most popular of the algorithms for the papers we surveyed.}
+PageRank is selected because of its popularity; most libraries provide reference implementations. One challenge with using PageRank is the stopping criterion; all implementations have been modified to use $|| p_t - p_{t-1}||_1$ (the absolute sum of differences) where $p_t$ is the pagerank at step $t$. Verification of the PageRank results is beyond the scope of this paper, although this may explain some of the large performance discrepancies.\todo{Better explain why these were selected. They're the most popular of the algorithms for the papers we surveyed.}
 
 This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms.
 
 \subsection{Parsing and Data Analysis}
-The example workflow provided in our implementation yields the figures generated in this paper.
+Our example analyzes data using the R programming language and shell scripting parsers. The example workflow provided in our utility yields the figures generated in this paper.
 
 \subsection{Machine Specifications}
 We performed experiments on our 36-core (72 thread) Intel Haswell server with 256GB DDR4 RAM, with two Intel Xeon E5-2699 v3 CPUs. The operating system is GNU/Linux version 4.4.0-22.
@@ -195,7 +198,7 @@ We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in
 
 \subsection{Runtime}
 
-In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on a Kronecker graph of scale $22$ (4,194,304 vertices and approximately 33,554,432 edges)\todo{work?}. An explanation of each algorithm is given in \cite{Iosup:2016:Graphalyticstech}. Graphalytics by default does not perform SSSP on unweighted, undirected graphs. The discrepancy between PageRank values in Table~\ref{tab:graphalytics} and Fig.~\ref{fig:pr} is a result of the differing stopping criterion.\todo{What are the likely culprits for performance differences---measure cache miss rates. Try to find something which correlates with performance. Resource stalls will work easily (not as interesting) Cycles per instruction? Automate with perfexplorer or autoperf}
+In Table~\ref{tab:graphalytics} we show the results from running Graphalytics on a Kronecker graph of scale $22$ (4,194,304 vertices and approximately $16 \times 2^22 = 33,500,000$ edges)\todo{work?}. An explanation of each algorithm is given in \cite{Iosup:2016:Graphalyticstech}. Graphalytics by default does not perform SSSP on unweighted, undirected graphs. The discrepancy between PageRank values in Table~\ref{tab:graphalytics} and Fig.~\ref{fig:pr} is a result of the differing stopping criterion.\todo{What are the likely culprits for performance differences---measure cache miss rates. Try to find something which correlates with performance. Resource stalls will work easily (not as interesting) Cycles per instruction? Automate with perfexplorer or autoperf}
 
 In addition to the data presented in Table~\ref{tab:graphalytics}, one may want to know the cost of performing additional computations on a graph once the data structures have been built. Additionally, one may desire runtime bounds to get a reasonable maximum timespan for a given problem. Table~\ref{tab:epg-perf} begins to compile performance results and the rest of this section further explores these topics.
 
