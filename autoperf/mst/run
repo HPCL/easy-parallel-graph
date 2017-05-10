@@ -41,35 +41,33 @@ GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 OUTPUTDIR="$(pwd)/output"
 ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 
-# Default settings
-EPV=8 # Edges per vertex
-NUM_TRIALS=8
-
-# The datasets have been generated for these values.
+# Example settings for datasets
 # RT_TYPES="ER B G"
-# INS_PCTAGES="10 25 50 75 90 100"
-# CHANGED_VERTICES="1000 2000 5000"
+# INS_PCTAGES="25 50 75 100"
+# CHANGED_VERTICES="5000 10000 15000"
 # SCALES="20 21 22 23 24"
 
-# Custom Settings
+# Example settings for experiments
 THREADS="1 2 4 8 16 32 48 64 72"
-#CHANGED_VERTICES="5000 10000 15000"
-INS_PCTAGES="25 50 75 100"
-RT_TYPES="ER B"
+EPV=32 # Edges per vertex
+NUM_BATCHES=10
+NUM_TRIALS=8
+#INS_PCTAGES="25 50 75 100"
+#RT_TYPES="ER B G" # Parameters are only known for these three
 
 # For batches:
+THREADS="64"
 CHANGED_VERTICES="10000"
-INS_PCTAGES="75"
-SCALES="23"
+INS_PCTAGES="25 50 75 100"
+SCALES="23 24 25"
 RT_TYPES="ER B"
-NUM_BATCHES=10
 
 # These will get overwritten; useful for one-off scripts
 export OMP_NUM_THREADS=64 # If any generator is multithreaded
 RT=ER
 INS_PCT=75
 CVERTS=10000
-S=14
+S=23
 
 # Define commands to be run
 generate_data()
@@ -124,7 +122,18 @@ generate_data()
 						mv "$XPS_DIR/GraphC.txt" "$DDIR/rmat${PART_SUFFIX}.cert"
 						mv "$XPS_DIR/Graphdiff.txt" "$DDIR/rmat${PART_SUFFIX}.diff"
 					fi
+					# No batches
+					for INS_PCT in $INS_PCTAGES; do
+						for CVERTS in $CHANGED_VERTICES; do	
+							FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+							"$XPS_DIR/cE.out" "$DDIR/rmat${PART_SUFFIX}.wel" $CVERTS 100 $INS_PCT > "$DDIR/changedrmat${FULL_SUFFIX}"
+							sort -n -k1 -k2 "$DDIR/changedrmat${FULL_SUFFIX}" > "$DDIR/changedrmat${FULL_SUFFIX}S"
+							awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="$DDIR/changedrmat${FULL_SUFFIX}S" "$DDIR/rmat${PART_SUFFIX}.wel" > "$DDIR/rmat${FULL_SUFFIX}.wel"
+							"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/rmat${FULL_SUFFIX}.wel" "$DDIR/rmat${FULL_SUFFIX}.gr"
+						done
+					done
 				else
+					# Batches
 					for INS_PCT in $INS_PCTAGES; do
 						for CVERTS in $CHANGED_VERTICES; do	
 							BATCH_SIZE=$(( $CVERTS / $NUM_BATCHES ))
@@ -284,6 +293,73 @@ run_autoperf()
 	# autoperf
 }
 
+generate_real()
+{
+	echo "Transforming real world datasets."
+	DATASETS=( com-lj.ungraph )
+	# DATASETS=( com-friendster.ungraph com-orkut.ungraph com-lj.ungraph soc-pokec-relationships wiki-Talk protein.links.v10 )
+	VERTICES=( 3997962 )
+	EDGES=( 34681189 )
+	echo "Unzipping the datasets. This only gets done once."
+	for idx in $(seq 0 $(( ${#DATASETS[@]} - 1 )) ); do
+		FILE_PREFIX="$DDIR/${DATASETS[$idx]}"
+		if [ ! -f "$FILE_PREFIX.txt" ]; then
+			echo "Unzipping $FILE_PREFIX.txt.gz..."
+			gunzip -c "$FILE_PREFIX.txt.gz" > "$FILE_PREFIX.txt"
+		else
+			echo "File $FILE_PREFIX.txt already unzipped"
+		fi
+	done
+
+	for idx in $(seq 0 $(( ${#DATASETS[@]} - 1 )) ); do
+		echo "Transforming ${DATASETS[$idx]} into the correct formats"
+		FILE_PREFIX="$DDIR/${DATASETS[$idx]}"
+		awk '!/^#/{printf "%d %d %d\n", $1, $2, int(rand()*100)}' "$FILE_PREFIX.txt" > "$FILE_PREFIX.wel"
+		"$XPS_DIR/tEx.out" "$FILE_PREFIX.wel" $(awk '{print $1; exit}' "$FILE_PREFIX.wel" )
+		mv "Graphall.txt" "$FILE_PREFIX.wel"
+		mv "GraphC.txt" "$FILE_PREFIX.cert"
+		mv "Graphdiff.txt" "$FILE_PREFIX.diff"
+		# No batches
+		for INS_PCT in $INS_PCTAGES; do
+			for CVERTS in $CHANGED_VERTICES; do	
+				FILE_SUFFIX="_${INS_PCT}i_${CVERTS}"
+				echo "Running on ${FILE_PREFIX}$FILE_SUFFIX (no batches)"
+				"$XPS_DIR/cE.out" "$FILE_PREFIX.wel" $CVERTS 100 $INS_PCT > "${FILE_PREFIX}_changed${FILE_SUFFIX}"
+				sort -n -k1 -k2 "${FILE_PREFIX}_changed${FILE_SUFFIX}" > "${FILE_PREFIX}_changed${FILE_SUFFIX}S"
+				awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="${FILE_PREFIX}_changed${FILE_SUFFIX}S" "$FILE_PREFIX.wel" > "${FILE_PREFIX}$FILE_SUFFIX.wel"
+				"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${FILE_PREFIX}$FILE_SUFFIX.wel"  "${FILE_PREFIX}$FILE_SUFFIX.gr"
+			done
+		done
+		# Batches
+		BATCH_SIZE=$(( $CVERTS / $NUM_BATCHES ))
+		for B in $(seq 1 $NUM_BATCHES); do
+			for INS_PCT in $INS_PCTAGES; do
+				for CVERTS in $CHANGED_VERTICES; do	
+					TOTAL_CHANGED=$(( $B * $BATCH_SIZE ))
+					PREV_BATCH_SUFFIX="_${INS_PCT}i_${CVERTS}_$(( $B - 1 ))b"
+					FILE_SUFFIX="_${INS_PCT}i_${CVERTS}_${B}b"
+					echo -e "~~~\nBatch $B, $TOTAL_CHANGED of $CVERTS changed vertices, $INS_PCT% insertions\n~~~" # LOG
+					if [ "$B" -eq 1 ]; then
+						"$XPS_DIR/cE.out" "$FILE_PREFIX.wel" $BATCH_SIZE 100 $INS_PCT > "${FILE_PREFIX}_changed${FILE_SUFFIX}"
+						sort -n -k1 -k2 "${FILE_PREFIX}_changed${FILE_SUFFIX}" > "${FILE_PREFIX}_changed${FILE_SUFFIX}S"
+						awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="${FILE_PREFIX}_changed${FILE_SUFFIX}S" "$FILE_PREFIX.wel" > "${FILE_PREFIX}$FILE_SUFFIX.wel"
+						"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${FILE_PREFIX}$FILE_SUFFIX.wel"  "${FILE_PREFIX}$FILE_SUFFIX.gr"
+					else
+						"$XPS_DIR/tEx.out" "${FILE_PREFIX}${PREV_BATCH_SUFFIX}.wel" 1
+						mv "Graphall.txt" "${FILE_PREFIX}${FILE_SUFFIX}.wel"
+						mv "GraphC.txt" "${FILE_PREFIX}${FILE_SUFFIX}.cert"
+						mv "Graphdiff.txt" "${FILE_PREFIX}${FILE_SUFFIX}.diff"
+						"$XPS_DIR/cE.out" "${FILE_PREFIX}${PREV_BATCH_SUFFIX}.wel" $BATCH_SIZE 100 $INS_PCT > "${FILE_PREFIX}_changed${FILE_SUFFIX}"
+						sort -n -k1 -k2 "${FILE_PREFIX}_changed${FILE_SUFFIX}" > "${FILE_PREFIX}_changed${FILE_SUFFIX}S"
+						awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="${FILE_PREFIX}_changed${FILE_SUFFIX}S" "${FILE_PREFIX}${PREV_BATCH_SUFFIX}.wel" > "${FILE_PREFIX}${FILE_SUFFIX}.wel"
+						"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${FILE_PREFIX}${FILE_SUFFIX}.wel" "${FILE_PREFIX}${FILE_SUFFIX}.gr"
+					fi
+				done
+			done
+		done
+	done
+}
+
 run_experiment()
 {
 	echo "Running the experiment..."
@@ -315,22 +391,29 @@ run_experiment()
 			for INS_PCT in $INS_PCTAGES; do
 				for CVERTS in $CHANGED_VERTICES; do
 					for OMP_NUM_THREADS in $THREADS; do
-						for B in $(seq $NUM_BATCHES); do
-							for dummy in $(seq $NUM_TRIALS); do
-								export OMP_NUM_THREADS
-								N_VERT=$(echo 2 ^ $S | bc)
-								#FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
-								FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${B}b"
-								PART_SUFFIX="${S}${EPV}_${RT}"
-								MSTLOG="$OUTPUTDIR/mst-${FULL_SUFFIX}_${OMP_NUM_THREADS}t.log"
-								GALOISLOG="$OUTPUTDIR/galois-${FULL_SUFFIX}_${OMP_NUM_THREADS}t.log"
-								echo "Running ${FULL_SUFFIX}_${OMP_NUM_THREADS}t" # LOG
+						for dummy in $(seq $NUM_TRIALS); do
+							export OMP_NUM_THREADS
+							N_VERT=$(echo 2 ^ $S | bc)
+							FULL_SUFFIX="${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}"
+							PART_SUFFIX="${S}${EPV}_${RT}"
+							MSTLOG="$OUTPUTDIR/mst-${FULL_SUFFIX}_${OMP_NUM_THREADS}t.log"
+							GALOISLOG="$OUTPUTDIR/galois-${FULL_SUFFIX}_${OMP_NUM_THREADS}t.log"
+							BATCH_SIZE=$(( $CVERTS / $NUM_BATCHES ))
+							echo -n "Running ${FULL_SUFFIX}_${OMP_NUM_THREADS}t, batch" # LOG
+							if [ "$NUM_BATCHES" -gt 1 ]; then
+								for B in $(seq $NUM_BATCHES); do
+									echo -n " $B"
+									echo "Galois Batch $B" >> "$GALOISLOG"
+									$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}_${B}b.gr" >> "$GALOISLOG"
+								done
+								echo #\n
+							else
 								$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/rmat${FULL_SUFFIX}.gr" >> "$GALOISLOG"
-								# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices> <batch size> <number of threads>
-								$SD "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $CVERTS $OMP_NUM_THREADS >> "$MSTLOG"
-								$SD chown $USER "$MSTLOG"
-								$SD chown $USER "$GALOISLOG"
-							done
+							fi
+							# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices> <batch size> <number of threads>
+							$SD "$XPS_DIR/a.out" "$DDIR/rmat${PART_SUFFIX}.diff" "$DDIR/rmat${PART_SUFFIX}.cert" "$DDIR/changedrmat${FULL_SUFFIX}S" 100 $N_VERT $BATCH_SIZE $OMP_NUM_THREADS >> "$MSTLOG"
+							$SD chown $USER "$MSTLOG"
+							$SD chown $USER "$GALOISLOG"
 						done
 					done
 				done
@@ -342,7 +425,7 @@ run_experiment()
 
 # parse_output helper function: parse one output file
 # Expects the following variables to be set:
-# PKG DATA_FORMAT GALOISLOG MSTLOG PFN
+# PKG DATA_FORMAT GALOISLOG MSTLOG PFN NUM_BATCHES
 parse_one()
 {
 	if [ "$POWER_PROFILING" = "1" ]; then
@@ -355,14 +438,32 @@ parse_one()
 		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,All,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${MSTLOG}" >> "$PFN"
 		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/^[0-9]+\.[0-9]+ s/{printf "MST,%s,All,RAPL Time (s),%s\n",INFO,$1;exit}' "${MSTLOG}" >> "$PFN"
 	fi
-	# Galois
-	awk -F ',' -v INFO="$DATA_FORMAT" '/,Time,/{printf "Galois,All,%s,Time (s),%s\n",INFO,$5 / 1000}' "${GALOISLOG}" >> "$PFN"
-	# MST
-	awk -v INFO="$DATA_FORMAT" '/Total Time for Creating Initial Rooted Tree at iter/{printf "MST,rooting tree,%s,Time (s),%s\n",INFO,$12}' "${MSTLOG}" >> "$PFN"
-	awk -v INFO="$DATA_FORMAT" '/Time for First Pass/{printf "MST,first pass,%s,Time (s),%s\n",INFO,$5}' "${MSTLOG}" >> "$PFN"
-	awk -v INFO="$DATA_FORMAT" '/Time for Classify and insert/{printf "MST,insertion,%s,Time (s),%s\n",INFO,$6}' "${MSTLOG}" >> "$PFN"
-	awk -v INFO="$DATA_FORMAT" '/Time for Deletion/{printf "MST,deletion,%s,Time (s),%s\n",INFO,$4}' "${MSTLOG}" >> "$PFN"
-	awk -v INFO="$DATA_FORMAT" '/Total Time for Updating/{if (NF == 5){printf "MST,All,%s,Time (s),%s\n",INFO,$5}}' "${MSTLOG}" >> "$PFN"
+	if [ "$NUM_BATCHES" -le 1 ]; then 
+		# Galois
+		awk -F ',' -v INFO="$DATA_FORMAT" '/,Time,/{printf "Galois,All,%s,Time (s),%s\n",INFO,$5 / 1000}' "${GALOISLOG}" >> "$PFN"
+		# MST
+		awk -v INFO="$DATA_FORMAT" '/Total Time for Creating Initial Rooted Tree at iter/{printf "MST,rooting tree,%s,Time (s),%s\n",INFO,$12}' "${MSTLOG}" >> "$PFN"
+		awk -v INFO="$DATA_FORMAT" '/Time for First Pass/{printf "MST,first pass,%s,Time (s),%s\n",INFO,$5}' "${MSTLOG}" >> "$PFN"
+		awk -v INFO="$DATA_FORMAT" '/Time for Classify and insert/{printf "MST,insertion,%s,Time (s),%s\n",INFO,$6}' "${MSTLOG}" >> "$PFN"
+		awk -v INFO="$DATA_FORMAT" '/Time for Deletion/{printf "MST,deletion,%s,Time (s),%s\n",INFO,$4}' "${MSTLOG}" >> "$PFN"
+		awk -v INFO="$DATA_FORMAT" '/Total Time for Updating/{if (NF == 5){printf "MST,All,%s,Time (s),%s\n",INFO,$5}}' "${MSTLOG}" >> "$PFN"
+	else
+		for B in $(seq $NUM_BATCHES); do
+			INFO="${DATA_FORMAT},$B"
+			# Galois
+			grep -A 23 "Galois Batch $B" "${GALOISLOG}" |  awk -F ',' -v INFO="$INFO" '/,Time,/{printf "Galois,All,%s,Time (s),%s\n",INFO,$5 / 1000}' "${GALOISLOG}" >> "$PFN"
+			# MST
+			if [ "$B" -eq 1 ]; then
+				awk -v INFO="$INFO" '/Total Time for Creating Initial Rooted Tree at iter 1/{printf "MST,rooting tree,%s,Time (s),%s\n",INFO,$12}' "${MSTLOG}" >> "$PFN"
+			else
+				THIS_BATCH=$(grep -B 2 -A 8 "Total Time for Updating Rooted Tree at iter $B" "$MSTLOG")
+				echo "$THIS_BATCH" | awk -v INFO="$INFO" '/Total Time for Updating Rooted Tree at iter/{printf "MST,updating tree,%s,Time (s),%s\n",INFO,$11}' "${MSTLOG}" >> "$PFN"
+
+				echo "$THIS_BATCH" | awk -v INFO="$INFO" '/Time for Classify and insert/{printf "MST,insertion,%s,Time (s),%s\n",INFO,$6}' "${MSTLOG}" >> "$PFN"
+				echo "$THIS_BATCH" | awk -v INFO="$INFO" '/Time for Deletion/{printf "MST,deletion,%s,Time (s),%s\n",INFO,$4}' "${MSTLOG}" >> "$PFN"
+			fi
+		done
+	fi
 }
 
 parse_output()
@@ -373,18 +474,21 @@ parse_output()
 	else
 		PFN="$OUTPUTDIR/parsed-aggregate.txt"
 	fi
-	RT=ER # RMAT type: ER->(.25,.25,.25,.25) G->(.45, .15, .15, .25) B->(.55, .15, .15, .15)
 	PKG=2
 	# Print the header
-	echo 'algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value' > "$PFN"
+	if [ "$NUM_BATCHES" -le 1 ]; then 
+		echo 'algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value' > "$PFN"
+	else
+		echo 'algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,batch,measurement,value' > "$PFN"
+	fi
 	for RT in $RT_TYPES; do
 		for S in $SCALES; do
 			for INS_PCT in $INS_PCTAGES; do
 				for CVERTS in $CHANGED_VERTICES; do	
 					for T in $THREADS; do
 						for S in $SCALES; do
-							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${T}t.log"
-							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${T}t.log"
+							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${T}t.log"
+							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${T}t.log"
 							DATA_FORMAT="$S,$EPV,$RT,$INS_PCT,$CVERTS,$T"
 							parse_one
 						done
@@ -415,7 +519,8 @@ parse_output()
 # "Main"
 ###
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
-	generate_data
+	#generate_data
+	generate_real
 fi
 if [ "$cmd" = build -o "$cmd" = all ]; then
 	# build_autoperf
