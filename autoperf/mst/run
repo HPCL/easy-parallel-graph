@@ -21,11 +21,11 @@ done
 cmd="$1"
 if [ -z "$cmd" -o "$cmd" = "-h" -o "$cmd" = "--help" ]; then
 	echo "$USAGE"
-	return 2
+	exit 2
 elif [ "$cmd" != generate_data -a "$cmd" != experiment -a "$cmd" != build -a "$cmd" != all -a "$cmd" != parse ]; then
 	echo "Invalid argument $cmd"
 	echo "$USAGE"
-	return 2
+	exit 2
 fi
 
 # Initialization
@@ -41,24 +41,34 @@ GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 OUTPUTDIR="$(pwd)/output"
 ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 
-# Example settings for datasets
+# Example settings for synthetic datasets
+#DATASETS=( com-friendster.ungraph com-orkut.ungraph com-lj.ungraph soc-pokec-relationships wiki-Talk protein.links.v10 )
+# ^ Those are all the ones whose URLs are included in this file
+DATASETS=( com-lj.ungraph com-friendster.ungraph )
+REAL_VERTICES=( 3997962 65608366 )
+REAL_EDGES=( 34681189 1806067135 )
+# DATASETS=( facebook_combined ) # Test dataset, only 4,000 vertices
+# REAL_VERTICES=( 4039 ) # Test
+# REAL_EDGES=( 88234 ) # Test
+
+
+# Example settings for synthetic datasets
 # RT_TYPES="ER B G"
 # INS_PCTAGES="25 50 75 100"
 # CHANGED_VERTICES="5000 10000 15000"
 # SCALES="20 21 22 23 24"
+# RT_TYPES="ER B G" # Parameters are only known for these three
 
 # Example settings for experiments
-THREADS="1 2 4 8 16 32 48 64 72"
 EPV=32 # Edges per vertex
+THREADS="1 2 4 8 16 32 48 64 72"
 NUM_BATCHES=10
 NUM_TRIALS=8
-#INS_PCTAGES="25 50 75 100"
-#RT_TYPES="ER B G" # Parameters are only known for these three
 
 # For batches:
 THREADS="64"
 CHANGED_VERTICES="10000"
-INS_PCTAGES="25 50 75 100"
+INS_PCTAGES="75"
 SCALES="23 24 25"
 RT_TYPES="ER B"
 
@@ -72,14 +82,6 @@ S=23
 # Define commands to be run
 generate_data()
 {
-	echo "Downloading datasets. May take a while..." # LOG
-	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
-	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
-	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-lj.ungraph.txt.gz
-	wget -nc -P "$DDIR" https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz
-	wget -nc -P "$DDIR" https://snap.stanford.edu/data/wiki-Talk.txt.gz
-	wget -nc -P "$DDIR" http://string-db.org/download/protein.links.v10.txt.gz
-
 	# Download or generate Mew MST graph files
 	# Right now we just generate them on the fly
 	# wget -nc -P "$DDIR" http://brix.d.cs.uoregon.edu/graphs/rmat{20..27}8_{B,G,ER}.gr.gz
@@ -295,11 +297,15 @@ run_autoperf()
 
 generate_real()
 {
+	echo "Downloading datasets. May take a while..." # LOG
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/bigdata/communities/com-lj.ungraph.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz
+	wget -nc -P "$DDIR" https://snap.stanford.edu/data/wiki-Talk.txt.gz
+	wget -nc -P "$DDIR" http://string-db.org/download/protein.links.v10.txt.gz
+
 	echo "Transforming real world datasets."
-	DATASETS=( com-lj.ungraph )
-	# DATASETS=( com-friendster.ungraph com-orkut.ungraph com-lj.ungraph soc-pokec-relationships wiki-Talk protein.links.v10 )
-	VERTICES=( 3997962 )
-	EDGES=( 34681189 )
 	echo "Unzipping the datasets. This only gets done once."
 	for idx in $(seq 0 $(( ${#DATASETS[@]} - 1 )) ); do
 		FILE_PREFIX="$DDIR/${DATASETS[$idx]}"
@@ -345,7 +351,7 @@ generate_real()
 						awk -f "$LIB_DIR/../change_edgelist.awk" -v CEL="${FILE_PREFIX}_changed${FILE_SUFFIX}S" "$FILE_PREFIX.wel" > "${FILE_PREFIX}$FILE_SUFFIX.wel"
 						"$GALOIS_DIR/build/release/tools/graph-convert/graph-convert" -intedgelist2gr "${FILE_PREFIX}$FILE_SUFFIX.wel"  "${FILE_PREFIX}$FILE_SUFFIX.gr"
 					else
-						"$XPS_DIR/tEx.out" "${FILE_PREFIX}${PREV_BATCH_SUFFIX}.wel" 1
+						"$XPS_DIR/tEx.out" "${FILE_PREFIX}${PREV_BATCH_SUFFIX}.wel" $(awk '{if($1==0 || $1==1){print $1}else{print 1} exit}' "${FILE_PREFIX}${PREV_BATCH_SUFFIX}.wel")
 						mv "Graphall.txt" "${FILE_PREFIX}${FILE_SUFFIX}.wel"
 						mv "GraphC.txt" "${FILE_PREFIX}${FILE_SUFFIX}.cert"
 						mv "Graphdiff.txt" "${FILE_PREFIX}${FILE_SUFFIX}.diff"
@@ -415,6 +421,66 @@ run_experiment()
 							$SD chown $USER "$MSTLOG"
 							$SD chown $USER "$GALOISLOG"
 						done
+					done
+				done
+			done
+		done
+	done
+	cd "$LIB_DIR/.."
+}
+
+run_real()
+{
+	echo "Running real world datasets."
+	mkdir -p "$OUTPUTDIR"
+	cd "$OUTPUTDIR" # So we can just print output to cwd
+	# TODO: more parameters and more loop levels
+	# Adjust parameters
+	if [ "$POWER_PROFILING" = "1" ]; then
+		GALOIS_MST="$GALOIS_DIR/build/power/apps/boruvka/boruvka"
+		SD='sudo'
+	else
+		GALOIS_MST="$GALOIS_DIR/build/release/apps/boruvka/boruvka"
+		SD=''
+	fi
+	echo "Deleting previous log files..."
+	for idx in $(seq 0 $(( ${#DATASETS[@]} - 1 )) ); do
+		DSET="${DATASETS[$idx]}"
+		for INS_PCT in $INS_PCTAGES; do
+			for CVERTS in $CHANGED_VERTICES; do
+				for OMP_NUM_THREADS in $THREADS; do
+					rm -f "$OUTPUTDIR/{galois,mst}-${DSET}_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+				done
+			done
+		done
+	done
+	for idx in $(seq 0 $(( ${#DATASETS[@]} - 1 )) ); do
+		N_VERT=${REAL_VERTICES[$idx]}
+		DSET="${DATASETS[$idx]}"
+		for INS_PCT in $INS_PCTAGES; do
+			for CVERTS in $CHANGED_VERTICES; do
+				for OMP_NUM_THREADS in $THREADS; do
+					export OMP_NUM_THREADS
+					for dummy in $(seq $NUM_TRIALS); do
+						FILE_SUFFIX="_${INS_PCT}i_${CVERTS}"
+						MSTLOG="mst-${DSET}${FILE_SUFFIX}_${OMP_NUM_THREADS}t.log"
+						GALOISLOG="galois-${DSET}${FILE_SUFFIX}_${OMP_NUM_THREADS}t.log"
+						BATCH_SIZE=$(( $CVERTS / $NUM_BATCHES ))
+						echo -n "Running $DSET${FILE_SUFFIX}_${OMP_NUM_THREADS}t, batch" # LOG
+						if [ "$NUM_BATCHES" -gt 1 ]; then
+							for B in $(seq $NUM_BATCHES); do
+								echo -n " $B"
+								echo "Galois Batch $B" >> "$GALOISLOG"
+								$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/${DSET}${FILE_SUFFIX}_${B}b.gr" >> "$GALOISLOG"
+							done
+							echo #\n
+						else
+							$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/${DSET}${FILE_SUFFIX}.gr" >> "$GALOISLOG"
+						fi
+						# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices> <batch size> <number of threads>
+						$SD "$XPS_DIR/a.out" "$DDIR/${DSET}.diff" "$DDIR/${DSET}${PART_SUFFIX}.cert" "$DDIR/${DSET}${FILE_PREFIX}_changed${FILE_SUFFIX}S" 100 $N_VERT $BATCH_SIZE $OMP_NUM_THREADS >> "$MSTLOG"
+						$SD chown $USER "$MSTLOG"
+						$SD chown $USER "$GALOISLOG"
 					done
 				done
 			done
@@ -536,6 +602,7 @@ fi
 
 if [ "$cmd" = experiment -o "$cmd" = all ]; then
 	# run_autoperf
-	run_experiment
+	# run_experiment
+	run_real
 fi
 
