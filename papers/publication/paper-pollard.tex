@@ -50,7 +50,7 @@ While leaderboards can indicate computational milestones, they are not particula
 
 To address these issues, we present \emph{easy-parallel-graph\mbox{-\textasteriskcentered}}
 % Here, \textasteriskcentered\ could be \emph{processing}, \emph{performance-analysis}, or \emph{algorithm-comparison})
-\footnote{Available at \url{https://github.com/HPCL/easy-parallel-graph}}, a utility which simplifies the installation, comparison, and performance analysis of the three most widely implemented graph algorithm building blocks: breadth first search (BFS), single source shortest paths (SSSP), and PageRank (PR). With this tool we select a small number of graph processing libraries over which we homogenize all aspects of execution to fairly compare performance. Additionally, we present an example use of this framework to analyze the performance, energy consumption, and scalability of specific algorithm implementation. This enables algorithm designers to select high performance reference implementations with which they can compare their improvements. To be clear, we are not proposing a new benchmark suite or providing any reference implementations. We introduce a framework for detailed and fair comparison of existing graph software packages without requiring the user to be familiar with them.
+\footnote{Available at \url{https://github.com/HPCL/easy-parallel-graph}}, a framework which simplifies the installation, comparison, and performance analysis of the three most widely implemented graph algorithm building blocks: breadth first search (BFS), single source shortest paths (SSSP), and PageRank (PR). With this tool we select a small number of graph processing libraries over which we homogenize all aspects of execution to fairly compare performance. Additionally, we present an example use of this framework to analyze the performance, energy consumption, and scalability of specific algorithm implementation. This enables algorithm designers to select high performance reference implementations with which they can compare their improvements. To be clear, we are not proposing a new benchmark suite or providing any reference implementations. We introduce a framework for detailed and fair comparison of existing graph software packages without requiring the user to be familiar with them.
 
 \section{Related Work}
 \todo[inline]{There's a large number of qualitative. Most third party comparisons are qualitative and just describe the overview instead of actual runtimes. This isn't a level playing field.}
@@ -108,7 +108,7 @@ In addition, we analyze  power and energy consumption as well as details such as
 
 \section{Methodology}
 \todo[inline]{Start with dataset subsection, write new intro to methodology, move this into inputs. We're comparing algorithms not applications. Understand those since they're the building blocks. Not comparing architectural details (cite that Nai paper). Important paragraph.}
-Our utility is broken down into five principal phases indicated in \figurename~\ref{fig:epg-overview}, each of which requires no more than a single shell command. The five phases are as follows:
+Our framework breaks the process of characterizing performance into five principal phases shown in \figurename~\ref{fig:epg-overview}, each of which requires no more than a single shell command. The five phases are as follows.
 \begin{enumerate}
 	\item Installing modified, stable forks of each software package to ensure homogeneity.
 	\item Given a synthetic problem size or a real-world graph file, generate the files necessary to run each software package.
@@ -176,7 +176,7 @@ PageRank is selected because of its popularity; most libraries provide reference
 This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms.
 
 \subsection{Parsing and Data Analysis}
-Our example analyzes data using the R programming language and shell scripting parsers. The example workflow provided in our utility yields the figures generated in this paper.
+Our example analyzes data using the R programming language and shell scripting parsers. The example workflow provided in our framework yields the figures generated in this paper.
 
 \subsection{Machine Specifications}
 We performed experiments on our 36-core (72 thread) Intel Haswell server with 256GB DDR4 RAM, with two Intel Xeon E5-2699 v3 CPUs. The operating system is GNU/Linux version 4.4.0-22.
