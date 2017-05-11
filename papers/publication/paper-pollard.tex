@@ -173,7 +173,8 @@ We select SSSP because of the straightforward extension from BFS; we need not mo
 
 PageRank is selected because of its popularity; most libraries provide reference implementations. One challenge with using PageRank is the stopping criterion; all implementations have been modified to use $|| p_t - p_{t-1}||_1$ (the absolute sum of differences) where $p_t$ is the pagerank at step $t$. Verification of the PageRank results is beyond the scope of this paper, although this may explain some of the large performance discrepancies.\todo[inline]{Better explain why these were selected. They're the most popular of the algorithms for the papers we surveyed.}
 
-This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms.
+This approach is not specific to a particular algorithm; measuring the execution time, data structure construction time, and power consumption can be applied easily to other algorithms. We select some representative algorithms here to demonstrate the process, which we hope will motivate others to use
+the framework to add more algorithms.
 
 \subsection{Parsing and Data Analysis}
 Our example analyzes data using the R programming language and shell scripting parsers. The example workflow provided in our framework yields the figures generated in this paper.
