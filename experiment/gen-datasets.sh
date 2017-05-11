@@ -127,15 +127,17 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
 		# We write a serialized graph to speed up GAP
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
-		echo " weighted."
+		echo " weighted. Weighted graphs are currently not supported because of a bug in GraphMat."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
 		awk '{printf "%d %d %s\n", ($1+1), ($2+1), $3}' "$d.e" > "$d/$d.wel"
+		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d/$d.el" # For GraphMat
 		echo "Getting roots."
-		"$GAPDIR/sssp" -f "$d/$d.wel" -n $(($NRT*2)) > tmp.log
+		"$GAPDIR/sssp" -f "$d/$d.el" -n $(( $NRT * 2 )) > tmp.log
 		# TODO: Use this in real-datasets, change WeightT to float if need be and recompile GAPBS
 		"$GAPDIR/converter" -s -f "$d/$d.wel" -b "$d/$d.wsg"
 		# We make no assumptions so we output double precision edge weights
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 1 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
+		# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 0 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
 	else
 		echo "File format not recognized"
 		exit 1
@@ -168,7 +170,7 @@ else
 	cat "$DDIR/$d/${d}-undir.el" | tr '[:blank:]' '\n' | sort -n | uniq >> "$DDIR/$d/vertex.csv"
 
 	# Convert to GraphMat format
-	# GraphMat requires edge weights---Just make them all 1 for the .1wel format
+	# GraphMat requires edge weights---Just make them all 1 for the .wel format
 	# XXX: What happens when you remove selfloops and duplicated edges.
 	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}.el" > "$DDIR/$d/$d.1el"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
@@ -179,5 +181,5 @@ fi
 cd "$OLDPWD"
 
 # TEST: Convert back to non-binary, see what we get
-# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 0 --outputformat 1 --inputheader 1 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$d.graphmat" "$DDIR/$d.test.1wel"
+# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 0 --outputformat 1 --inputheader 1 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$d.graphmat" "$DDIR/$d.test.wel"
 
