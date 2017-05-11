@@ -88,7 +88,7 @@ if [ -z "$FILE" ]; then
 fi
 
 mkdir -p "$DDIR"
-export OMP_NUM_THREADS=32
+export OMP_NUM_THREADS=64
 NRT=64
 GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
@@ -129,7 +129,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
-		awk '{printf "%d %d\n", ($1+1), ($2+1) $3}' "$d.e" > "$d/$d.wel"
+		awk '{printf "%d %d %s\n", ($1+1), ($2+1), $3}' "$d.e" > "$d/$d.wel"
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.wel" -n $(($NRT*2)) > tmp.log
 		# TODO: Use this in real-datasets, change WeightT to float if need be and recompile GAPBS
