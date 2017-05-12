@@ -44,9 +44,13 @@ ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 # Example settings for synthetic datasets
 #DATASETS=( com-friendster.ungraph com-orkut.ungraph com-lj.ungraph soc-pokec-relationships wiki-Talk protein.links.v10 )
 # ^ Those are all the ones whose URLs are included in this file
-DATASETS=( com-lj.ungraph com-friendster.ungraph )
-REAL_VERTICES=( 3997962 65608366 )
-REAL_EDGES=( 34681189 1806067135 )
+#DATASETS=( com-lj.ungraph com-friendster.ungraph )
+#REAL_VERTICES=( 3997962 65608366 )
+#REAL_VERTICES=( 3998075 46565605 ) # This is from tr '[:blank:]' '\n' | sort -n | uniq | wc -l
+#REAL_EDGES=( 34681189 1806067135 )
+DATASETS=( com-lj.ungraph )
+REAL_VERTICES=( 4036538  )
+REAL_EDGES=( 34681189 )
 # DATASETS=( facebook_combined ) # Test dataset, only 4,000 vertices
 # REAL_VERTICES=( 4039 ) # Test
 # REAL_EDGES=( 88234 ) # Test
@@ -478,7 +482,7 @@ run_real()
 							$SD "$GALOIS_MST" -t=$OMP_NUM_THREADS "$DDIR/${DSET}${FILE_SUFFIX}.gr" >> "$GALOISLOG"
 						fi
 						# ./a.out <diff_file> <certificate> <set of changed edges> <upper bound of edge weight> <number of vertices> <batch size> <number of threads>
-						$SD "$XPS_DIR/a.out" "$DDIR/${DSET}.diff" "$DDIR/${DSET}${PART_SUFFIX}.cert" "$DDIR/${DSET}${FILE_PREFIX}_changed${FILE_SUFFIX}S" 100 $N_VERT $BATCH_SIZE $OMP_NUM_THREADS >> "$MSTLOG"
+						$SD "$XPS_DIR/a.out" "$DDIR/${DSET}.diff" "$DDIR/${DSET}.cert" "$DDIR/${DSET}_changed${FILE_SUFFIX}S" 100 $N_VERT $BATCH_SIZE $OMP_NUM_THREADS >> "$MSTLOG"
 						$SD chown $USER "$MSTLOG"
 						$SD chown $USER "$GALOISLOG"
 					done
