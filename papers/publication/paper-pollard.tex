@@ -8,6 +8,7 @@
 \pgfplotsset{compat=1.12}
 \usepackage{booktabs}
 \usepackage{todonotes}
+\usepackage{listings}
 
 \newcommand{\todob}[1]{\todo[inline,color=green!40]{#1}}
 
@@ -31,7 +32,7 @@
 }
 \maketitle
 \begin{abstract}
-The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph processing packages: GraphMat, the Graph500, the Graph Algorithm Platform Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world\todo[inline]{actual real-world. (i) Michael LeBeane et al, Supercomputing (SC 15), Data Partitioning Strategies for Graph Workloads on Heterogeneous Clusters (ii) Shuang Song et al,  ICPP 2016, Proxy-Guided Load Balancing of Graph Processing Workloads on Heterogeneous Clusters.} datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms\todo[inline]{more algorithms, justify why these algorithms}: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
+The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph processing packages: GraphMat, the Graph500, the Graph Algorithm Platform Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world\todo[inline]{actual real-world. (i) Michael LeBeane et al, Supercomputing (SC 15), Data Partitioning Strategies for Graph Workloads on Heterogeneous Clusters (ii) Shuang Song et al (say it's distributed and we're shared),  ICPP 2016, Proxy-Guided Load Balancing of Graph Processing Workloads on Heterogeneous Clusters. (partitioning, but yet again, we're shared)} datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms\todo[inline]{more algorithms, justify why these algorithms}: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
 \end{abstract}
 
 \section{Introduction}
@@ -54,17 +55,19 @@ To address these issues, we present \emph{easy-parallel-graph\mbox{-\textasteris
 
 \section{Related Work}
 \todo[inline]{There's a large number of qualitative. Most third party comparisons are qualitative and just describe the overview instead of actual runtimes. This isn't a level playing field.}
-Most performance analysis of graph processing systems come from the empirical results of each new library designer's publications. For example, GraphMat~\cite{Sundaram:2015:GraphMat}, PowerGraph~\cite{Gonzalez:2012:Powergraph}, and GraphBIG~\cite{Nai:2015:Graphbig} present a comparison of performance between their system and a selection of other software packages.
+Most performance analysis of graph processing systems come from the empirical results of each new library designer's publications. For example, GraphMat~\cite{Sundaram:2015:GraphMat}, PowerGraph~\cite{Gonzalez:2012:Powergraph}, and GraphBIG~\cite{Nai:2015:Graphbig} present a comparison of performance between their system and a selection of other software packages and in general any new approach will compare itself to existing implementations.
 
 Nai et al.~\cite{Nai:2016:architectural} provide a detailed performance analysis using GraphBIG as their reference implementation. Their approach also compares GraphBIG to the GraphLab and Pregel execution models. Their analysis considers architectural performance measurements such as cache miss rates to measure bottlenecks and computational efficiency for a variety of datasets. While incredibly thorough, these analyses focus on covering a wide range of datasets and appear difficult to apply to a new approach. For example, GraphMat reduce computation to sparse matrix operations which may not suffer from the same memory bottlenecks indicated in the results of Nai et al.
 
-Beyond the aforementioned performance results, a number of reports focus on performance analysis not tied to a particular software package we presently describe.
+Research by Song et al.~\cite{Song:2016:LoadBalancing} and LeBeane et al.~\cite{LeBeane:2015:GraphHetero} considers the important problem of partitioning on heterogeneous architectures and provide profiling to reduce runtime, improve load balance, and reduce energy consumption.  Our framework instead focuses on shared memory packagess. 
 
-Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and~\cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model. These implementations are hand tuned and provides recommendations for future improvements.
+Beyond the aforementioned performance results, a number of reports focus on performance analysis not tied to a particular software package. Satish et al.~\cite{Satish:2014:NavigatingGraph} analyze the performance of several systems on datasets on the order of $30$ billion edges and~\cite{Lu:2014:ExperimentalEval} uses six real-world datasets and focuses on the vertex-centric programming model. These implementations are hand tuned and provides recommendations for future improvements.
 
-The most prominent example of a graph processing performance analysis tool not tied to a particular iplementation is Graphalytics~\cite{Capota:2015:Graphalytics}. Like our work, Graphalytics also automates the setup and execution of graph packages for performance analysis. Graphalyics relies on Apache Maven and Java to wrap each graph processing software package---Graphalytics calls these platforms---and requires configuration files for each dataset.\todo[inline]{What am I saying with this?}
+The most prominent example of a graph processing performance analysis tool not tied to a particular iplementation is Graphalytics~\cite{Capota:2015:Graphalytics}. Like our work, Graphalytics also automates the setup and execution of graph packages for performance analysis. Graphalyics relies on Apache Maven and Java to wrap the execution of each graph processing software package.
+%---Graphalytics calls these platforms---and requires configuration files for each dataset.\todo[inline]{What am I saying with this?}
+%Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program.
 
-Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program. By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.96 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, other performance-relevant details, such as the number of iterations run for PageRank, are not easily available using Graphalytics.
+By default, Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm in seconds. For example, one run of a single source shortest paths algorithm took 5.96 seconds. However, perusing the log files reveals a more complete picture: of these 5.96 seconds, 0.21 was spent computing the shortest paths while the remaining time consisted of building the necessary data structures. Furthermore, other performance-relevant details, such as the number of iterations run for PageRank, are not easily available using Graphalytics.
 %We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
 % The full logs:
 %Finished setting ids, time: 0.157009
@@ -163,9 +166,9 @@ Our approach is not specific or limited to these graph packages and can be exten
 
 \subsection{Algorithms}\label{sec:algs}
 
-We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, although not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
+We consider three algorithms: Breadth First Search (BFS), Single Source Shortest Paths (SSSP), and PageRank, though not all algorithms are implemented on all systems. We inspected the source code of the surveyed parallel graph processing systems to ensure the same phases of execution are measured across differing execution and programming paradigms. 
 
-We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500~\cite{Murphy:2010:Graph500}. The advantage of the Graph500 is that it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
+We select BFS because the canonical performance leaderboard for parallel graph processing is the Graph500~\cite{Murphy:2010:Graph500}. One strength of the Graph500 is it provides standardized measurement specifications and dataset generation. The primary drawback with the Graph500 is it measures a single algorithm.
 
 Our work aims to add similar rigor to other graph algorithms by borrowing heavily from the Graph500 specification. The Graph500 Benchmark 1 (``Search'') is concerned with two kernels: the creation of a graph data structure from an unsorted edge list stored in RAM and the actual BFS\footnote{For a complete specification, see \url{http://graph500.org/specifications}}. We run the BFS using 32 random roots with the exception of PowerGraph which doesn't provide an reference implementation of BFS in its toolkits.
 
@@ -307,6 +310,29 @@ Figure~\ref{fig:bfs-scaling} shows the scalability and speedup for BFS. We defin
 
 \subsection{Power and Energy Consumption}
 We use the Performance Application Programming Interface (PAPI)~\cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides a set of hardware counters for measuring energy usage. We use PAPI to obtain average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation and give a summary of the results in Table~\ref{tab:power}. In our case, the fastest code is also the most energy efficient, although with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
+\begin{figure}
+\begin{lstlisting}[language=C, frame=single]
+#ifdef POWER_PROFILING
+power_rapl_t ps;
+power_rapl_init(&ps);
+power_rapl_start(&ps);
+#endif
+	<region of code to monitor>
+#ifdef POWER_PROFILING
+power_rapl_end(&ps);
+power_rapl_print(&ps);
+#endif
+\end{lstlisting}
+\begin{lstlisting}[language=make,  basicstyle=\footnotesize]
+CFLAGS += -I$(PAPI)/include -DPOWER_PROFILING=1
+LDLIBS += -L$(PAPI)/lib
+LDLIBS += -Wl,-rpath,$(PAPI)/lib -lpapi
+\end{lstlisting}
+\caption{The changes required to monitor energy usage for a C or C++ file and its corresponding Makefile, given the papi header file is included and PAPI is the directory where PAPI is installed.}\todob{Is this too much detail?}
+\label{lst:RAPL}
+\end{figure}
+
+Listing~\ref{lst:RAPL} shows the simplicity of adding RAPL profiling to existing code. Once the source code is modified, the implementation may be recompiled and our provided header file linked in. Alternatively, there may be scenarios where this approach is not feasible. For example, if the user does not have root privileges s/he may not be able to access the model specific registers storing the energy usage. One alternative is to use TAU paired with PAPI to instrument the source code, and if the counters are available on the host CPU then the power and energy can still be measured.
 
 \begin{table}
 	\caption{The data are generated using a Kronecker graph with a scale of 22 and using 32 threads. Sleeping Energy refers to the power (in Watts) consumed during the \texttt{unistd} C \texttt{sleep} function, multiplied by the Time row. Essentially, this measures the amount of energy that would have been consumed if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over 32 roots.}
@@ -338,6 +364,8 @@ RAPL also allows the measurement of DRAM power, the results of which are shown i
 
 \section{Future Work and Conclusion}
 \todo[inline]{Maybe; it's still difficult to add more graphs to the dataset sinc you need to know all the metadata.}
+
+\todo[inline]{Difficulty in running each dataset; GraphMat requires vertices to be 1 indexed and graph dataset conversion tools are limited.}
 We have presented a systematic approach to analyzing parallel graph processing performance, both measuring power consumption and the two fundamental phases of execution. While the comparison presented here can help one choose among alternatives for the selected packages and algorithms, the problem of selecting a graph processing framework for a given large-scale problem remains far from simple. Hence, we make our code available at \url{https://github.com/HPCL/easy-parallel-graph} and encourage further experimentation. Our results required minor changes to the original projects to add calls to PAPI sampling and those changes are also available on forked versions of the repositories. 
 
 Overall, the GAP Benchmark Suite was the highest-performing system across the given datasets though not the most scalable. However, this is only for relatively small graphs; all the graphs used here had at most $2^{22}$ vertices. It should be noted that GAP is also the most recent of projects. Thus, we recommend graph processing algorithm designers compare their BFS implementations to the Graph500 for BFS, GAP Benchmark Suite for smaller problem sizes or a low number of threads (at most 32), and GraphMat for larger problems with more threads. This is despite the fact that GraphBIG has the best scalability, because even at more than 16 threads the runtime for GraphBIG is still at least one order of magnitude slower than GAP or GraphMat for all sampled algorithms. One last consideration is price: GraphMat requires the Intel compiler collection.

@@ -34,6 +34,43 @@ time_boxplot_with_batches <- function(filename, scale, ins_pct, cverts, num_thre
 	dev.off()
 }
 
+percent_insertions <- function(filename, scale_num, cvert,
+		RMAT = "ER", num_threads = 72) {
+	x <- read.csv(filename, header = TRUE)
+	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
+	# execution_phase: All, rooting tree, first pass, insertion, deletion
+	# where rooting tree is only done for the first batch
+	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
+	nedges <- epv * 2^scale
+	# Generate a figure
+	salient_cols <- c("insertion_percent", "value")
+	method_time <- subset(x,
+			x$scale==scale_num &
+			x$edges_per_vertex==epv &
+			x$RMAT_type==RMAT &
+			x$threads==num_threads &
+			x$execution_phase=="All" &
+			x$changed_vertices==cvert &
+			x$algorithm=="MST",
+			salient_cols)
+	# method_time$value <- as.numeric(as.character(algo_time$Time)) # May not be necessary
+	# Remove zero rows---they're invalid and don't work with the log plot
+	# If some factors were coerced into NAs then there was some issue parsing
+	#method_time <- algo_time[!algo_time$Time == 0.0, ]
+	#method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
+	
+	pdf(paste0("insertion_pct_",scale_num,"_",cvert,"_time.pdf"), width = 2.5, height = 2.5)
+	ggplot(aes(y = value, x = insertion_percent, group = insertion_percent),
+			data = method_time) +
+		ylab("Time (seconds)") +
+		xlab("Insertion Percent") +
+		scale_x_continuous(breaks = as.numeric(method_time$insertion_percent)) +
+		geom_boxplot() +
+		labs(title = "Update vs. Insertion %") +
+		theme(axis.text.x = element_text(angle = 90, hjust = 1))
+	dev.off()
+}
+
 measure_scalability <- function(filename, one_scale) {
     # Read in and average the data for BFS for each thread
     # It is wasteful to reread the parsed*-1t.csv but it simplifies the code
@@ -94,6 +131,8 @@ plot_strong_scaling <- function(scaling_data, scale) {
 	#			  side = 2, las = 1, xpd = NA, outer = TRUE, adj = -0.2)
 	dev.off()
 }
+
+percent_insertions("parsed-20-23-partial.txt", 23, 5000, RMAT = "ER", num_threads = 72)
 
 time_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv", 23, 10000, 75, 64)
 ss22 <- measure_scalability("parsed-20-23-partial.txt", 22) # Partial means only 3--4 experiments were run.
