@@ -32,7 +32,7 @@
 }
 \maketitle
 \begin{abstract}
-The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph processing packages: GraphMat, the Graph500, the Graph Algorithm Platform Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world\todo[inline]{actual real-world. (i) Michael LeBeane et al, Supercomputing (SC 15), Data Partitioning Strategies for Graph Workloads on Heterogeneous Clusters (ii) Shuang Song et al (say it's distributed and we're shared),  ICPP 2016, Proxy-Guided Load Balancing of Graph Processing Workloads on Heterogeneous Clusters. (partitioning, but yet again, we're shared)} datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms\todo[inline]{more algorithms, justify why these algorithms}: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
+The rapidly growing number of large network analysis problems has led to the emergence of many parallel and distributed graph processing systems---one survey in 2014 identified over 80. Since then, the landscape has evolved; some packages have become inactive while more are being developed. Determining the best approach for a given problem is infeasible for most developers. To enable easy, rigorous, and repeatable comparison of the capabilities of such systems, we present an approach and associated software for analyzing the performance and scalability of parallel, open-source graph libraries. We demonstrate our approach on five graph processing packages: GraphMat, the Graph500, the Graph Algorithm Platform Benchmark Suite, GraphBIG, and PowerGraph using synthetic and real-world datasets. We examine previously overlooked aspects of parallel graph processing performance such as phases of execution and energy usage for three algorithms\todo[inline]{more algorithms, justify why these algorithms}: breadth first search, single source shortest paths, and PageRank and compare our results to Graphalytics.
 \end{abstract}
 
 \section{Introduction}
@@ -279,7 +279,6 @@ The behavior of PageRank is slightly different. As with SSSP and BFS, the GAP Be
 
 Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} compresses the apparent variance in runtime. Each platform in Fig.~\ref{fig:pr} has a relative standard deviation between $1/4$ and $1/2$ that of the same system executing SSSP.
 
-\todo[inline]{The y-axis is mislabeled. Should be "iterations" for pagerank.}
 \begin{figure}
 	\centering
 	\begin{minipage}{0.48\linewidth}
@@ -334,8 +333,8 @@ LDLIBS += -Wl,-rpath,$(PAPI)/lib -lpapi
 
 Listing~\ref{lst:RAPL} shows the simplicity of adding RAPL profiling to existing code. Once the source code is modified, the implementation may be recompiled and our provided header file linked in. Alternatively, there may be scenarios where this approach is not feasible. For example, if the user does not have root privileges s/he may not be able to access the model specific registers storing the energy usage. One alternative is to use TAU paired with PAPI to instrument the source code, and if the counters are available on the host CPU then the power and energy can still be measured.
 
-\begin{table}
-	\caption{The data are generated using a Kronecker graph with a scale of 22 and using 32 threads. Sleeping Energy refers to the power (in Watts) consumed during the \texttt{unistd} C \texttt{sleep} function, multiplied by the Time row. Essentially, this measures the amount of energy that would have been consumed if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over 32 roots.}
+\begin{table*}
+	\caption{The data are generated using a Kronecker graph with a scale of 22. The program is executed with 32 threads. Sleeping Energy refers to the power (in Watts) consumed during the \texttt{unistd} C \texttt{sleep} function, multiplied by the Time row. Essentially, this measures the amount of energy that would have been consumed if nothing was running. The increase over sleep is the ratio of the first and third columns. These are all averaged over 32 roots.}
 	\centering
 	\begin{tabular}{l|r|r|r|r}
 			&	GAP  &    Graph500 & GraphBIG & GraphMat \\ \hline
@@ -346,7 +345,7 @@ Listing~\ref{lst:RAPL} shows the simplicity of adding RAPL profiling to existing
 		Increase over Sleep & 2.926 & 3.928 & 2.834 & 3.153
 	\end{tabular}
 	\label{tab:power}
-\end{table}
+\end{table*}
 
 RAPL also allows the measurement of DRAM power, the results of which are shown in Fig.~\ref{fig:power}. The right plot describes the second row of Table~\ref{tab:power} in more detail. We notice a smaller spread of RAM power consumption, but still a noticeable difference. GraphMat exhibits the lowest average RAM power consumption (but not the shortest execution time). This information can be useful when choosing an algorithm to use in limited power scenarios, where a slower algorithms that will not exceed the power cap is preferred to a faster one that may exceed it.
 
