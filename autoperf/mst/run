@@ -2,7 +2,7 @@
 # Runs mst experiments on Arya
 # This should be run in the easy-parallel-graph/autoperf/mst directory
 
-USAGE="usage: ./run [--power] generate_data|experiment|parse|all
+USAGE="usage: ./run [--power] [--real] generate_data|experiment|parse|all
 	. run [--power] build <------ do this one first"
 # source run build to get the environment variables to stick.
 
@@ -12,6 +12,10 @@ for arg in "$@"; do
 	case $arg in
 	--power)
 		export POWER_PROFILING=1
+		shift
+	;;
+	--real)
+		REALWORLD=1
 		shift
 	;;
 	*)	# Default
@@ -45,11 +49,8 @@ ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 #DATASETS=( com-friendster.ungraph com-orkut.ungraph com-lj.ungraph soc-pokec-relationships wiki-Talk protein.links.v10 )
 # ^ Those are all the ones whose URLs are included in this file
 #DATASETS=( com-lj.ungraph com-friendster.ungraph )
-#REAL_VERTICES=( 3997962 65608366 )
-#REAL_VERTICES=( 3998075 46565605 ) # This is from tr '[:blank:]' '\n' | sort -n | uniq | wc -l
-#REAL_EDGES=( 34681189 1806067135 )
 DATASETS=( com-lj.ungraph )
-REAL_VERTICES=( 4036538  )
+REAL_VERTICES=( 4036538 )
 REAL_EDGES=( 34681189 )
 # DATASETS=( facebook_combined ) # Test dataset, only 4,000 vertices
 # REAL_VERTICES=( 4039 ) # Test
@@ -538,7 +539,7 @@ parse_one()
 
 parse_output()
 {
-	echo "Parsing output..."
+	echo "Parsing output... "
 	if [ "$POWER_PROFILING" = "1" ]; then
 		PFN="$OUTPUTDIR/parsed-power-aggregate.txt"
 	else
@@ -551,11 +552,21 @@ parse_output()
 	else
 		echo 'algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,batch,measurement,value' > "$PFN"
 	fi
-	for RT in $RT_TYPES; do
-		for S in $SCALES; do
-			for INS_PCT in $INS_PCTAGES; do
-				for CVERTS in $CHANGED_VERTICES; do	
-					for T in $THREADS; do
+	for INS_PCT in $INS_PCTAGES; do
+		for CVERTS in $CHANGED_VERTICES; do	
+			for T in $THREADS; do
+				if [ "$1" = '1' ]; then
+					for idx in $(seq 0 $(( ${#DATASETS[@]} - 1 )) ); do
+						N_VERT=${REAL_VERTICES[$idx]}
+						N_EDGE=${REAL_EDGES[$idx]}
+						DSET="${DATASETS[$idx]}"
+						MSTLOG="$OUTPUTDIR/mst-${DSET}_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+						GALOISLOG="$OUTPUTDIR/galois-${DSET}_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+						DATA_FORMAT="$N_VERT,$(( $N_EDGE / $N_VERT )),$DSET,$INS_PCT,$CVERTS,$T"
+						parse_one
+					done
+				else
+					for RT in $RT_TYPES; do
 						for S in $SCALES; do
 							MSTLOG="$OUTPUTDIR/mst-${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${T}t.log"
 							GALOISLOG="$OUTPUTDIR/galois-${S}${EPV}_${RT}_${INS_PCT}i_${CVERTS}_${T}t.log"
@@ -563,7 +574,7 @@ parse_output()
 							parse_one
 						done
 					done
-				done
+				fi
 			done
 		done
 	done
@@ -589,8 +600,11 @@ parse_output()
 # "Main"
 ###
 if [ "$cmd" = generate_data -o "$cmd" = all ]; then
-	#generate_data
-	generate_real
+	if [ "$REALWORLD"  = '1' ]; then
+		generate_real
+	else
+		generate_data
+	fi
 fi
 if [ "$cmd" = build -o "$cmd" = all ]; then
 	# build_autoperf
@@ -601,12 +615,15 @@ if [ "$cmd" = build -o "$cmd" = all ]; then
 fi
 
 if [ "$cmd" = parse -o "$cmd" = all ]; then
-	parse_output
+	parse_output $REALWORLD
 fi
 
 if [ "$cmd" = experiment -o "$cmd" = all ]; then
 	# run_autoperf
-	# run_experiment
-	run_real
+	if [ "$REALWORLD"  = '1' ]; then
+		run_real
+	else
+		run_experiment
+	fi
 fi
 

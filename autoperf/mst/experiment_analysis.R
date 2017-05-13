@@ -5,9 +5,21 @@ time_boxplot_with_batches <- function(filename, scale, ins_pct, cverts, num_thre
 	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
 	# execution_phase: All, rooting tree, first pass, insertion, deletion
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
-	nedges <- epv * 2^scale
+	if (scale > 99) {
+		if (x$RMAT_type[1] == "com-lj.ungraph") {
+			plot_title <- "Livejournal Dataset"
+			nedges <- 34681189
+			plot_subtitle <- paste0(nedges, " edges, ", scale, " vertices")
+		} else {
+			nedges <- epv * scale # Just an estimation
+		}
+		plotfilename <- paste0("plot-",x$RMAT_type[1],"_",ins_pct,"i_",cverts,"_10b.pdf")
+	} else {
+		nedges <- epv * 2^scale
+		plotfilename <- paste0("plot",scale,"_",ins_pct,"i_",cverts,"_10b.pdf")
+	}
 	# Generate a figure
-	salient_cols <- c("algorithm", "execution_phase", "value")
+	salient_cols <- c("algorithm", "execution_phase", "value", "batch")
 	method_time <- subset(x,
 			x$scale==scale &
 			x$edges_per_vertex == epv &
@@ -21,15 +33,12 @@ time_boxplot_with_batches <- function(filename, scale, ins_pct, cverts, num_thre
 	#method_time <- algo_time[!algo_time$Time == 0.0, ]
 	method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
 	
-	# If you want ugly base graphics but also want it to work on arya
-	pdf(paste0("plot",scale,"_",ins_pct,"i_",cverts,"_10b.pdf"), width = 3.3, height = 3.3)
-	#boxplot(value~algo_and_phase, data = method_time,
-	#		ylab = "Time (seconds)" )
-	# Prettier
+	pdf(plotfilename, width = 3.3, height = 3.3)
 	box <- ggplot(aes(y = value, x = algo_and_phase), data = method_time) +
 		ylab("Time (seconds)") +
 		xlab("Execution Phase.Algorithm") +
-		geom_boxplot()
+		geom_boxplot() +
+		labs(title = plot_title, subtitle = plot_subtitle)
 	box + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 	dev.off()
 }
@@ -72,11 +81,7 @@ percent_insertions <- function(filename, scale_num, cvert,
 }
 
 measure_scalability <- function(filename, one_scale) {
-    # Read in and average the data for BFS for each thread
-    # It is wasteful to reread the parsed*-1t.csv but it simplifies the code
     x <- read.csv(filename, header = TRUE)
-	#x$algo_and_phase <- interaction(x$execution_phase, x$algorithm)
-    #x$algo_and_phase <- factor(x$algo_and_phase, ordered = TRUE)
 	yy <- subset(x,
 			x$scale == one_scale & x$changed_vertices == 5000 &
 			x$insertion_percent == 75 & x$RMAT_type == "ER")
@@ -132,9 +137,23 @@ plot_strong_scaling <- function(scaling_data, scale) {
 	dev.off()
 }
 
-percent_insertions("parsed-20-23-partial.txt", 23, 5000, RMAT = "ER", num_threads = 72)
-
-time_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv", 23, 10000, 75, 64)
-ss22 <- measure_scalability("parsed-20-23-partial.txt", 22) # Partial means only 3--4 experiments were run.
+time_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv",
+						  23, 10000, 75, 64)
+# Partial means only 3--4 experiments were run.
+ss22 <- measure_scalability("parsed-20-23-partial.txt", 22)
 ss23 <- measure_scalability("parsed-20-23-partial.txt", 23)
+plot_strong_scaling(ss23) # These results are not nice
+percent_insertions("parsed-20-23-partial.txt",
+				   23, 5000, RMAT = "ER", num_threads = 72)
+
+#DATASETS=( com-lj.ungraph )
+#REAL_VERTICES=( 4036538 )
+#REAL_EDGES=( 34681189 )
+#THREADS="1 2 4 8 16 32 48 64 72"
+#NUM_BATCHES=10
+#NUM_TRIALS=8
+#THREADS="64"
+#CHANGED_VERTICES="10000"
+#INS_PCTAGES="75"
+time_boxplot_with_batches("parsed-lj_75i_10000.txt", 4036538, 75, 10000, 64)
 
