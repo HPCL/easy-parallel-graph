@@ -5,7 +5,7 @@ if (length(args) != 1) {
 	stop(usage)
 }
 bpc <- "cyan"
-prefix <- "./output/"
+prefix <- "./output/" # The default.
 
 # source sets scale and threads
 source(args[1]) # This is a security vulnerability... just be careful
@@ -21,7 +21,7 @@ time_boxplot <- function(scale, thr, algo) {
 	nedges <- 16 * 2^scale
 	filename <- paste0(prefix,"parsed-","kron-",scale,"-",thr,".csv")
 	x <- read.csv(filename, header = FALSE)
-	colnames(x) <- c("Sys","Algo","Metric","Time")	
+	colnames(x) <- c("Sys","Algo","Metric","Time")
 	# Generate a figure
 	algo_time <- subset(x, x$Algo == algo & x$Metric == "Time",
 			c("Sys","Time"))
