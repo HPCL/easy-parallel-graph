@@ -1,22 +1,25 @@
 library(ggplot2)
 
-time_boxplot_with_batches <- function(filename, scale, ins_pct, cverts, num_threads) {
+time_boxplot_with_batches <- function(filename, scale_num, ins_pct, cverts, num_threads)
+{
 	x <- read.csv(filename, header = TRUE)
 	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
 	# execution_phase: All, rooting tree, first pass, insertion, deletion
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
-	if (scale > 99) {
+	if (scale_num > 99) {
 		if (x$RMAT_type[1] == "com-lj.ungraph") {
 			plot_title <- "Livejournal Dataset"
 			nedges <- 34681189
-			plot_subtitle <- paste0(nedges, " edges, ", scale, " vertices")
+			plot_subtitle <- paste0(nedges, " edges, ", scale_num, " vertices")
 		} else {
-			nedges <- epv * scale # Just an estimation
+			nedges <- epv * scale_num # Just an estimation
 		}
 		plotfilename <- paste0("plot-",x$RMAT_type[1],"_",ins_pct,"i_",cverts,"_10b.pdf")
 	} else {
-		nedges <- epv * 2^scale
-		plotfilename <- paste0("plot",scale,"_",ins_pct,"i_",cverts,"_10b.pdf")
+		nedges <- epv * 2^scale_num
+		plotfilename <- paste0("plot",scale_num,"_",ins_pct,"i_",cverts,"_10b.pdf")
+		plot_title <- paste0("RMAT with Scale ",scale)
+		plot_subtitle <- paste0(nedges, "edges, ", 2^scale_num, " vertices")
 	}
 	# Generate a figure
 	salient_cols <- c("algorithm", "execution_phase", "value", "batch")
@@ -26,6 +29,7 @@ time_boxplot_with_batches <- function(filename, scale, ins_pct, cverts, num_thre
 			x$changed_vertices==cverts &
 			x$insertion_percent==ins_pct &
 			x$threads == num_threads,
+			x$measurement == "Time (s)",
 			salient_cols)
 	# method_time$value <- as.numeric(as.character(algo_time$Time)) # May not be necessary
 	# Remove zero rows---they're invalid and don't work with the log plot
@@ -44,7 +48,8 @@ time_boxplot_with_batches <- function(filename, scale, ins_pct, cverts, num_thre
 }
 
 percent_insertions <- function(filename, scale_num, cvert,
-		RMAT = "ER", num_threads = 72) {
+		RMAT = "ER", num_threads = 72)
+{
 	x <- read.csv(filename, header = TRUE)
 	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
 	# execution_phase: All, rooting tree, first pass, insertion, deletion
@@ -80,7 +85,8 @@ percent_insertions <- function(filename, scale_num, cvert,
 	dev.off()
 }
 
-measure_scalability <- function(filename, one_scale) {
+measure_scalability <- function(filename, one_scale)
+{
     x <- read.csv(filename, header = TRUE)
 	yy <- subset(x,
 			x$scale == one_scale & x$changed_vertices == 5000 &
@@ -108,7 +114,8 @@ measure_scalability <- function(filename, one_scale) {
     return(algo_time)
 }
 
-plot_strong_scaling <- function(scaling_data, scale) {
+plot_strong_scaling <- function(scaling_data, scale)
+{
 	colors <- rainbow(nrow(scaling_data))
 	colors <- gsub("F", "C", colors) # You want it darker
 	colors <- gsub("CC$", "FF", colors) # But keep it opaque
@@ -137,6 +144,55 @@ plot_strong_scaling <- function(scaling_data, scale) {
 	dev.off()
 }
 
+power_boxplot_with_batches <- function(
+		filename, scale_num, ins_pct, cverts, num_threads,
+		measurement_type = "Total CPU Energy (J)", rmat = "ER")
+		# possible values for measurement_type:
+		# "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
+{
+	x <- read.csv(filename, header = TRUE)
+	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
+	# execution_phase: All, rooting tree, first pass, insertion, deletion
+	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
+	plotfilename <- paste0("plot-",measurement_type,"-",scale_num,epv,"_",ins_pct,"i_",cverts,"_10b.pdf")
+	nedges <- epv * 2^scale_num
+	salient_cols <- c("algorithm", "execution_phase", "batch", "measurement", "value")
+	method_time <- subset(x,
+			x$scale==scale &
+			x$RMAT_type == rmat &
+			x$edges_per_vertex==epv &
+			x$changed_vertices==cverts &
+			x$insertion_percent==ins_pct &
+			x$threads==num_threads &
+			x$measurement==measurement_type,
+			salient_cols)
+	# This is necessary if the data is noisy; then $value becomes a factor
+	# method_time$value <- as.numeric(as.character(method_time$value))
+	# Remove zero rows---they're invalid and don't work with the log plot
+	# If some factors were coerced into NAs then there was some issue parsing
+	#method_time <- algo_time[!algo_time$Time == 0.0, ]
+	method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
+	
+	if (measurement_type == "Time (s)") {
+		plot_title <- paste0("Time with RMAT Scale ", scale)
+	} else if (measurement_type == "Average CPU Power (W)") {
+		plot_title <- paste0("Power Usage with RMAT Scale ", scale)
+	} else if (measurement_type == "Average CPU Energy (J)") {
+		plot_title <- paste0("Power Usage with RMAT Scale ", scale)
+	}
+	plot_subtitle <- paste(2^scale_num, "vertices", epv, "edges per vertex")
+	# Generate a figure
+	pdf(plotfilename, width = 3.3, height = 3.3)
+	box <- ggplot(aes(y = value, x = algo_and_phase), data = method_time) +
+		ylab(measurement_type) +
+		xlab("Execution Phase.Algorithm") +
+		geom_boxplot() +
+		labs(title = plot_title, subtitle = plot_subtitle)
+	box + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+	dev.off()
+
+}
+
 time_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv",
 						  23, 10000, 75, 64)
 # Partial means only 3--4 experiments were run.
@@ -156,4 +212,19 @@ percent_insertions("parsed-20-23-partial.txt",
 #CHANGED_VERTICES="10000"
 #INS_PCTAGES="75"
 time_boxplot_with_batches("parsed-lj_75i_10000.txt", 4036538, 75, 10000, 64)
+
+# TODO: Rerun this with 64 threads and with less load.
+#sudo ./run --power experiment
+#EPV=32
+#SCALES=23
+#NUM_BATCHES=10
+#NUM_TRIALS=8
+#THREADS="72"
+#RT_TYPES="ER"
+#CHANGED_VERTICES="10000"
+#INS_PCTAGES="75"
+power_boxplot_with_batches("parsed-power-2332_ER_75i_10000_72t_w_other_procs.csv", 23, 75, 10000, 72,
+						   measurement_type = "Time (s)")
+power_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv", 23, 75, 10000, 64,
+						   measurement_type = "Time (s)")
 

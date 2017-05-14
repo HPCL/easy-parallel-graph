@@ -66,16 +66,16 @@ REAL_EDGES=( 34681189 )
 
 # Example settings for experiments
 EPV=32 # Edges per vertex
-THREADS="1 2 4 8 16 32 48 64 72"
+#THREADS="1 2 4 8 16 32 48 64 72"
 NUM_BATCHES=10
 NUM_TRIALS=8
 
 # For batches:
-THREADS="64"
+THREADS="72"
 CHANGED_VERTICES="10000"
 INS_PCTAGES="75"
-SCALES="23 24 25"
-RT_TYPES="ER B"
+SCALES="23"
+RT_TYPES="ER"
 
 # These will get overwritten; useful for one-off scripts
 export OMP_NUM_THREADS=64 # If any generator is multithreaded
@@ -376,7 +376,6 @@ run_experiment()
 	echo "Running the experiment..."
 	mkdir -p "$OUTPUTDIR"
 	cd "$OUTPUTDIR" # So we can just print output to cwd
-	# TODO: more parameters and more loop levels
 	# Adjust parameters
 	SD='sudo'
 	if [ "$POWER_PROFILING" = "1" ]; then
@@ -501,13 +500,29 @@ parse_one()
 {
 	if [ "$POWER_PROFILING" = "1" ]; then
 		# Galois
-		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${GALOISLOG}" >> "$PFN"
-		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${GALOISLOG}" >> "$PFN"
-		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s,RAPL Time (s),%s\n",INFO,$1;exit}' ${GALOISLOG} >> "$PFN"
+		echo "Galois has not been formulated for batches and power."
+		INFO="${DATA_FORMAT},1"
+		awk -v PKG=$PKG -v INFO="$INFO" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "$GALOISLOG" >> "$PFN"
+		awk -v PKG=$PKG -v INFO="$INFO" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${GALOISLOG}" >> "$PFN"
+		awk -v PKG=$PKG -v INFO="$INFO" '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s,RAPL Time (s),%s\n",INFO,$1;exit}' ${GALOISLOG} >> "$PFN"
 		# MST
-		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,All,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${MSTLOG}" >> "$PFN"
-		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,All,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${MSTLOG}" >> "$PFN"
-		awk -v PKG=$PKG -v INFO="$DATA_FORMAT" '/^[0-9]+\.[0-9]+ s/{printf "MST,%s,All,RAPL Time (s),%s\n",INFO,$1;exit}' "${MSTLOG}" >> "$PFN"
+		# Do the other 3 for this (energy, time, power)
+		grep -A 32 "Starting Rooting Tree" "${MSTLOG}" | awk -v PKG=$PKG -v INFO="$INFO" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,rooting tree,%s,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+		grep -A 32 "Starting Rooting Tree" "${MSTLOG}" | awk -v PKG=$PKG -v INFO="$INFO" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,rooting tree,%s,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+		grep -A 32 "Starting Rooting Tree" "${MSTLOG}" | awk -v PKG=$PKG -v INFO="$INFO" '/^[0-9]+\.[0-9]+ s/{printf "MST,rooting tree,%s,RAPL Time (s),%s\n",INFO,$1;exit}' >> "$PFN"
+		EXECUTION_PHASES=( "Starting Classify and Insert" "Starting process_deletions" )
+		EXECUTION_NAMES=( "insertion" "deletion" )
+		for B in $(seq $NUM_BATCHES); do
+			BATCHB=$(grep -A 129 "Total Time for Updating Rooted Tree at iter $B" "${MSTLOG}")
+			INFO="${DATA_FORMAT},$B"
+			for idx in $(seq 0 $(( ${#EXECUTION_PHASES[@]} - 1 )) ); do
+				phase="${EXECUTION_PHASES[$idx]}"
+				name="${EXECUTION_NAMES[$idx]}"
+				echo "$BATCHB" | grep -A 37 "$phase" | awk -v PKG=$PKG -v INFO="$INFO" -v NAME="$name" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,%s,Total CPU Energy (J),%s\n",NAME,INFO,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+				echo "$BATCHB" | grep -A 37 "$phase" | awk -v PKG=$PKG -v INFO="$INFO" -v NAME="$name" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,%s,%s,Average CPU Power (W),%s\n",NAME,INFO,t+$3;t=0}else{t+=$3}}' >> "$PFN"
+				echo "$BATCHB" | grep -A 37 "$phase" | awk -v PKG=$PKG -v INFO="$INFO" -v NAME="$name" '/^[0-9]+\.[0-9]+ s/{printf "MST,%s,%s,RAPL Time (s),%s\n",NAME,INFO,$1;exit}' >> "$PFN"
+			done
+		done
 	fi
 	if [ "$NUM_BATCHES" -le 1 ]; then 
 		# Galois

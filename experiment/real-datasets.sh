@@ -28,7 +28,7 @@ for arg in "$@"; do
 done
 if [ "$#" -lt 1 ]; then
 	echo 'Please provide <filename> or the prefix of the filename'
-	echo $USAGE
+	echo "$USAGE"
 	exit 2
 fi
 FILE="$1"
