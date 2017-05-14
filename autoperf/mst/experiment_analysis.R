@@ -1,5 +1,35 @@
 library(ggplot2)
 
+# This takes a filename, reads it in, then filters it down by the parameters
+# and adds a column for their interations.
+# E.g. Galois.All, MST.insertion, MST.rooting tree, etc.
+# Expects the header to be
+# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
+get_method_time <- function(filename, scale_num, ins_pct, cverts, num_threads,
+							rmat_type = "ER", measurement_type = "Time (s)")
+{
+	x <- read.csv(filename, header = TRUE)
+	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
+	salient_cols <- c("algorithm", "execution_phase", "batch", "measurement", "value")
+	method_time <- subset(x,
+			x$scale==scale &
+			x$RMAT_type==rmat &
+			x$edges_per_vertex==epv &
+			x$changed_vertices==cverts &
+			x$insertion_percent==ins_pct &
+			x$threads==num_threads &
+			x$measurement==measurement_type,
+			salient_cols)
+	# This is necessary if the data is noisy; then $value becomes a factor
+	# method_time$value <- as.numeric(as.character(method_time$value))
+	# Remove zero rows---they're invalid and don't work with the log plot
+	# If some factors were coerced into NAs then there was some issue parsing
+	#method_time <- algo_time[!algo_time$Time == 0.0, ]
+	method_time$algo_and_phase <-
+			interaction(method_time$execution_phase, method_time$algorithm)
+	return(method_time)
+}
+
 time_boxplot_with_batches <- function(filename, scale_num, ins_pct, cverts, num_threads)
 {
 	x <- read.csv(filename, header = TRUE)
@@ -144,22 +174,24 @@ plot_strong_scaling <- function(scaling_data, scale)
 	dev.off()
 }
 
+# Can also not do power if you pick "Time (s)". Generates a box
+# for each execution phase:
+# execution_phase: All, rooting tree, first pass, insertion, deletion
+# possible values for measurement_type:
+# "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
 power_boxplot_with_batches <- function(
 		filename, scale_num, ins_pct, cverts, num_threads,
 		measurement_type = "Total CPU Energy (J)", rmat = "ER")
-		# possible values for measurement_type:
-		# "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
 {
 	x <- read.csv(filename, header = TRUE)
 	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
-	# execution_phase: All, rooting tree, first pass, insertion, deletion
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
 	plotfilename <- paste0("plot-",measurement_type,"-",scale_num,epv,"_",ins_pct,"i_",cverts,"_10b.pdf")
 	nedges <- epv * 2^scale_num
 	salient_cols <- c("algorithm", "execution_phase", "batch", "measurement", "value")
 	method_time <- subset(x,
 			x$scale==scale &
-			x$RMAT_type == rmat &
+			x$RMAT_type==rmat &
 			x$edges_per_vertex==epv &
 			x$changed_vertices==cverts &
 			x$insertion_percent==ins_pct &
@@ -213,9 +245,8 @@ percent_insertions("parsed-20-23-partial.txt",
 #INS_PCTAGES="75"
 time_boxplot_with_batches("parsed-lj_75i_10000.txt", 4036538, 75, 10000, 64)
 
-# TODO: Rerun this with 64 threads and with less load.
 #sudo ./run --power experiment
-#EPV=32
+#EPV=32 # or 8
 #SCALES=23
 #NUM_BATCHES=10
 #NUM_TRIALS=8
@@ -223,8 +254,68 @@ time_boxplot_with_batches("parsed-lj_75i_10000.txt", 4036538, 75, 10000, 64)
 #RT_TYPES="ER"
 #CHANGED_VERTICES="10000"
 #INS_PCTAGES="75"
-power_boxplot_with_batches("parsed-power-2332_ER_75i_10000_72t_w_other_procs.csv", 23, 75, 10000, 72,
+num_batches <- 10
+scale_num <- 23
+ins_pct <- 75
+cverts <- 10000
+num_threads <- 72
+filename <- "parsed-power-2332_ER_75i_10000_72t.csv"
+power_boxplot_with_batches(filename, scale_num, ins_pct, cverts, num_threads,
 						   measurement_type = "Time (s)")
+filename <- "parsed-power-238_ER_75i_10000_72t.csv"
+power_boxplot_with_batches(filename, scale_num, ins_pct, cverts, num_threads,
+						   measurement_type = "Time (s)")
+
+# "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
+# Time
+method_time32 <- get_method_time("parsed-power-2332_ER_75i_10000_72t.csv",
+							   scale_num, ins_pct, cverts, num_threads)
+avg_times32 <- aggregate(method_time32$value, list(method_time32$algo_and_phase), mean)
+method_time8 <- get_method_time("parsed-power-238_ER_75i_10000_72t.csv",
+							   scale_num, ins_pct, cverts, num_threads)
+avg_times8 <- aggregate(method_time8$value, list(method_time8$algo_and_phase), mean)
+total_times8 <- data.frame(Galois = avg_times8$x[1] * 10, MST = 10*(avg_times8$x[2]+avg_times8$x[3]+avg_times8$x[5])+avg_times8$x[4])
+total_times32 <- data.frame(Galois = avg_times32$x[1] * 10, MST = 10*(avg_times32$x[2]+avg_times32$x[3]+avg_times32$x[5])+avg_times32$x[4])
+
+# Energy
+method_nrg32 <- get_method_time("parsed-power-2332_ER_75i_10000_72t.csv",
+							   scale_num, ins_pct, cverts, num_threads, measurement_type = "Total CPU Energy (J)")
+avg_nrg32 <- aggregate(method_nrg32$value, list(method_nrg32$algo_and_phase), mean)
+method_nrg8 <- get_method_time("parsed-power-238_ER_75i_10000_72t.csv",
+							   scale_num, ins_pct, cverts, num_threads, measurement_type = "Total CPU Energy (J)")
+avg_nrg8 <- aggregate(method_nrg8$value, list(method_nrg8$algo_and_phase), mean)
+total_nrg8 <- data.frame(Galois = avg_nrg8$x[1] * 10, MST = 10*(avg_nrg8$x[2]+avg_nrg8$x[3])+avg_nrg8$x[4])
+total_nrg32 <- data.frame(Galois = avg_nrg32$x[1] * 10, MST = 10*(avg_nrg32$x[2]+avg_nrg32$x[3])+avg_nrg32$x[4])
+
+# Power
+method_pwr32 <- get_method_time("parsed-power-2332_ER_75i_10000_72t.csv",
+							   scale_num, ins_pct, cverts, num_threads, measurement_type = "Average CPU Power (W)")
+avg_pwr32 <- aggregate(method_pwr32$value, list(method_pwr32$algo_and_phase), mean)
+method_pwr8 <- get_method_time("parsed-power-238_ER_75i_10000_72t.csv",
+							   scale_num, ins_pct, cverts, num_threads, measurement_type = "Average CPU Power (W)")
+avg_pwr8 <- aggregate(method_pwr8$value, list(method_pwr8$algo_and_phase), mean)
+total_avg_pwr8 <- data.frame(
+		Galois = avg_nrg8$x[1] * 10 / total_times8$Galois[1],
+		MST = (10*(avg_nrg8$x[2]+avg_nrg8$x[3])+avg_nrg8$x[4]) /
+			  (10*(avg_times8$x[2]+avg_times8$x[3])+avg_times8$x[4]))
+total_avg_pwr32 <- data.frame(
+		Galois = avg_nrg32$x[1] * 10 / total_times32$Galois[1],
+		MST = (10*(avg_nrg32$x[2]+avg_nrg32$x[3])+avg_nrg32$x[4]) /
+			  (10*(avg_times32$x[2]+avg_times32$x[3])+avg_times32$x[4]))
+
+total_times <- rbind(total_times8, total_times32,
+					 total_nrg8, total_nrg32,
+					 total_avg_pwr8, total_avg_pwr32)
+rownames(total_times) <- c("8 EPV Total Time (s)", "32 EPV Total Time (s)",
+						   "8 EPV Total Energy (J)", "32 EPV Total Energy (J)",
+						   "8 EPV Avg Power (W)", "32 EPV Avg Power (W)")
+ggplot(aes(y = Value, x = Phase), data = avg_times8) +
+		ylab("Time (seconds)") +
+		xlab("Execution Phase.Algorithm") +
+		geom_bar() +
+		theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# v Not sure abou this one v
 power_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv", 23, 75, 10000, 64,
 						   measurement_type = "Time (s)")
 

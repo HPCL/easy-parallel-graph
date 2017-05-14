@@ -65,7 +65,7 @@ REAL_EDGES=( 34681189 )
 # RT_TYPES="ER B G" # Parameters are only known for these three
 
 # Example settings for experiments
-EPV=32 # Edges per vertex
+EPV=8 # Edges per vertex
 #THREADS="1 2 4 8 16 32 48 64 72"
 NUM_BATCHES=10
 NUM_TRIALS=8
@@ -390,7 +390,7 @@ run_experiment()
 			for INS_PCT in $INS_PCTAGES; do
 				for CVERTS in $CHANGED_VERTICES; do
 					for OMP_NUM_THREADS in $THREADS; do
-						rm -f "$OUTPUTDIR/{galois,mst}-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log"
+						rm -f "$OUTPUTDIR"/{galois,mst}-${S}${EPV}_$RT_${INS_PCT}i_${CVERTS}_${OMP_NUM_THREADS}t.log
 					done
 				done
 			done
