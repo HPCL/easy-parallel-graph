@@ -37,19 +37,6 @@ time_boxplot <- function(scale, thr, algo) {
 	dev.off()
 }
 
-for (thr in threads) {
-	time_boxplot(scale, thr, "BFS")
-}
-
-
-# UNIMPLEMENTED
-# weak_scaling <- function(threads, algo, all_scales) {
-# 	for (thr in threads) {
-# 		for (s in all_scales) {
-# 		}
-# 	}
-# }
-
 ###
 # Part 2: Generate the plots for a single algorithm and multiple problem sizes
 ###
@@ -116,4 +103,8 @@ plot_strong_scaling <- function(scaling_data, scale, threads, algo) {
 
 bfs_scale <- measure_scale(scale, threads, "BFS") # Possiblities: BFS, SSSP, PageRank
 plot_strong_scaling(bfs_scale, scale, threads, "BFS")
+
+for (thr in threads) {
+	time_boxplot(scale, thr, "BFS")
+}
 

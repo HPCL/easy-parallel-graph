@@ -72,14 +72,15 @@ export SKIP_VALIDATION=1
 # Load all the modules here
 module load intel/17
 
-echo "Cleaning $OUTPUT_PREFIX-*.out"
-rm -f "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR}.out"
+echo Note: Files of the form
+echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR}.out"
+echo get overwritten.
 
 echo Starting experiment at $(date)
 
 echo -n "Running Graph500 BFS"
-# This isn't working, so just regenerate the data
 #omp-csr/omp-csr -s $S -o "$DDIR/kron-$S/kron-${S}.graph500" -r "$DDIR/kron-$S/kron-${S}.roots"
+# ^ This isn't working, so just regenerate the data ^
 if [ "$OMP_NUM_THREADS" -gt 1 ]; then
 	echo " with OpenMP"
 	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
@@ -89,7 +90,7 @@ else
 fi
 
 # GAP
-rm -f "${OUTPUT_PREFIX}-GAP-{BFS,SSSP,PR}.out"
+rm -f "${OUTPUT_PREFIX}"-GAP-{BFS,SSSP,PR}.out
 echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 # Just do one trial to be the same as the rest of the experiments
@@ -111,7 +112,7 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 done
 
 # PowerGraph
-rm -f "${OUTPUT_PREFIX}-PowerGraph-{SSSP,PR}.{out,err}"
+rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR}.{out,err}
 echo "Running PowerGraph SSSP"
 # Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
 if [ "$OMP_NUM_THREADS" -gt 128 ]; then
@@ -130,7 +131,7 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 done
 
 # GraphMat
-rm -f "${OUTPUT_PREFIX}-GraphMat-{BFS,SSSP,PR}.out"
+rm -f "${OUTPUT_PREFIX}"-GraphMat-{BFS,SSSP,PR}.out
 echo "Running GraphMat BFS"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
 	echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
@@ -151,7 +152,7 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
 done
 
 # GraphBIG
-rm -f "${OUTPUT_PREFIX}-GraphBIG-{BFS,SSSP,PR}.out"
+rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR}.out
 echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
 head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
