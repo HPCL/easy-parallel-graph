@@ -64,15 +64,15 @@ The most prominent example of a graph processing performance analysis tool not t
 %Moreover, the complexity of Graphalytics can obfuscate the true behavior of the program.
 
 \begin{table}
-	\caption{A tabulated sample run of Graphalytics with 32 threads. Just one run per experiment is performed and these times do not take into account the different phases of execution. Runtimes are in seconds.}
+	\caption{A tabulated sample run of Graphalytics with 32 threads. Just one run per experiment is performed. Runtimes are in seconds. Below the table is an excerpt from the GraphMat log file.}
 	\centering
 	% cit-Patents: (3 774 768 vertices, 16 518 948 edges)
 	% dota-league (61 170 vertices, 50 870 313 edges)
 	\begin{tabular}{l|c|c|c|c|c|c}
 	\multicolumn{5}{l}{\large{\emph{Graphalytics}}} & \\
 	GraphBIG & BFS  & CDLP  &   LCC   &  PR &  SSSP & WCC \\ \hline
-	cit-Patents & 1.0 & 11.1 & 13.0 &   5.0 & N/A  & 1.3 \\
-	dota-league & 1.0 & 3.8 & 1104.0 & 2.5 & \textbf{2.9} & 0.9 \\
+	cit-Patents & 0.8 & 11.8 & 15.5  &  4.5 & N/A  & 1.3 \\
+	dota-league & 1.1 & 3.9 & 1073.7 &  2.6 & \textbf{3.0} & 1.0 \\
 	\multicolumn{1}{l}{}\\
 	PowerGraph & BFS  & CDLP  &   LCC   &  PR &  SSSP & WCC \\ \hline
 	cit-Patents & 13.8 & 30.1 & 23.9 & 18.8 & N/A & 22.1 \\
@@ -82,23 +82,23 @@ The most prominent example of a graph processing performance analysis tool not t
 	GraphMat & BFS  & CDLP  &   LCC   &  PR &  SSSP & WCC \\ \hline
 	cit-Patents & 7.8 & 20.6 & 11.2 &  8.4 & N/A &  7.0 \\
 	dota-league & 2.2 & 19.7 & 150.1 & 2.8 & \textbf{3.8} & 3.1
-	\end{tabular}
-
-	\begin{lstlisting}
-Timing results (for GraphMat SSSP on dota-league)
-- Finished file read of dota-league. time: 0.9495
-- load graph: 3.48167 sec
-- initialize engine: 3.60012e-05 sec
-- run algorithm: 0.168526 sec
-- print output: 0.105846 sec
-- deinitialize engine: 6.00815e-05 sec
-	\end{lstlisting}
+	\end{tabular} \\
+	\vspace{12pt}
+	Timing results (for GraphMat SSSP on dota-league)
+	\begin{itemize}
+		\item Finished file read of dota-league. time: 0.9495
+		\item load graph: 3.48167 sec
+		\item initialize engine: 3.60012e-05 sec
+		\item run algorithm: 0.168526 sec
+		\item print output: 0.105846 sec
+		\item deinitialize engine: 6.00815e-05 sec
+	\end{itemize}
 	\label{tab:graphalytics-realworld}
 \end{table}
 
 Graphalytics generates an HTML report listing the runtimes for each dataset and each algorithm. Table~\ref{tab:graphalytics-realworld} shows the results from a typical experiment run by Graphalytics.
 
-However, perusal of the log files reveals a different story. The listing contained below Table~\ref{tab:graphalytics-realworld} is the output from GraphMat itself. Graphalytics reports a 3.8 second runtime but 0.94 seconds of which GraphMat is simply reading the input file from disk. However, the GraphBIG timing (2.9 seconds) does not include the time to read the dota-league file. \textbf{If the time to read in the text file was computed correctly, GraphMat would be faster than GraphBIG.} To call this a fair comparison is dubious at best when phases of execution are omitted.
+However, perusal of the log files reveals a different story. The listing contained below Table~\ref{tab:graphalytics-realworld} is the output from GraphMat itself. Graphalytics reports a 3.8 second runtime but 0.94 seconds of which GraphMat is simply reading the input file from disk. However, the GraphBIG timing (3.0 seconds) does not include the time to read the dota-league file. \textbf{If the time to read in the text file was computed correctly, GraphMat would be faster than GraphBIG.} To call this a fair comparison is dubious at best when phases of execution are omitted.
 
 %We use GraphMat, the single source shortest paths algorithm, the dota-league dataset from the Game Trace Archive\cite{Guo:2012:GTA}, and the default settings as an example here.
 %source vertex: 55713
@@ -195,7 +195,7 @@ This study explores four shared memory parallel graph processing platforms and o
 	\item PowerGraph~\cite{Gonzalez:2012:Powergraph}, a library and programming model for distributed (and shared memory) graph-parallel computation. PowerGraph includes additional toolkits for tasks such as clustering and computer vision. Parallelism is achieved via a combination of OpenMP and light-weight, user-level threads called fibers. Powergraph uses a novel storage scheme on top of CSR.
 \end{enumerate}
 
-Our approach is not specific or limited to these graph packages and can be extended to others.
+Our approach is not specific or limited to these graph packages and can be extended to others. When comparing to Graphalytics, we use the most recent stable release, v0.2.
 
 \subsection{Algorithms}\label{sec:algs}
 
@@ -238,7 +238,7 @@ We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in
 
 \todo{redo this table}
 \begin{table}
-	\caption{The dataset used is the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds with 32 threads. Community detection is performed using label propagation.}
+	\caption{Graphalytics on the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds with 32 threads. Community detection uses label propagation.}
 	\centering
 	\pgfplotstabletypeset[
 	col sep=comma,
@@ -334,27 +334,32 @@ The difficulty in comparing iteration counts for PageRank underscores an importa
 	\centering
 		% trim=left lower right upper
 		\includegraphics[width=\linewidth, trim=0 18pt 6pt 0pt, clip]{graphics/compare-realworld.pdf}
-	\caption{32 threads.}
+	\caption{Real world experiments using \emph{easy-parallel-graph-\textasteriskcentered}. The leftmost plot does is missing Powergraph because Powergraph does not provide BFS.}
 	\label{fig:epg-realworld}
 \end{figure}
-\todo{pick between one}
-\begin{table}
-	\centering
-	\caption{This table shows averages of runtimes for the Dota-League dataset using our method with 32 threads. We average over 32 runs and since the data structure construction times do not differ significantly we average across all algorithms. Both PowerGraph and GraphBIG read in the files and build a graph data structure simultaneously so we cannot measure data structure construction time.}
-	\begin{tabular}{l|c|c|c|c}
-		\multicolumn{2}{l}{\large{\emph{easy-parallel-graph\mbox{-\textasteriskcentered}}}} & & &\\
-		System & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular}
-		& \begin{tabular}[x]{@{}c@{}}Run \\ BFS\end{tabular}
-		& \begin{tabular}[x]{@{}c@{}}Run \\ SSSP\end{tabular}
-		& \begin{tabular}[x]{@{}c@{}}Run \\ PageRank\end{tabular}
-		\\ \hline
-		GraphBIG   & N/A   & 0.01133        & {\bf 0.03791} & 19.5325  \\
-		PowerGraph & N/A   & N/A            & 0.3687        & 3.4406 \\
-		GAP        & 0.351 & 0.07449        & 0.0746        & {\bf 0.2465} \\
-		GraphMat   & 2.207 & {\bf 0.02273 } & 0.0397        & 1.6952 \\
-	\end{tabular}
-	\label{tab:epg-perf}
-\end{table}
+
+\begin{figure}
+	\includegraphics[width=\linewidth, trim=0 18pt 6pt 0pt, clip]{graphics/graphalytics-GraphBIG.png}
+	\caption{Real world and synthetic experiments using Graphalytics on GraphBIG using 32 threads. Graphalytics outputs one HTML page per software package.}
+	\label{fig:graphalytics-html}
+\end{figure}
+%\begin{table}
+%	\centering
+%	\caption{This table shows averages of runtimes for the Dota-League dataset using our method with 32 threads. We average over 32 runs and since the data structure construction times do not differ significantly we average across all algorithms. Both PowerGraph and GraphBIG read in the files and build a graph data structure simultaneously so we cannot measure data structure construction time.}
+%	\begin{tabular}{l|c|c|c|c}
+%		\multicolumn{2}{l}{\large{\emph{easy-parallel-graph\mbox{-\textasteriskcentered}}}} & & &\\
+%		System & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular}
+%		& \begin{tabular}[x]{@{}c@{}}Run \\ BFS\end{tabular}
+%		& \begin{tabular}[x]{@{}c@{}}Run \\ SSSP\end{tabular}
+%		& \begin{tabular}[x]{@{}c@{}}Run \\ PageRank\end{tabular}
+%		\\ \hline
+%		GraphBIG   & N/A   & 0.01133        & {\bf 0.03791} & 19.5325  \\
+%		PowerGraph & N/A   & N/A            & 0.3687        & 3.4406 \\
+%		GAP        & 0.351 & 0.07449        & 0.0746        & {\bf 0.2465} \\
+%		GraphMat   & 2.207 & {\bf 0.02273 } & 0.0397        & 1.6952 \\
+%	\end{tabular}
+%	\label{tab:epg-perf}
+%\end{table}
 %1         GAP      BFS Data structure build  0.25732000
 %2    GraphMat      BFS Data structure build  2.10878359
 %3         GAP PageRank Data structure build  0.32198688
@@ -373,8 +378,8 @@ The difficulty in comparing iteration counts for PageRank underscores an importa
 %16   GraphMat     SSSP                 Time  0.03936912
 %17 PowerGraph     SSSP                 Time  0.36874997
 
-\todo{This paragraph is out of place}
-In addition to the data presented in Table~\ref{tab:graphalytics}, one may want to know the cost of performing additional computations on a graph once the data structures have been built. Additionally, one may desire runtime bounds to get a reasonable maximum timespan for a given problem. Table~\ref{tab:epg-perf} begins to compile performance results and the rest of this section further explores these topics.
+In addition to the data presented in Table~\ref{tab:graphalytics}, one may want to know the cost of performing additional computations on a graph once the data structures have been built. Figure~\ref{fig:epg-realworld} compiles average performance results for \emph{easy-parallel-graph-\textasteriskcentered}. We contrast this with Graphalytics which outputs an HTML page resulting from a single trial. We display a partial screenshot in \figurename~\ref{fig:graphalytics-html}.
+\todo{Update figure to include "Algorithm run" on the y axis. Then add in data structure construction time and comment on it; Why does dota league or patents take more time?} 
 
 \subsection{Power and Energy Consumption}
 We use the Performance Application Programming Interface (PAPI)~\cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides a set of hardware counters for measuring energy usage. We use PAPI to obtain average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation and give a summary of the results in Table~\ref{tab:power}. In our case, the fastest code is also the most energy efficient, although with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
