@@ -133,7 +133,8 @@ However, perusal of the log files reveals a different story. The listing shown b
 %03:17:45.114 [INFO ] Benchmarked algorithm "Single source shortest paths" on graph "dota-league".
 %03:17:45.114 [INFO ] Benchmarking algorithm "Single source shortest paths" on graph "dota-league" succeed.
 %03:17:45.114 [INFO ] Benchmarking algorithm "Single source shortest paths" on graph "dota-league" took 3830 ms.
-With a plugin to Graphalytics called Granula~\cite{Ngai:2015:Granula}, one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. This requires in-depth knowledge of the source code and execution model in addition to expertise with the Granula API but allows detailed performance analysis and automatic execution and compilation of performance results.\footnote{An example of Granula can be seen at \url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
+With a plugin to Graphalytics called Granula~\cite{Ngai:2015:Granula}, one can explicitly specify a performance model to analyze specific execution behavior such as the amount of communication or runtime of particular kernels of execution. This requires in-depth knowledge of the source code and execution model in addition to expertise with the Granula API but allows detailed performance analysis and automatic execution and compilation of performance results.\footnote{An example of Granula can be seen at \url{http://bit.ly/granula-example}}.
+%\url{https://github.com/tudelft-atlarge/graphalytics-platforms-graphx/tree/master/granula-model-graphx}}.
 
 Beyond this plethora of performance data, the Graph Algorithm Platform Benchmark Suite (GAP)~\cite{Beamer:2015:GAPBench}, GraphBIG~\cite{Nai:2015:Graphbig}, and the Graph500~\cite{Murphy:2010:Graph500} consider themselves reference implementations or benchmark suites with which other implementations can be compared. If no fewer than three software packages call themselves, ``reference implementations,'' which one are we to trust? Our belief is that choosing a single reference implementation cannot capture the complexities inherent in graph processing.
 
@@ -236,7 +237,7 @@ We performed experiments on our 36-core (72 thread) Intel Haswell server with 25
 
 \section{Performance Analysis}\label{sec:perf}
 
-We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in terms of execution time, scalability over multiple threads, and power and energy consumption. All figures except those measuring scalability (Fig.~\ref{fig:bfs-scaling}) use 32 threads.
+We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in terms of execution time, scalability over multiple threads, and power and energy consumption. All figures except those measuring scalability (Figs.~\ref{fig:bfs-speedup} and~\ref{fig:bfs-efficiency}) use 32 threads.
 
 \subsection{Runtime for Synthetic Graphs}
 
@@ -315,7 +316,6 @@ Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} c
 	\label{fig:pr}
 \end{figure}
 
-
 The difficulty in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite can be recompiled to store weights as integers or floating point values. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a graph is represented in the system (e.g., weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
 
 \subsection{Scalability}
@@ -328,7 +328,7 @@ Figures~\ref{fig:bfs-speedup} and~\ref{fig:bfs-efficiency} illustrate the parall
 	\label{fig:bfs-speedup}
 \end{figure}
 
-We define the parallel efficiency as $T_1 / (n T_n)$ where $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ is the time for $n$ threads. Ideal efficiency is defined as $T_n = T_1/n$ and is the horizontal line near the top of Fig.~\ref{fig:bfs-efficiency}. 
+Figure~\ref{fig:bfs-efficiency} shows the parallel efficiency,  $T_1 / (nT_n)$ for different implementations of BFS. Ideal efficiency is defined as $T_n = T_1/n$ and is the horizontal line near the top of Fig.~\ref{fig:bfs-efficiency}. 
 \begin{figure}[htb]
 	\centering
 		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss20.pdf}
