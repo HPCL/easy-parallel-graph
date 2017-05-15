@@ -48,18 +48,18 @@ time_boxplot_with_batches <- function(filename, scale_num, ins_pct, cverts, num_
 	} else {
 		nedges <- epv * 2^scale_num
 		plotfilename <- paste0("plot",scale_num,"_",ins_pct,"i_",cverts,"_10b.pdf")
-		plot_title <- paste0("RMAT with Scale ",scale)
+		plot_title <- paste0("RMAT with Scale ",scale_num)
 		plot_subtitle <- paste0(nedges, "edges, ", 2^scale_num, " vertices")
 	}
 	# Generate a figure
 	salient_cols <- c("algorithm", "execution_phase", "value", "batch")
 	method_time <- subset(x,
-			x$scale==scale &
-			x$edges_per_vertex == epv &
+			x$scale==scale_num &
+			x$edges_per_vertex==epv &
 			x$changed_vertices==cverts &
 			x$insertion_percent==ins_pct &
-			x$threads == num_threads,
-			x$measurement == "Time (s)",
+			x$threads==num_threads &
+			x$measurement=="Time (s)",
 			salient_cols)
 	# method_time$value <- as.numeric(as.character(algo_time$Time)) # May not be necessary
 	# Remove zero rows---they're invalid and don't work with the log plot
@@ -73,7 +73,7 @@ time_boxplot_with_batches <- function(filename, scale_num, ins_pct, cverts, num_
 		xlab("Execution Phase.Algorithm") +
 		geom_boxplot() +
 		labs(title = plot_title, subtitle = plot_subtitle)
-	box + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+	box + theme(axis.text.x = element_text(angle = 30, hjust = 1))
 	dev.off()
 }
 
@@ -85,7 +85,7 @@ percent_insertions <- function(filename, scale_num, cvert,
 	# execution_phase: All, rooting tree, first pass, insertion, deletion
 	# where rooting tree is only done for the first batch
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
-	nedges <- epv * 2^scale
+	nedges <- epv * 2^scale_num
 	# Generate a figure
 	salient_cols <- c("insertion_percent", "value")
 	method_time <- subset(x,
@@ -103,15 +103,16 @@ percent_insertions <- function(filename, scale_num, cvert,
 	#method_time <- algo_time[!algo_time$Time == 0.0, ]
 	#method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
 	
-	pdf(paste0("insertion_pct_",scale_num,"_",cvert,"_time.pdf"), width = 2.5, height = 2.5)
-	ggplot(aes(y = value, x = insertion_percent, group = insertion_percent),
-			data = method_time) +
+	p <- ggplot(data = method_time,
+				aes(y = value, x = insertion_percent, group = insertion_percent)) +
 		ylab("Time (seconds)") +
 		xlab("Insertion Percent") +
 		scale_x_continuous(breaks = as.numeric(method_time$insertion_percent)) +
 		geom_boxplot() +
 		labs(title = "Update vs. Insertion %") +
 		theme(axis.text.x = element_text(angle = 90, hjust = 1))
+	pdf(paste0("insertion_pct_",scale_num,"_",cvert,"_time.pdf"), width = 2.5, height = 2.5)
+	p
 	dev.off()
 }
 
@@ -243,7 +244,7 @@ percent_insertions("parsed-20-23-partial.txt",
 #THREADS="64"
 #CHANGED_VERTICES="10000"
 #INS_PCTAGES="75"
-time_boxplot_with_batches("parsed-lj_75i_10000.txt", 4036538, 75, 10000, 64)
+time_boxplot_with_batches("parsed-lj_75i_10000.csv", 4036538, 75, 10000, 64)
 
 #sudo ./run --power experiment
 #EPV=32 # or 8
@@ -315,7 +316,7 @@ ggplot(aes(y = Value, x = Phase), data = avg_times8) +
 		geom_bar() +
 		theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-# v Not sure abou this one v
+# v Not sure about this one v
 power_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv", 23, 75, 10000, 64,
 						   measurement_type = "Time (s)")
 
