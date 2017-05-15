@@ -74,6 +74,9 @@ The most prominent example of a graph processing performance analysis tool not t
 	dota-league & 1.0 & 3.8 & 1104.0 & 2.5 & \textbf{2.9} & 0.9 \\
 	\multicolumn{1}{l}{}\\
 	PowerGraph & BFS  & CDLP  &   LCC   &  PR &  SSSP & WCC \\ \hline
+	cit-Patents & 13.8 & 30.1 & 23.9 & 18.8 & N/A & 22.1 \\
+	dota-league & 25.6 & 31.2 & 458.1 & 26.7 & 28.9 & 22.9 \\
+	% graph500-22 43.0 s 55.6 s 299.8 s 46.4 s N/A    40.5 s
 	\multicolumn{1}{l}{}\\
 	GraphMat & BFS  & CDLP  &   LCC   &  PR &  SSSP & WCC \\ \hline
 	cit-Patents & 7.8 & 20.6 & 11.2 &  8.4 & N/A &  7.0 \\
@@ -234,7 +237,7 @@ We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in
 
 \todo{redo this table}
 \begin{table}
-	\caption{The dataset used is the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds running with the maximal number of threads (64 for PowerGraph, 72 for the others). Community detection is performed using label propagation.}
+	\caption{The dataset used is the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds with 32 threads. Community detection is performed using label propagation.}
 	\centering
 	\pgfplotstabletypeset[
 	col sep=comma,
@@ -316,31 +319,29 @@ The difficulty in comparing iteration counts for PageRank underscores an importa
 	\centering
 	\begin{minipage}{\linewidth}
 		% trim=left lower right upper
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_speedup.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_speedup20.pdf}
 	\end{minipage}
 	\begin{minipage}{\linewidth}
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss20.pdf}
 	\end{minipage}
 	\caption{The top figure has both axes logarithmic with an exception at 72 threads for readability. Linear speedup is. GraphBIG dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time for $n$ threads.}
 	\label{fig:bfs-scaling}
 \end{figure}
 
-
 \subsection{Real World Datasets}
-\todo{Plot this}
 \begin{table}
 	\centering
-	\caption{This table shows averages of runtimes for the Dota-League dataset using our method using 32 threads. Each cell represents the average over 32 runs. The ``N/A'' for PowerGraph and GraphBIG exist because both of these systems read in the files and build a graph data structure simultaneously.}
+	\caption{This table shows averages of runtimes for the Dota-League dataset using our method with 32 threads. We average over 32 runs and since the data structure construction times do not differ significantly we average across all algorithms. Both PowerGraph and GraphBIG read in the files and build a graph data structure simultaneously so we cannot measure data structure construction time.}
 	\begin{tabular}{l|c|c|c|c}
 		System & \begin{tabular}[x]{@{}c@{}}Construct Data \\ Structure\end{tabular}
 		& \begin{tabular}[x]{@{}c@{}}Run \\ BFS\end{tabular}
 		& \begin{tabular}[x]{@{}c@{}}Run \\ SSSP\end{tabular}
 		& \begin{tabular}[x]{@{}c@{}}Run \\ PageRank\end{tabular}
 		\\ \hline
-		GraphBIG   & N/A   & 0.0476  & 0.162    & 21.39  \\
-		PowerGraph & N/A   & 0.36874 & 0.344    & 3.441  \\
-		GAP        & 0.412 & 0.00464 & 0.267    & 0.2464 \\
-		GraphMat   & 1.013 &         &          & 2.1587 \\
+		GraphBIG   & N/A   & 0.01133        & {\bf 0.03791} & 19.5325  \\
+		PowerGraph & N/A   & N/A            & 0.3687        & 3.4406 \\
+		GAP        & 0.351 & 0.07449        & 0.0746        & {\bf 0.2465} \\
+		GraphMat   & 2.207 & {\bf 0.02273 } & 0.0397        & 1.6952 \\
 	\end{tabular}
 	\label{tab:epg-perf}
 \end{table}
