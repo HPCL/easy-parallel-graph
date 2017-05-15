@@ -23,7 +23,6 @@ set +o histexpand
 # So Ctrl-C works and subroutines can exit the whole script.
 trap "exit 1" INT
 export TOP_PID=$$ 
-MAX_THREADS=64 # This is a PowerGraph limitation.
 MAX_THREADS=32 # To ensure compatibility with easy-parallel-graph
 
 OSNAME=$(uname)
@@ -47,6 +46,7 @@ else
 	MEM_KB=$(cat /proc/meminfo | grep MemAvailable | awk '{print $2}')
 fi
 NUM_THREADS=$(if [ "$NUM_CORES" -lt $MAX_THREADS ]; then echo $NUM_CORES; else echo $MAX_THREADS; fi)
+export OMP_NUM_THREADS="$NUM_THREADS"
 GA_DIR="$BASE_DIR/ldbc_graphalytics"
 DATASET_DIR=$BASE_DIR/datasets
 
@@ -345,7 +345,7 @@ install_PowerGraph()
 	if [ $? -ne 0 ]; then kill -s TERM $TOP_PID; fi
  	if [ "$NUM_CORES" -gt "$MAX_THREADS" ]; then
  		echo "Using $MAX_THREADS threads on $NUM_CORES available cores due to PowerGraph limitations."
- 		export GRAPHLAB_THREADS_PER_WORKER=64
+ 		export GRAPHLAB_THREADS_PER_WORKER=$MAX_THREADS
  	else
  		export GRAPHLAB_THREADS_PER_WORKER=$NUM_THREADS
  	fi
@@ -432,7 +432,7 @@ run_benchmark()
 	cd "$PKGDIR" # Very important that you're in the directory you un-tar'd
 	mkdir -p "$BASE_DIR/experiments"
 	LOG_FILE="$BASE_DIR/experiments/${platform}-log.txt"
-	./run-benchmark.sh | tee "$LOG_FILE" # calls prepare-benchmark.sh
+	./run-benchmark.sh 2> "$BASE_DIR/experiments/${platform}-log.err" | tee "$LOG_FILE" # calls prepare-benchmark.sh
 	# Parse through logs and move the reports to a more convenient location
 	OUTPUT=$(dirname $(awk -F '"' '/Wrote benchmark report/{print $(NF-1)}' "$LOG_FILE"))
 	echo -e "Moving experiment and log files from\n$PKGDIR/$OUTPUT\nto\n$BASE_DIR/experiments"

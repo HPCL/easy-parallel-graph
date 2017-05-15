@@ -58,17 +58,17 @@ boxplot(Time~Sys, sssp_dsc, ylab = "Time (seconds)",
 # mtext(paste0("Scale = ",scale), side = 3)
 dev.off()
 
-pdf("graphics/pr_iters.pdf", width = 4.5, height = 4.5)
+pdf("graphics/pr_iters.pdf", width = 4, height = 4)
 pr_mean_iters <- aggregate(pr_iters$Time, list(pr_iters$Sys), mean)
 pr_sys_order <- order(pr_mean_iters[[2]])
 pr_mean_iters <- pr_mean_iters[pr_sys_order,]
-bp <- barplot(pr_mean_iters[[2]], ylab = "Time (seconds)",
+bp <- barplot(pr_mean_iters[[2]], ylab = "Iterations",
 		main = "PageRank Iterations", col=rainbow(length(pr_mean_iters[[1]])))
 text(bp, par("usr")[3], labels = pr_mean_iters[[1]], srt = 30,
 		adj = c(0.95,0.95), xpd = TRUE, cex = 1.0)
 dev.off()
 
-pdf("graphics/pr_time.pdf", width = 4.5, height = 4.5)
+pdf("graphics/pr_time.pdf", width = 4, height = 4)
 pr_sys_labels <- pr_mean_iters[[1]] # Get the order from iterations
 pr_time$Sys <- factor(pr_time$Sys, pr_sys_labels, ordered = TRUE)
 pr_time <- pr_time[order(pr_time$Sys),]
