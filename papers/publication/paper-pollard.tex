@@ -330,6 +330,14 @@ The difficulty in comparing iteration counts for PageRank underscores an importa
 \end{figure}
 
 \subsection{Real World Datasets}
+\begin{figure}
+	\centering
+		% trim=left lower right upper
+		\includegraphics[width=\linewidth, trim=0 18pt 6pt 0pt, clip]{graphics/compare-realworld.pdf}
+	\caption{32 threads.}
+	\label{fig:epg-realworld}
+\end{figure}
+\todo{pick between one}
 \begin{table}
 	\centering
 	\caption{This table shows averages of runtimes for the Dota-League dataset using our method with 32 threads. We average over 32 runs and since the data structure construction times do not differ significantly we average across all algorithms. Both PowerGraph and GraphBIG read in the files and build a graph data structure simultaneously so we cannot measure data structure construction time.}

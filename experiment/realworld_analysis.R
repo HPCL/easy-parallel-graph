@@ -1,3 +1,4 @@
+library(ggplot2)
 # Given the results from parse-output.sh,
 # tabulate and generate some plots.
 usage <- "usage: Rscript experiment_analysis.R <config_file>"
@@ -26,10 +27,17 @@ avgs <- tabulate_data <- function(thr, dataset)
 # Supported options for algo: "BFS", "SSSP", "PageRank"
 compare_datasets <- function(all_avgs, dataset_list, algo, metric = "Time")
 {
-	# TODO: Currently not working
-	avgs.m.a <- subset(all_avgs, all_avgs$Metric==metric & all_avgs$Algo==algo)
-	ggplot(avgs.m.a, aes(Dataset, Sys)) +
-			geom_col(aes(fill = Time))
+	# If you just want a single algorithm, remove the "facet_wrap" line and use
+	# avgs.m.a <- subset(all_avgs, all_avgs$Metric==metric & all_avgs$Algo==algo)
+	avgs.m <- subset(all_avgs, all_avgs$Metric==metric)
+	p <- ggplot(avgs.m, aes(Dataset, Time, fill = Sys)) +
+			geom_bar(stat = "identity", position = "dodge") +
+			facet_wrap(~Algo, scales = "free") +
+			theme(axis.text.x = element_text(angle = 15, hjust = 1))
+	pdf(paste0("graphics/compare-",metric,".pdf"),
+		width = 5, height = 3)
+	p
+	dev.off()
 }
 
 all_avgs <- data.frame()
