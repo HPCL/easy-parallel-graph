@@ -86,7 +86,9 @@ if [ "$OMP_NUM_THREADS" -gt 1 ]; then
 	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 else
 	echo " sequentially"
-	"$GRAPH500DIR/seq-csr/seq-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
+	# seq-csr is slower than omp-csr with one thread
+	# "$GRAPH500DIR/seq-csr/seq-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
+	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 fi
 
 # GAP

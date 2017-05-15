@@ -19,20 +19,21 @@ scale <- $S
 mkdir -p graphics
 Rscript experiment_analysis.R example_config.R
 
-# Dota-league dataset
-DSET=dota-league
-curl -o datasets/$DSET.zip https://atlarge.ewi.tudelft.nl/graphalytics/zip/$DSET.zip
-unzip -d datasets datasets/$DSET.zip
-mv datasets/$DSET/$DSET.e datasets/$DSET.e
-mv datasets/$DSET/$DSET.v datasets/$DSET.v
-./gen-datasets.sh -f=datasets/$DSET.e
-./run-experiment.sh -f=$DSET 32
-./parse-output.sh -f=$DSET
+DATASETS="dota-league cit-Patents"
+for DSET in $DATASETS; do
+	curl -o datasets/$DSET.zip https://atlarge.ewi.tudelft.nl/graphalytics/zip/$DSET.zip
+	unzip -d datasets datasets/$DSET.zip
+	mv datasets/$DSET/$DSET.e datasets/$DSET.e
+	mv datasets/$DSET/$DSET.v datasets/$DSET.v
+	./gen-datasets.sh -f=datasets/$DSET.e
+	./run-experiment.sh -f=$DSET 32
+	./parse-output.sh -f=$DSET
+done
 
 echo "# Config file for experiment_analysis.R. threads a vector, scale an int.
 prefix <- './output/'
 threads <- 32
-dataset <- '$DSET'
+dataset_list <- c(${DATASETS// /,})
 " > ${DSET}_config.R # Warning: this file is sourced in experiment_analysis.R
 Rscript realworld_analysis.R ${DSET}_config.R
 
