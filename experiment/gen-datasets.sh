@@ -153,17 +153,26 @@ else
 	d="$FILE_PREFIX"
 	mkdir -p "$DDIR/$d"
 	# FIXME: make-edgelist only generates files at most 2.0Gb
-	"$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
-	# Convert to GAP format (edgelist)
-	"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v"
+	# "$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
+
+	# Convert to edgelist
+	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" #FIXME
+	"$GAPDIR/converter" -g $S -e "$DDIR/$d/$d.el"
+
+	# Symmetrize (make undirected)
+	"$GAPDIR/converter" -g $S -s -e "$DDIR/$d/${d}-undir.el"
+
+	# Convert to GAP serialized format
+	"$GAPDIR/converter" -g $S -s -b "$DDIR/$d/$d.sg"
+
+	# Generate roots (usually graph500 does this but it doesn't work for scale > 22)
+	"$GAPDIR/bfs" -n $NRT -f "$DDIR/$d/$d.sg" | awk '/Source/{print $2}' > "$DDIR/$d/${d}-roots.v"
+
 	# Sort the roots (mitigate that weird issue with GraphBIG not working for root > # vertices read)
 	cat "$DDIR/$d/${d}-roots.v" | sort -n > tmp.txt
 	cp tmp.txt "$DDIR/$d/${d}-roots.v"
 	rm tmp.txt
 
-	# Symmetrize (make undirected)
-	"$GAPDIR/converter" -f "$DDIR/$d/${d}.el" -s -e "$DDIR/$d/${d}-undir.el"
-	"$GAPDIR/converter" -s -f "$DDIR/$d/$d.el" -b "$DDIR/$d/$d.sg"
 	# Convert to GraphBIG format
 	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$d/${d}-undir.el" > "$DDIR/$d/edge.csv"
 	echo ID > "$DDIR/$d/vertex.csv"

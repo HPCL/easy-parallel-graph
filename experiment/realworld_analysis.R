@@ -33,7 +33,9 @@ compare_datasets <- function(all_avgs, dataset_list, algo, metric = "Time")
 	p <- ggplot(avgs.m, aes(Dataset, Time, fill = Sys)) +
 			geom_bar(stat = "identity", position = "dodge") +
 			facet_wrap(~Algo, scales = "free") +
-			theme(axis.text.x = element_text(angle = 15, hjust = 1))
+			# If your datasets are too long you can rename them
+			scale_x_discrete(labels = c("dota","Patents")) +
+			theme(axis.text.x = element_text(angle = 30, hjust = 1))
 	pdf(paste0("graphics/compare-",metric,".pdf"),
 		width = 5, height = 3)
 	p
@@ -48,5 +50,5 @@ for (dset in dataset_list) {
 }
 colnames(all_avgs) <- c("Dataset","Sys","Algo","Metric","Time")
 
-compare_datasets(avgs_list, dataset_list, "SSSP")
+compare_datasets(all_avgs, dataset_list, "SSSP")
 
