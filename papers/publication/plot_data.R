@@ -151,7 +151,7 @@ dev.off()
 pdf("graphics/bfs_speedup.pdf", width = 7, height = 4)
 bfs_spd <- data.frame(t(apply(bfs_ss, 1, function(x){x*threadcnts})))
 colnames(bfs_spd) <- threadcnts
-plot(as.numeric(bfs_spd[1,]), xaxt = "n", type = "b", ylim = c(1,10),
+plot(as.numeric(bfs_spd[1,]), xaxt = "n", type = "b", ylim = c(1,18),
 		ylab = "Speedup", xlab = "Threads", col = colors[1], log = "y",
 		main = "BFS Speedup", cex.main=1.4, lty = 1, pch = 1, lwd = 3)
 for (pli in seq(2,nrow(bfs_ss))) {

@@ -319,11 +319,11 @@ Moreover, the logarithmic scale in Figures~\ref{fig:bfs-time} and~\ref{fig:pr} c
 The difficulty in comparing iteration counts for PageRank underscores an important challenge for any comparison of graph processing systems. The assumptions under which the various platforms operate can have a dramatic effect on the program. For example, the GAP Benchmark Suite can be recompiled to store weights as integers or floating-point values. This may affect performance in addition to runtime behavior in cases where weights like $0.2$ are cast to $0$. Similarly, how a graph is represented in the system (e.g., weighed or directed) may have performance and algorithmic implications but is not always readily apparent.
 
 \subsection{Scalability}
-Figures~\ref{fig:bfs-speedup} and~\ref{fig:bfs-efficiency} illustrate the parallel strong efficiency of the BFS algorithm in different packages on a Kronecker graph of scale $20$ . The parallel speedup shown in Fig.~\ref{fig:bfs-speedup} is computed as $T_1 / T_n$ where $T_1$ is the sequential time and $T_n$ is the execution time on $n$ threads. 
+Figures~\ref{fig:bfs-speedup} and~\ref{fig:bfs-efficiency} illustrate the parallel strong efficiency of the BFS algorithm in different packages on a Kronecker graph of scale $23$. The parallel speedup shown in Fig.~\ref{fig:bfs-speedup} is computed as $T_1 / T_n$ where $T_1$ is the sequential time and $T_n$ is the execution time on $n$ threads. Because of timing considerations, only four trials were run for these experiments.
 \begin{figure}[htb]
 	\centering
 		% trim=left lower right upper
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_speedup20.pdf}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_speedup23.pdf}
 		\caption{Speedup of BFS for a scale-20 graph, black solid line represents ideal speedup. Both axes are logarithmic with an exception at 72 threads for readability. }
 	\label{fig:bfs-speedup}
 \end{figure}
@@ -331,12 +331,14 @@ Figures~\ref{fig:bfs-speedup} and~\ref{fig:bfs-efficiency} illustrate the parall
 Figure~\ref{fig:bfs-efficiency} shows the parallel efficiency,  $T_1 / (nT_n)$ for different implementations of BFS. Ideal efficiency is defined as $T_n = T_1/n$ and is the horizontal line near the top of Fig.~\ref{fig:bfs-efficiency}. 
 \begin{figure}[htb]
 	\centering
-		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss20.pdf}
-	\caption{Parallel efficiency for a scale-20 graph. GraphBIG dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time with $n$ threads.}
+		\includegraphics[width=\linewidth, trim=0 18pt 18pt 12pt, clip]{graphics/bfs_ss23.pdf}
+	\caption{Parallel efficiency for a scale-23 graph. Graph500 dips below 1 because it is slower for $2$ threads than for 1. $T_1$ is the serial time, $n$ is the number of threads, and $T_n$ time with $n$ threads.}
 	\label{fig:bfs-efficiency}
 \end{figure}
 
-These plots show generally poor scaling for this size problem, a challenge facing most parallel graph algorithms. In addition, $2^{20}$ vertices is a relatively small graph by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine. GCC version 4.8.5 supports OpenMP version 3.1 but the most recent release of OpenMP is 4.5.
+These plots show generally poor scaling for this size problem, a challenge facing most parallel graph algorithms. In addition, $2^{23}$ vertices is a relatively small graph by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine. GCC version 4.8.5 supports OpenMP version 3.1 but the most recent release of OpenMP is 4.5.
+
+Overall, GAP is the most scalable with GraphMat close behind for larger threads and even slightly beating GAP at 72 threads. While care was taken to ensure there was no other load on the system when the experiments were performed, the efficiency for two threads is surprisingly low for the Graph500. Because the Graph500 spends a shorter amount of time executing in general (there is no file I/O performs multiple BFS passes one right after another), it is more sensitive to spikes in CPU usage.
 
 \subsection{Real-World Datasets}
 \begin{figure}
@@ -467,7 +469,7 @@ With respect to power and energy profiling, while our current implementation sup
 \section{Conclusion}
 We have presented a tool called \emph{easy-parallel-graph\mbox{-\textasteriskcentered}}, where \textasteriskcentered $\ = $ installer, comparator, performance analyzer, dataset homogenizer, or performance visualizer. This framework can analyze both power consumption and the two fundamental phases of execution: data structure construction and algorithm execution. While the comparison presented here can help one choose among alternatives for the selected packages and algorithms, the problem of selecting a graph processing framework for a given large-scale problem remains far from simple. Furthermore, increasing hardware heterogeneity demands performance analysis be easily repeatable on the target architecture. Because of this, our framework is designed to be easy to use and we make our code freely available at \url{https://github.com/HPCL/easy-parallel-graph} to encourage further experimentation.
 
-Overall, the GAP Benchmark Suite was the best-performing system across all chosen datasets, although not the most scalable for the graphs used in this study (at most $2^{22}$ vertices). In addition, GAP is the most recent project and also the most robust in terms of the input graphs accepted. Thus, we recommend graph processing algorithm designers compare their BFS implementations to the Graph500 for BFS, GAP Benchmark Suite for smaller problem sizes or a low number of threads (at most 32), and GraphMat for larger problems with more threads. This is despite the fact that GraphBIG has the best scalability, because even at more than 16 threads the runtime for GraphBIG is still at least one order of magnitude slower than GAP or GraphMat for all sampled algorithms. Last, but not least, one must consider cost and portability: GraphMat requires the Intel compiler collection, which is not free or universally available for all platforms.
+Overall, the GAP Benchmark Suite is the best-performing system across all chosen datasets and in general the most scalable for the graphs used in this study (at most $2^{23}$ vertices). In addition, GAP is the most recent project and also the most robust in terms of the input graphs accepted.  Powergraph and Graphmat are designed for larger graphs (it is possible to run in distributed mode for both) so the overhead of these frameworks may dominate for smaller problem sizes. Two more potentially important considerations are cost and portability: GraphMat requires the Intel compiler collection which may be cost-prohibitive for some users. Despite the GAP Benchmark Suite being the overall best performing benchmark, it was not the best performing in every case so we unsurprisingly recommend the more comprehensive comparison using all five benchmarks offered by \emph{easy-parallel-\mbox{graph-\textasteriskcentered}}.
 
 \bibliographystyle{IEEEtranS}
 \bibliography{../drp}
