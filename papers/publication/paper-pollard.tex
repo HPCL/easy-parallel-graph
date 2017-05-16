@@ -83,8 +83,11 @@ The most prominent example of a graph processing performance analysis tool not t
 	% graph500-22 43.0 s 55.6 s 299.8 s 46.4 s N/A    40.5 s
 	\multicolumn{1}{l}{}\\
 	GraphMat & BFS  & CDLP  &   LCC   &  PR &  SSSP & WCC \\ \hline
-	cit-Patents & 7.8 & 20.6 & 11.2 &  8.4 & N/A &  7.0 \\
-	dota-league & 2.2 & 19.7 & 150.1 & 2.8 & \textbf{3.8} & 3.1\\ \hline
+	% This was with 64 threads
+	%cit-Patents & 7.8 & 20.6 & 11.2 &  8.4 & N/A &  7.0 \\
+	%dota-league & 2.2 & 19.7 & 150.1 & 2.8 & \textbf{3.8} & 3.1\\ \hline
+	cit-Patents 8.3 & 21.7 & 11.4 & 9.1 & N/A & 7.8 \\
+	dota-league 3.8 & 19.7 & 236.4 & 3.8 & 7.4 & 3.9 \\
 	\end{tabular}
 	\end{center}
 	%\vspace{12pt}
@@ -338,7 +341,7 @@ Figure~\ref{fig:bfs-efficiency} shows the parallel efficiency,  $T_1 / (nT_n)$ f
 
 These plots show generally poor scaling for this size problem, a challenge facing most parallel graph algorithms. 
 \todo[inline]{If time permits, replace with a larger graph to show scaling.}
-In addition, $2^{20}$ vertices is a relatively ``small'' graph resulting for by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine. GCC version 4.8.5 supports OpenMP version 3.1 but the most recent release of OpenMP is 4.5.
+In addition, $2^{20}$ vertices is a relatively small graph by today's standards and thus library designers focus on scalability for larger graphs. Another limitation may be the ability for OpenMP to efficiently handle such a large number of threads per machine. GCC version 4.8.5 supports OpenMP version 3.1 but the most recent release of OpenMP is 4.5.
 
 \subsection{Real-World Datasets}
 \begin{figure}
