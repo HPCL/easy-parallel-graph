@@ -244,7 +244,14 @@ We analyze the performance of the algorithms described in Sec.~\ref{sec:algs} in
 
 \subsection{Runtime for Synthetic Graphs}
 
-\todo{redo this table}
+\todo{redo this table: 
+	BFS CDLP LCC PR SSSP WCC
+	GraphMat
+	10.3 s 45.8 s 401.0 s 8.9 s N/A   7.4 s
+	Powergraph
+	43.0 s 55.6 s 299.8 s 46.4 s N/A    40.5 s
+	OpenG
+	1.6 s 6.7 s  1910.0 s 4.7 s N/A   2.2 s}
 \begin{table}
 	\caption{Graphalytics on the same Kronecker graph with scale $22$ as used in other experiments. Performance results are in seconds with 32 threads. Community detection uses label propagation.}
 	\centering
@@ -278,7 +285,6 @@ In contrast, our results for the Kronecker graph of scale $22$ are presented in 
 
 Figures~\ref{fig:bfs-time} and \ref{fig:sssp-time} show performance results for a Kronecker graph with scale $22$. The box plots give an idea of the runtime distributions. There is less variance in the runtimes of SSSP (between 0.1 and 1.7 seconds) compared to BFS (0.01 and 1.7 seconds) but GAP is the clear winner in both cases. The data structure construction times for GAP and GraphMat are consistent; in both cases the platforms create the same data structure for both algorithms. These results are consistent with~\cite{Sundaram:2015:GraphMat} which lists GraphMat as more higher performing than PowerGraph in SSSP.
 
-\todo{Rotate the x-tick text so you can make all of the text larger}
 \begin{figure}
 	\centering
 	\begin{minipage}{0.48\linewidth}
@@ -393,7 +399,7 @@ In addition, $2^{20}$ vertices is a relatively small graph by today's standards 
 %17 PowerGraph     SSSP                 Time  0.36874997
 
 In addition to the data presented in Table~\ref{tab:graphalytics}, one may want to know the cost of performing additional computations on a graph once the data structures have been built. Figure~\ref{fig:epg-realworld} compiles average performance results for \emph{easy-parallel-graph-\textasteriskcentered}. We contrast this with Graphalytics which outputs an HTML page resulting from a single trial. We display a partial screenshot in \figurename~\ref{fig:graphalytics-html}.
-\todo{Update figure to include "Algorithm run" on the y axis. Then add in data structure construction time and comment on it; Why does dota league or patents take more time?} 
+\todo{Update figure to include "Algorithm run" on the y axis. Then add in data structure construction time and comment on it; Why does dota league or patents take more time?}
 
 \subsection{Power and Energy Consumption}
 We use the Performance Application Programming Interface (PAPI)~\cite{Browne:2000:PAPI} to gain access to Intel's Running Average Power Limit (RAPL), which provides a set of hardware counters for measuring energy usage. We use PAPI to obtain average energy in nanojoules for a given time interval. We modify the source code for each project to time only the actual BFS computation and give a summary of the results in Table~\ref{tab:power}. In our case, the fastest code is also the most energy efficient, although with this level of granularity we could detect circumstances where one could make a tradeoff between energy and runtime.
