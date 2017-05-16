@@ -90,13 +90,13 @@ dev.off()
 ###
 threadcnts <- c(1,2,4,8,16,32,64,72)
 scale <- 20
-measure_scale <- function(algo) {
+measure_scale <- function(algo, scale) {
 	# Read in and average the data for BFS for each thread
 	# It is wasteful to reread the parsed*-1.csv but it simplifies the code
 	x <- read.csv(paste0("parsed-kron-",scale,"-1.csv"), header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
 	x$Sys <- factor(x$Sys, ordered = TRUE)
-	systems <- levels(subset(x$Sys, x$Algo == algo, c("Sys")))
+	systems <- unique(subset(x$Sys, x$Algo == algo, c("Sys")))
 	algo_time <- data.frame(
 			matrix(ncol = length(threadcnts), nrow = length(systems)),
 			row.names = systems)
@@ -112,7 +112,7 @@ measure_scale <- function(algo) {
 	return(algo_time)
 }
 
-bfs_scale <- measure_scale("BFS")
+bfs_scale <- measure_scale("BFS", scale)
 
 colors <- rainbow(nrow(bfs_scale))
 colors <- gsub("F", "C", colors) # You want it darker
@@ -124,6 +124,7 @@ for (ti in rev(seq(length(threadcnts)))) {
 }
 
 # Plot the strong scalability for BFS
+# Actually, this is called Parallel Efficiency!
 pdf("graphics/bfs_ss.pdf", width = 7, height = 4)
 systems <- rownames(bfs_ss)
 plot(as.numeric(bfs_ss[1,]), xaxt = "n", type = "b", ylim = c(0,1),
