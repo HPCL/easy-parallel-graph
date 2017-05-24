@@ -33,7 +33,7 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 
 ## Dependencies
 ### The Scripts in the `experiment` Directory
-1. R
+1. R and the ggplot2 library
 2. Graph500, GAP, Graphalytics, GraphBIG, PowerGraph dependencies
 
 ### GraphBIG/OpenG
@@ -52,12 +52,12 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 1. A C++ compiler with OpenMP Support
 
 ### `get-graphalytics.sh`
-1. Bash
-2. Perl
-3. Yarn
-4. Apache maven 3.0.0 or later
-5. Git
-6. wget
+1. Java
+2. Bash
+3. Perl
+4. Yarn
+5. Apache maven 3.0.0 or later
+6. Git
 
 ### Graphalytics
 1. Apache maven 3.0.0 or later
