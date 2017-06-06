@@ -100,17 +100,20 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	echo Converting $FILE into the correct formats...
 	# If it's from SNAP then there may be some comments
 	if [ ! -f "$DDIR/$d.e" ]; then
+		if [ ! -f "$FILE" ]; then
+			echo "Cannot find file $FILE relative from $(pwd)"
+			exit 1
+		fi
 		awk '!/^#/{print}' "$FILE" > "$DDIR/$d.e"
 	fi
 	OLDPWD=$(pwd)
 	cd $DDIR
-	if [ ! -f "$d.v" ]; then
+	if [ ! -f "$d.v" ] || [ $(wc -l "$d.v") -gt 0 ]; then
 		echo "Creating $d.v..."
 		cat  "$d.e" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
 	fi
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$d.v" | tail -n 1) + 1))
-	# nvertices=$(wc -l $d.v | awk '{print $1}') # Graphmat requires nvertices >= largest index
 	echo -n  "Checking whether $d.e is weighted or unweighted..."
 	if [ $(awk '{print NF; exit}' "$d.e") -eq 2 ]; then
 		echo " unweighted."
@@ -181,7 +184,7 @@ else
 	# Convert to GraphMat format
 	# GraphMat requires edge weights---Just make them all 1 for the .wel format
 	# XXX: What happens when you remove selfloops and duplicated edges.
-	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}.el" > "$DDIR/$d/$d.1el"
+	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}-undir.el" > "$DDIR/$d/$d.1el"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$DDIR/$d/vertex.csv" | tail -n 1) + 1 ))

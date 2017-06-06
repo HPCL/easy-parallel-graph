@@ -62,12 +62,15 @@ cd "$LIBDIR"
 
 # Galois:
 # cd "$LIBDIR"
-# wget http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
-# tar -xvf Galois-2.2.1.tar.gz
+# wget -nc http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
+# tar -xf Galois-2.2.1.tar.gz
 # cd "$LIBDIR/Galois-2.2.1"
 # ex -s src/Barrier.cpp '+:%s/\Vpthread_barrier_init(&bar, 0, ~0)/pthread_barrier_init(\&bar, 0, MAX_THREADS)/g' '+:x'
 # ex -sc '1i|#define MAX_THREADS 8096' -cx src/Barrier.cpp # Warning: this isn't idempotent
-# mkdir default; cd default; cmake ../..
+# mkdir default
+# cd default
+# cmake ..
+# make # TODO: This fails right now for DESorderedHandNB, I think it has to do with boost.
 
 if [ -z "$FAILED" ]; then
 	echo All libraries downloaded and built correctly.

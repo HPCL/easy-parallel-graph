@@ -85,14 +85,15 @@ if [ "$OMP_NUM_THREADS" -gt 1 ]; then
 	echo " with OpenMP"
 	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 else
-	echo " sequentially"
+	echo " with OpenMP"
+	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
+	# echo " sequentially"
 	# seq-csr is slower than omp-csr with one thread
 	# "$GRAPH500DIR/seq-csr/seq-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
-	"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 fi
 
 # GAP
-rm -f "${OUTPUT_PREFIX}"-GAP-{BFS,SSSP,PR}.out
+rm -f "${OUTPUT_PREFIX}"-GAP-{BFS,SSSP,PR,TriangleCount}.out
 echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 # Just do one trial to be the same as the rest of the experiments
@@ -113,8 +114,11 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
 done
 
+echo "Running GAP TriangleCount"
+"$GAPDIR"/tc -f "$DDIR/kron-$S/kron-${S}.sg" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TriangleCount.out"
+
 # PowerGraph
-rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR}.{out,err}
+rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TriangleCount}.{out,err}
 echo "Running PowerGraph SSSP"
 # Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
 if [ "$OMP_NUM_THREADS" -gt 128 ]; then
@@ -130,6 +134,11 @@ done
 echo "Running PowerGraph PageRank"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-$S/kron-${S}.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
+done
+
+echo "Running PowerGraph TriangleCount"
+for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/kron-$S/kron-${S}.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TriangleCount.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TriangleCount.err"
 done
 
 # GraphMat
@@ -153,8 +162,14 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
 done
 
+# TODO: Triangle Counting gives different answers on every platform
+echo "Running GraphMat TriangleCount"
+for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
+	"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TriangleCount.out"
+done
+
 # GraphBIG
-rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR}.out
+rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR,TriangleCount}.out
 echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
 head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
@@ -168,6 +183,11 @@ echo "Running GraphBIG PageRank"
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-$S" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
+done
+
+echo "Running GraphBIG TriangleCount"
+for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/kron-$S" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TriangleCount.out"
 done
 
 echo Finished experiment at $(date)

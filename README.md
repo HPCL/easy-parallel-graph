@@ -13,6 +13,12 @@ The general workflow could consist of the following steps. You can find an examp
 	* Note: `run-power.sh` also parses the log files.
 5. Analyze the data. Some examples can be found in `papers/publication/plot_data.R` and`experiment/experiment_analysis.R`.
 
+## Algorithms
+1. Breadth First Search (BFS)
+2. Single Source Shortest Paths (SSSP)
+3. PageRank: This uses a stopping criterion of `sum(|π_i - π_(i-1)|)` where `π_i` is the PageRank at iteration `i` and the alpha parameter is ɑ = 0.15.
+4. Triangle Counting (TriangleCount) - Counts the number of triangles in an undirected graph. If the input graph is directed, it is symmetrized beforehand.
+
 ### Graphalytics
 You can download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
 
