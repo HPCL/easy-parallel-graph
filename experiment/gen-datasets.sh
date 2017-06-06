@@ -177,14 +177,14 @@ else
 	rm tmp.txt
 
 	# Convert to GraphBIG format
-	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$d/${d}-undir.el" > "$DDIR/$d/edge.csv"
+	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$d/${d}.el" > "$DDIR/$d/edge.csv"
 	echo ID > "$DDIR/$d/vertex.csv"
-	cat "$DDIR/$d/${d}-undir.el" | tr '[:blank:]' '\n' | sort -n | uniq >> "$DDIR/$d/vertex.csv"
+	cat "$DDIR/$d/${d}.el" | tr '[:blank:]' '\n' | sort -n | uniq >> "$DDIR/$d/vertex.csv"
 
 	# Convert to GraphMat format
 	# GraphMat requires edge weights---Just make them all 1 for the .wel format
 	# XXX: What happens when you remove selfloops and duplicated edges.
-	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}-undir.el" > "$DDIR/$d/$d.1el"
+	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}.el" > "$DDIR/$d/$d.1el"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$DDIR/$d/vertex.csv" | tail -n 1) + 1 ))
