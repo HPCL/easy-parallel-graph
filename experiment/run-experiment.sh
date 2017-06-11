@@ -56,6 +56,7 @@ GRAPHBIGDIR="$LIBDIR/graphBIG"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 POWERGRAPHDIR="$LIBDIR/PowerGraph"
+GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 OUTPUT_PREFIX="$OUTDIR/kron-$S/${OMP_NUM_THREADS}t"
 mkdir -p "$OUTDIR/kron-$S"
 
@@ -189,6 +190,29 @@ echo "Running GraphBIG TriangleCount"
 for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/kron-$S" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TriangleCount.out"
 done
+
+# Galois
+# GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
+# rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR,TriangleCount}.out
+# echo "Running Galois BFS"
+# for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+#         "$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/kron-$S/kron-$S.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
+# done
+# 
+# echo "Running Galois SSSP"
+# for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+#         # Currently, SSSP throws an error when you try to use sg and not wsg file format.
+#         "$GALOISDIR"/apps/sssp/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.gr" -n 1 -s >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
+# done
+# 
+# echo "Running Galois PageRank"
+# # PageRank Note: ROOT is a dummy variable to ensure the same # of trials
+# # error = sum(|newPR - oldPR|)
+# for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+#         "$GALOISDIR"/pagerank/pagerank -f "$DDIR/kron-$S/kron-${S}.gr" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-Galois-PR.out"
+# done
+
+# No triangle count for Galois
 
 echo Finished experiment at $(date)
 

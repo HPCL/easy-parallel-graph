@@ -21,9 +21,11 @@ USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<fn>|<scale>
 #         kron-20.1el
 #         kron-20-undir.el
 #         kron-20.graphmat
+#         kron-20.vgr # TODO: Test if vgr or gr can work
 #         vertex.csv
 #         edge.csv
-# If you have a real dataset with filename pre.whatever
+# If you have a real dataset with filename pre.whatever;
+# extensions of .wel and .gr if weighted, .el and .vgr if unweighted.
 # $DDIR/
 #     pre.e
 #     pre.v
@@ -32,6 +34,7 @@ USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<fn>|<scale>
 #         pre.roots
 #         pre-roots.v
 #         pre.[w]el
+#         pre.[v]gr
 #         pre.1el
 #         vertex.csv
 #         edge.csv
@@ -93,6 +96,7 @@ NRT=64
 GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
+GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 ### Real world datasets as provided by Graphalytics
 if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	d="$FILE_PREFIX" # For convenience
@@ -125,10 +129,13 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# We don't want it to take 1 iteration.
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.el" -n $(($NRT*2)) > tmp.log
+		# We write a serialized graph to speed up GAP
 		"$GAPDIR/converter" -s -f "$d/$d.el" -b "$d/$d.sg"
 		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
-		# We write a serialized graph to speed up GAP
+
+		# Convert to Galois format
+		echo "Galois file format for real world graphs currently unsupported." # TODO
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted. Weighted graphs are currently not supported because of a bug in GraphMat."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
@@ -141,8 +148,11 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# We make no assumptions so we output double precision edge weights
 		# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 0 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
+		# Convert to Galois format
+		echo "Galois file format for real world graphs currently unsupported." # TODO
 	else
 		echo "File format not recognized"
+		cd "$OLDPWD"
 		exit 1
 	fi
 	awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$d/$d-roots.v"
@@ -159,7 +169,7 @@ else
 	# "$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
 
 	# Convert to edgelist
-	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" #FIXME
+	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" # TODO
 	"$GAPDIR/converter" -g $S -e "$DDIR/$d/$d.el"
 
 	# Symmetrize (make undirected)
@@ -189,6 +199,12 @@ else
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$DDIR/$d/vertex.csv" | tail -n 1) + 1 ))
 	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$DDIR/$d/$d.1el" "$DDIR/$d/$d.graphmat"
+
+	# Convert to Galois format.
+	# Currently, their unweighted graph format (vgr) doesn't work so we add 1s as weights.
+	# "$GALOISDIR/tools/graph-convert/graph-convert" -edgelist2vgr "$DDIR/$d/$d.el" "$DDIR/$d/$d.vgr"
+	awk '{print $1 " " $2 " " 1}' "$DDIR/$d/$d.el" > "$DDIR/$d/$d.wel"
+	"$GALOISDIR/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
 fi
 cd "$OLDPWD"
 

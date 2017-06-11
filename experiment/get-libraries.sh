@@ -61,22 +61,26 @@ cd "$LIBDIR"
 # export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
 
 # Galois:
-# cd "$LIBDIR"
-# wget -nc http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
-# tar -xf Galois-2.2.1.tar.gz
-# cd "$LIBDIR/Galois-2.2.1"
-# ex -s src/Barrier.cpp '+:%s/\Vpthread_barrier_init(&bar, 0, ~0)/pthread_barrier_init(\&bar, 0, MAX_THREADS)/g' '+:x'
-# ex -sc '1i|#define MAX_THREADS 8096' -cx src/Barrier.cpp # Warning: this isn't idempotent
-# mkdir default
-# cd default
-# cmake ..
-# make # TODO: This fails right now for DESorderedHandNB, I think it has to do with boost.
+cd "$LIBDIR"
+wget -nc http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
+tar -xf Galois-2.2.1.tar.gz
+cd "$LIBDIR/Galois-2.2.1"
+# Chose some large maximum number of threads, say 8096
+ex -s src/Barrier.cpp '+:%s/\Vpthread_barrier_init(&bar, 0, ~0)/pthread_barrier_init(\&bar, 0, 8096)/g' '+:x'
+cd build
+mkdir -p default
+cd default
+cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DCMAKE_C_COMPILER=gcc-4.8 ../..
+make # TODO: This fails right now for DESorderedHandNB on sansa. I think it has to do with boost or gcc5 ABI or gcc5 being 32 bit only...
+if [ "$?" -ne 0 ]; then FAILED="$FAILED Galois"; fi
 
 if [ -z "$FAILED" ]; then
 	echo All libraries downloaded and built correctly.
 else
 	echo "$FAILED failed to load. Possible issues:"
-	echo GraphMat requires icpc.
-	echo Other dependencies can be found in the README.md
+	echo "GraphMat requires icpc."
+	echo "Galois is known to work with gcc 4.8.5 but has issues with gcc 4.9 or gcc 5.4.0. It's finicky."
+	echo "Your version of boost may cause issues as well; try using boost 1.55.0 or greater."
+	echo "Other dependencies can be found in the README.md"
 fi
 
