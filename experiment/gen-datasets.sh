@@ -97,7 +97,10 @@ GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
-### Real world datasets as provided by Graphalytics
+
+###
+# Real world datasets as provided by Graphalytics
+###
 if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	d="$FILE_PREFIX" # For convenience
 	mkdir -p "$DDIR/$d"
@@ -131,16 +134,24 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		"$GAPDIR/sssp" -f "$d/$d.el" -n $(($NRT*2)) > tmp.log
 		# We write a serialized graph to speed up GAP
 		"$GAPDIR/converter" -s -f "$d/$d.el" -b "$d/$d.sg"
+
+		echo Writing the graph transpose to "$DDIR/$d/${d}-t.el"
+		awk '{print $2 " " $1}' "$DDIR/$d/$d.el" > "$DDIR/$d/${d}-t.el"
+
 		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
-
 		# Convert to Galois format
-		echo "Galois file format for real world graphs currently unsupported." # TODO
+		echo "Galois file format for unweighted real world graphs currently unsupported." # TODO
+		# But if it were, we would also need the transpose:
+		# echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
+		# "$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/${d}.gr" "$DDIR/$d/${d}-t.gr"
+
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted. Weighted graphs are currently not supported because of a bug in GraphMat."
 		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
 		awk '{printf "%d %d %s\n", ($1+1), ($2+1), $3}' "$d.e" > "$d/$d.wel"
 		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d/$d.el" # For GraphMat
+
 		echo "Getting roots."
 		"$GAPDIR/sssp" -f "$d/$d.el" -n $(( $NRT * 2 )) > tmp.log
 		# TODO: Use this in real-datasets, change WeightT to float if need be and recompile GAPBS
@@ -149,7 +160,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 0 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
 		# Convert to Galois format
-		echo "Galois file format for real world graphs currently unsupported." # TODO
+		"$GALOISDIR/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
 	else
 		echo "File format not recognized"
 		cd "$OLDPWD"
@@ -160,7 +171,9 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
 	echo "ID" > "$DDIR/$d/vertex.csv"
 	sed 's/[:space:]+/,/' "$DDIR/$d.v" >> "$DDIR/$d/vertex.csv"
-### Synthetic datasets to the Graph500 specification
+###
+# Synthetic datasets to the Graph500 specification
+###
 else
 	# Generate graph (Graph500 can only save to its binary format)
 	d="$FILE_PREFIX"
@@ -172,8 +185,8 @@ else
 	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" # TODO
 	"$GAPDIR/converter" -g $S -e "$DDIR/$d/$d.el"
 
-	# Symmetrize (make undirected)
-	"$GAPDIR/converter" -g $S -s -e "$DDIR/$d/${d}-undir.el"
+	# Symmetrize (make undirected) # TODO: RESULTS IN IDENTICAL OUTPUT
+	# "$GAPDIR/converter" -g $S -s -e "$DDIR/$d/${d}-undir.el"
 
 	# Convert to GAP serialized format
 	"$GAPDIR/converter" -g $S -s -b "$DDIR/$d/$d.sg"
@@ -193,7 +206,7 @@ else
 
 	# Convert to GraphMat format
 	# GraphMat requires edge weights---Just make them all 1 for the .wel format
-	# XXX: What happens when you remove selfloops and duplicated edges.
+	# TODO: What happens when you remove selfloops and duplicated edges.
 	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}.el" > "$DDIR/$d/$d.1el"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
@@ -205,6 +218,8 @@ else
 	# "$GALOISDIR/tools/graph-convert/graph-convert" -edgelist2vgr "$DDIR/$d/$d.el" "$DDIR/$d/$d.vgr"
 	awk '{print $1 " " $2 " " 1}' "$DDIR/$d/$d.el" > "$DDIR/$d/$d.wel"
 	"$GALOISDIR/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
+	echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
+	"$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/$d.gr" "$DDIR/$d/${d}-t.gr"
 fi
 cd "$OLDPWD"
 

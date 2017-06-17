@@ -70,9 +70,6 @@ TOL=0.00000006
 NRT=32 # Number of roots
 export SKIP_VALIDATION=1
 
-# Load all the modules here
-module load intel/17
-
 echo Note: Files of the form
 echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR}.out"
 echo get overwritten.
@@ -192,25 +189,25 @@ for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 done
 
 # Galois
-# GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
-# rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR,TriangleCount}.out
-# echo "Running Galois BFS"
-# for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-#         "$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/kron-$S/kron-$S.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
-# done
-# 
-# echo "Running Galois SSSP"
-# for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-#         # Currently, SSSP throws an error when you try to use sg and not wsg file format.
-#         "$GALOISDIR"/apps/sssp/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.gr" -n 1 -s >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
-# done
-# 
-# echo "Running Galois PageRank"
-# # PageRank Note: ROOT is a dummy variable to ensure the same # of trials
-# # error = sum(|newPR - oldPR|)
-# for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-#         "$GALOISDIR"/pagerank/pagerank -f "$DDIR/kron-$S/kron-${S}.gr" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-Galois-PR.out"
-# done
+rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR,TriangleCount}.out
+echo "Running Galois BFS"
+for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/kron-$S/kron-$S.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
+done
+
+echo "Running Galois SSSP"
+for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	# TODO: Adjust delta parameter -delta=<int>
+	# Currently, SSSP throws an error when you try to use sg and not wsg file format.
+	"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/kron-$S/kron-$S.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
+done
+
+echo "Running Galois PageRank"
+# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
+# error = sum(|newPR - oldPR|)
+for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/kron-$S/kron-${S}-t.gr" "$DDIR/kron-$S/kron-${S}.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
+done
 
 # No triangle count for Galois
 

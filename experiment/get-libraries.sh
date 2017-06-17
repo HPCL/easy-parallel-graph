@@ -72,6 +72,7 @@ mkdir -p default
 cd default
 cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DCMAKE_C_COMPILER=gcc-4.8 ../..
 make # TODO: This fails right now for DESorderedHandNB on sansa. I think it has to do with boost or gcc5 ABI or gcc5 being 32 bit only...
+cd "$LIBDIR/.."
 if [ "$?" -ne 0 ]; then FAILED="$FAILED Galois"; fi
 
 if [ -z "$FAILED" ]; then
