@@ -71,7 +71,7 @@ NRT=32 # Number of roots
 export SKIP_VALIDATION=1
 
 echo Note: Files of the form
-echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR}.out"
+echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph,Galois}-{BFS,SSSP,PR,TC}.out"
 echo get overwritten.
 
 echo Starting experiment at $(date)
@@ -91,7 +91,7 @@ else
 fi
 
 # GAP
-rm -f "${OUTPUT_PREFIX}"-GAP-{BFS,SSSP,PR,TriangleCount}.out
+rm -f "${OUTPUT_PREFIX}"-GAP-{BFS,SSSP,PR,TC}.out
 echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 # Just do one trial to be the same as the rest of the experiments
@@ -113,10 +113,10 @@ for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 done
 
 echo "Running GAP TriangleCount"
-"$GAPDIR"/tc -f "$DDIR/kron-$S/kron-${S}.sg" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TriangleCount.out"
+"$GAPDIR"/tc -f "$DDIR/kron-$S/kron-${S}.sg" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
 
 # PowerGraph
-rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TriangleCount}.{out,err}
+rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TC}.{out,err}
 echo "Running PowerGraph SSSP"
 # Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
 if [ "$OMP_NUM_THREADS" -gt 128 ]; then
@@ -136,7 +136,7 @@ done
 
 echo "Running PowerGraph TriangleCount"
 for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/kron-$S/kron-${S}.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TriangleCount.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TriangleCount.err"
+	"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/kron-$S/kron-${S}.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
 done
 
 # GraphMat
@@ -163,11 +163,11 @@ done
 # TODO: Triangle Counting gives different answers on every platform
 echo "Running GraphMat TriangleCount"
 for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
-	"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TriangleCount.out"
+	"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
 done
 
 # GraphBIG
-rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR,TriangleCount}.out
+rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR,TC}.out
 echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
 head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
@@ -185,11 +185,11 @@ done
 
 echo "Running GraphBIG TriangleCount"
 for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-	"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/kron-$S" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TriangleCount.out"
+	"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/kron-$S" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
 done
 
 # Galois
-rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR,TriangleCount}.out
+rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR}.out
 echo "Running Galois BFS"
 for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
 	"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/kron-$S/kron-$S.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"

@@ -150,6 +150,8 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GAP-*.out'); do
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,SSSP,Data structure build," $3}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,SSSP,Time," $3}' "$FN" >> "$OUTFN"
 	elif [ "$ALGO" = PR ]; then
+		# TODO: Double-check this. Should it not be average time?
+		# TODO: Add TC to GAP, GraphBIG, GraphMat
 		echo -n 'GAP,PageRank,File reading,' >> "$OUTFN"
 		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,PageRank,Data structure build," $3}' "$FN" >> "$OUTFN"
@@ -174,7 +176,35 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-PowerGraph-*.out'); do
 	elif [ "$ALGO" = PR ]; then
 		awk -v NRT=$NRT '/Finished Running engine/{i++; if(i<=NRT)print "PowerGraph,PageRank,Time," $5}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/iterations completed/{i++; if(i<=NRT)print "PowerGraph,PageRank,Iterations," $(NF-2)}' "$ERRFN" >> "$OUTFN"
+	elif [ "$ALGO" = TC ]; then
+		awk -v NRT=$NRT '/Counted in /{i++; if(i<=NRT)print "PowerGraph,TC,Time," $3}' "$FN" >> "$OUTFN"
+		awk -v NRT=$NRT '/[0-9]+ Triangles/{i++; if(i<=NRT)print "PowerGraph,TC,Triangles," $1}' "$FN" >> "$OUTFN"
 	fi
 done
 echo #\n
+
+echo -n "Parsing Galois for"
+for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-Galois-*.out'); do
+	f=$(basename $FN)
+	T=${f%%t[^0-9]*}
+	OUTFN="$OUTDIR/parsed-$FILE_PREFIX-$T.csv"
+	ALGO=$(expr match "${f%.out}" '.*\(-.*\)')
+	ALGO=${ALGO#-}
+	echo -n "; $ALGO $T threads"
+	if [ "$ALGO" = BFS ]; then
+		awk -v NRT=$NRT -F, '/STAT,\(NULL\),TotalTime/{print "Galois,BFS,Time," ($5 / 1000)}' "$FN" >> "$OUTFN"
+	elif [ "$ALGO" = SSSP ]; then
+		awk -v NRT=$NRT -F, '/STAT,\(NULL\),TotalTime/{print "Galois,SSSP,Time,"  ($5 / 1000)}' "$FN" >> "$OUTFN"
+	elif [ "$ALGO" = PR ]; then
+		awk -v NRT=$NRT -F, '/STAT,\(NULL\),TotalTime/{print "Galois,PageRank,Time," ($5 / 1000)}' "$FN" >> "$OUTFN"
+	fi
+done
+echo #\n
+
+# Naive error handling: If something wasn't parsed then there will
+# be lines with extra fields.
+grep -E '.*,.*,.*,.*,.*' "$OUTDIR"/parsed-*
+if [ $? -eq 0 ]; then
+	echo One or more csv files is ill-formed. This is probably because an experiment failed.
+fi
 
