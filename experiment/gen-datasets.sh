@@ -89,6 +89,7 @@ if [ -z "$FILE" ]; then
 	;;
 	esac
 fi
+echo "Starting data set generation at $(date)"
 
 mkdir -p "$DDIR"
 export OMP_NUM_THREADS=64
@@ -222,6 +223,7 @@ else
 	"$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/$d.gr" "$DDIR/$d/${d}-t.gr"
 fi
 cd "$OLDPWD"
+echo "Completed data set generation at $(date)"
 
 # TEST: Convert back to non-binary, see what we get
 # "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 1 --inputformat 0 --outputformat 1 --inputheader 1 --outputheader 1 --inputedgeweights 1 --outputedgeweights 2 "$DDIR/$d.graphmat" "$DDIR/$d.test.wel"

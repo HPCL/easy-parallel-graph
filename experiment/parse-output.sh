@@ -56,10 +56,10 @@ LOG_DIR="$OUTDIR/$FILE_PREFIX"
 NRT=32
 # Header: Sys,Algo,Metric,Time
 
-echo -n "Parsing GraphBIG for"
 echo "Removing old parsed files and starting fresh..."
-rm -f "$OUTDIR"/parsed-$FILE_PREFIX-*.csv
+rm -f "$OUTDIR/parsed-$FILE_PREFIX"-*.csv
 
+echo -n "Parsing GraphBIG for"
 for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 	f=$(basename $FN)
 	T=${f%%t[^0-9]*}
@@ -67,6 +67,7 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 	ALGO=$(expr match "${f%.out}" '.*\(-.*\)')
 	ALGO=${ALGO#-}
 	echo -n "; $ALGO $T threads"
+	# T=0 and 1 business because there are two times, one for iterations and one for everything else
 	if [ "$ALGO" = BFS ]; then
 		echo -n "GraphBIG,BFS,File reading," >> "$OUTFN"
 		grep -A 7 "Benchmark: BFS" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
@@ -80,6 +81,11 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 		grep -A 7 "Degree Centrality" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
 		grep 'iteration #' "$FN" | awk '{print "GraphBIG,PageRank,Iterations," $4}' >> "$OUTFN"
 		grep -A 11 "Degree Centrality" "$FN" | awk -v T=1 '/time/{if(T%2==0){print "GraphBIG,PageRank,Time," $3} T++}' >> "$OUTFN"
+	elif [ "$ALGO" = TC ]; then
+		echo -n 'GraphBIG,TC,File reading,' >> "$OUTFN"
+		grep -A 4 "Benchmark: triangle count" "$FN" | awk '/time/{print $3}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep 'total triangle count' "$FN" | awk '{print "GraphBIG,TC,Triangles," $5}' >> "$OUTFN"
+		grep -A 3 "computing triangle count" "$FN" | awk '/time/{print "GraphBIG,TC,Time," $3}' >> "$OUTFN"
 	fi
 done
 echo #\n
@@ -127,6 +133,12 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphMat-*.out'); do
 		grep -B 5 "PR Time" "$FN" | awk '/A from memory/{print "GraphMat,PageRank,Data structure build," $(NF-1)}' >> "$OUTFN"
 		grep -B 1 "PR Time" "$FN" | awk '/Completed/{print "GraphMat,PageRank,Iterations," $2}' >> "$OUTFN"
 		awk '/PR Time/{print "GraphMat,PageRank,Time," ($4/1000)}' "$FN" >> "$OUTFN"
+	elif [ "$ALGO" = TC ]; then
+		echo -n 'GraphMat,TC,File reading,' >> "$OUTFN"
+		awk -F ':' '/Finished file read /{print $NF}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk '/A from memory/{print "GraphMat,TC,Data structure build," $(NF-1)}' "$FN" >> "$OUTFN"
+		awk '/Total triangles/{print "GraphMat,TC,Triangles," $4}' "$FN" >> "$OUTFN"
+		awk '/Time =/{print "GraphMat,TC,Time," ($3/1000)}' "$FN" >> "$OUTFN"
 	fi
 done
 echo #\n
@@ -150,13 +162,15 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GAP-*.out'); do
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,SSSP,Data structure build," $3}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,SSSP,Time," $3}' "$FN" >> "$OUTFN"
 	elif [ "$ALGO" = PR ]; then
-		# TODO: Double-check this. Should it not be average time?
-		# TODO: Add TC to GAP, GraphBIG, GraphMat
 		echo -n 'GAP,PageRank,File reading,' >> "$OUTFN"
 		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,PageRank,Data structure build," $3}' "$FN" >> "$OUTFN"
 		grep -B 2 'Average Time:' "$FN" | awk '/^\s*[0-9]+/{print "GAP,PageRank,Iterations," $1}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,PageRank,Time," $3}' "$FN" >> "$OUTFN"
+	elif [ "$ALGO" = TC ]; then
+		echo -n 'GAP,TC,File reading,' >> "$OUTFN"
+		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,TC,Time," $3}' "$FN" >> "$OUTFN"
 	fi
 done
 echo #\n
