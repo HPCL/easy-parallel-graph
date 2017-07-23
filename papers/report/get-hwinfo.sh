@@ -17,7 +17,7 @@ if [ "$OSNAME" = Darwin ]; then
 	RAM_FREQ=$(cat /tmp/profile.txt | grep -A 16 "Memory:$" | grep "Speed" | awk -F ":" '{print $2}' | sed 's/^[[:space:]]*//')
 	GPU_MODEL=$(cat /tmp/profile.txt | grep -A 11 "Graphics/Displays" | grep "Chipset" | awk -F ":" '{print $2}' | sed 's/^[[:space:]]*//')
 	rm /tmp/profile.txt
-	#CPU_SIMD=$(sysctl -n machdep.cpu.features)
+	CPU_SIMD=$(sysctl -n machdep.cpu.features)
 else
 	CPU_MODEL=$(lscpu | grep "Model name" | cut -d' ' -f 3- | sed 's/^[[:space:]]*//')
 	CPU_SOCKETS=$(grep -i "physical id" /proc/cpuinfo | sort -u | wc -l)
@@ -57,6 +57,7 @@ print_record "CPU Cores" "$CPU_CORES"
 print_record "CPU Clock" "$CPU_CLOCK"
 # TODO: May want to add a field for flags. Specifically, what level of SIMD there is.
 # i.e. avx512 > avx2 > avx > sse2 > sse
+print_record "CPU_FLAGS" "$CPU_SIMD"
 # Another useful detail may be the version of CUDA supported.
 print_record "RAM Size" "$RAM_SIZE"
 print_record "RAM Freq" "$ACTUAL_RAM_FREQ"
