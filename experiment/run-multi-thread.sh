@@ -2,15 +2,14 @@
 # Runs run-experiment.sh for each thread number.
 # Must have been parsed beforehand.
 S=$1
-if [ -z "$S" ]; then
-	echo "usage: run-multi-thread.sh <scale>"
+THREADS="1 2 4 8 12 16 20 24 28 32"
+if [ -z "$S" ] || [ "$S" = '--help' ] || [ "$S" = '-h' ]; then
+	echo "usage: run-multi-thread.sh <scale>
+	You can also change the THREADS variable in this script"
 	exit 2
 fi
-for T in $(echo 1 2 4 8 16 32 64 72); do
-	./run-experiment --ddir=$HOME/graphalytics/all-datasets/gabb17 --libdir=$HOME/graphalytics $S $T >> output/out${S}-${T}.log 2>> output/out${S}-${T}.err
+mkdir -p output/out-kron-$S
+for T in $(echo $THREADS); do
+	./run-experiment.sh $S $T >> output/kron-${S}-logs/${T}t.log 2>> output/kron-${S}-logs/${T}t.err
 done
 
-# Other experiment examples on arya:
-# ./gen-datasets.sh --libdir=$LIBDIR --ddir=$DDIR $S
-# ./run-experiment.sh $S $T --libdir=$LIBDIR --ddir=$DDIR > output/out${S}-${T}.log 2> output/out${S}-${T}v2.err &
-# ./run-power.sh --ddir=$DDIR $S $T
