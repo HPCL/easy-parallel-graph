@@ -13,6 +13,12 @@ The general workflow could consist of the following steps. You can find an examp
 	* Note: `run-power.sh` also parses the log files.
 5. Analyze the data. Some examples can be found in `papers/publication/plot_data.R` and`experiment/experiment_analysis.R`.
 
+## Algorithms
+1. Breadth First Search (BFS)
+2. Single Source Shortest Paths (SSSP)
+3. PageRank: This uses a stopping criterion of `sum(|π_i - π_(i-1)|)` where `π_i` is the PageRank at iteration `i` and the alpha parameter is ɑ = 0.15.
+4. Triangle Counting (TriangleCount) - Counts the number of triangles in an undirected graph. If the input graph is directed, it is symmetrized beforehand.
+
 ### Graphalytics
 You can download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
 
@@ -33,7 +39,7 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 
 ## Dependencies
 ### The Scripts in the `experiment` Directory
-1. R
+1. R and the ggplot2 library
 2. Graph500, GAP, Graphalytics, GraphBIG, PowerGraph dependencies
 
 ### GraphBIG/OpenG
@@ -52,12 +58,12 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 1. A C++ compiler with OpenMP Support
 
 ### `get-graphalytics.sh`
-1. Bash
-2. Perl
-3. Yarn
-4. Apache maven 3.0.0 or later
-5. Git
-6. wget
+1. Java
+2. Bash
+3. Perl
+4. Yarn
+5. Apache maven 3.0.0 or later
+6. Git
 
 ### Graphalytics
 1. Apache maven 3.0.0 or later

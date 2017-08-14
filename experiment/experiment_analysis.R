@@ -10,7 +10,7 @@ prefix <- "./output/" # The default.
 source(args[1]) # This is a security vulnerability... just be careful
 
 # Assuming default edgefactor of 16
-stopifnot(length(scale) == 1) # Not supported yet
+stopifnot(length(scale) == 1) # Multiple scales in one go not supported yet
 
 ###
 # Define some functions
@@ -20,25 +20,29 @@ stopifnot(length(scale) == 1) # Not supported yet
 # {"Time", "File reading", "Iterations", "Data structure build"},
 # generate a pdf boxplot, one box per System, of the runtimes.
 time_boxplot <- function(scale, thr, algo, timing_metric = "Time") {
+	out_fn <- paste0("graphics/", algo, "_", gsub(" ", "_", timing_metric),
+			"_", scale, "-", thr, "t.pdf")
+	message("Writing to ", out_fn)
 	nedges <- 16 * 2^scale
-	filename <- paste0(prefix,"parsed-","kron-",scale,"-",thr,".csv")
-	x <- read.csv(filename, header = FALSE)
+	in_fn <- paste0(prefix,"parsed-","kron-",scale,"-",thr,".csv")
+	x <- read.csv(in_fn, header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
 	# Generate a figure
 	algo_time <- subset(x, x$Algo == algo & x$Metric == timing_metric,
 			c("Sys","Time"))
+	stopifnot(nrow(algo_time) > 0)
 	algo_time$Time <- as.numeric(as.character(algo_time$Time))
 	# Remove zero rows---they're invalid and don't work with the log plot
 	# If some factors were coerced into NAs then there was some issue parsing
 	algo_time <- algo_time[!algo_time$Time == 0.0, ]
-	pdf(paste0("graphics/bfs_",timing_metric,"_",scale,"-", thr,"t.pdf"),
-		width = 5.2, height = 5.2)
+	pdf(out_fn, width = 5.2, height = 5.2)
 	ylabel <- timing_metric
-	if (timing_metric != "Iterations") {
+	if (timing_metric == "Time") {
 		ylabel <- paste(ylabel, "(seconds)")
 	}
 	boxplot(Time~Sys, data = algo_time, ylab = ylabel,
-			main = "BFS Time", log = "y", col="cyan")
+			main = paste(algo, "Time on", thr, "Threads"),
+			log = "y", col="cyan")
 	mtext(paste0("scale = ",scale, " nedges = ",nedges), side = 3)
 	dev.off()
 }
@@ -47,8 +51,8 @@ time_boxplot <- function(scale, thr, algo, timing_metric = "Time") {
 measure_scale <- function(scale, threads, algo) {
     # Read in and average the data for BFS for each thread
     # It is wasteful to reread the parsed*-1t.csv but it simplifies the code
-	filename <- paste0(prefix,"parsed-","kron-",scale,"-1.csv")
-    x <- read.csv(filename, header = FALSE)
+	in_fn <- paste0(prefix,"parsed-","kron-",scale,"-1.csv")
+    x <- read.csv(in_fn, header = FALSE)
     colnames(x) <- c("Sys","Algo","Metric","Time")
     x$Sys <- factor(x$Sys, ordered = TRUE)
     systems <- levels(subset(x$Sys, x$Algo == algo, c("Sys")))
@@ -59,8 +63,8 @@ measure_scale <- function(scale, threads, algo) {
     for (ti in seq(length(threads))) {
 		# V1 -> Sys, V4 -> Time
         thr <- threads[ti]
-		filename <- paste0(prefix,"parsed-kron-",scale,"-",thr,".csv")
-        Y <- read.csv(filename, header = FALSE)
+		in_fn <- paste0(prefix,"parsed-kron-",scale,"-",thr,".csv")
+        Y <- read.csv(in_fn, header = FALSE)
         ti_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
                 c(V1,V4))
 		one_ti <- aggregate(ti_time$V4, list(ti_time$V1), mean)
@@ -82,8 +86,9 @@ plot_strong_scaling <- function(scaling_data, scale, threadcnts, algo) {
 	colors <- rainbow(nrow(alg_ss))
 	colors <- gsub("F", "C", colors) # You want it darker
 	colors <- gsub("CC$", "FF", colors) # But keep it opaque
-	filename <- paste0("graphics/",algo,"_ss",scale,".pdf")
-	pdf(filename, width = 7, height = 4)
+	out_fn <- paste0("graphics/",algo,"_ss",scale,".pdf")
+	message("Writing to ", out_fn)
+	pdf(out_fn, width = 7, height = 4)
 	plot(as.numeric(alg_ss[1,]), xaxt = "n", type = "b", ylim = c(0,1),
 			ylab = "", xlab = "Threads", col = colors[1],
 			main = paste0(algo, " Strong Scaling"),
@@ -116,7 +121,9 @@ plot_speedup <- function(strong_scaling, threadcnts, algo)
 	colors <- rainbow(nrow(strong_scaling))
 	colors <- gsub("F", "C", colors) # You want it darker
 	colors <- gsub("CC$", "FF", colors) # But keep it opaque
-	pdf(paste0("graphics/",algo,"_speedup",scale,".pdf"), width = 7, height = 4)
+	out_fn <- paste0("graphics/",algo,"_speedup",scale,".pdf")
+	message("Writing to ", out_fn)
+	pdf(out_fn, width = 7, height = 4)
 	plot(as.numeric(spd[1,]), xaxt = "n", type = "b", ylim = c(1,10),
 			ylab = "Speedup", xlab = "Threads", col = colors[1], log = "y",
 			main = paste(algo,"Speedup"), cex.main=1.4, lty = 1, pch = 1, lwd = 3)
@@ -137,12 +144,18 @@ plot_speedup <- function(strong_scaling, threadcnts, algo)
 ###
 # Generate some figures
 ###
-bfs_scale <- measure_scale(scale, threads, "BFS") # Possiblities: BFS, SSSP, PageRank
+thr <- threads[length(threads) - 1] # Choose the second to last arbitrarily
+# Possiblities: BFS, SSSP, PageRank, TC
+bfs_scale <- measure_scale(scale, threads, "BFS")
 bfs_ss <- plot_strong_scaling(bfs_scale, scale, threads, "BFS")
 bfs_spd <- plot_speedup(bfs_ss, threads, "BFS")
 
-for (thr in threads) {
-	time_boxplot(scale, thr, "BFS", timing_metric = "Time")
-	time_boxplot(scale, thr, "BFS", timing_metric = "Data structure build")
-}
+message("Saving boxplots of various measurements. These may need to be edited")
+time_boxplot(scale, thr, "BFS", timing_metric = "Time")
+time_boxplot(scale, thr, "BFS", timing_metric = "Data structure build")
+time_boxplot(scale, thr, "SSSP", timing_metric = "Time")
+time_boxplot(scale, thr, "PageRank", timing_metric = "Time")
+time_boxplot(scale, thr, "PageRank", timing_metric = "Iterations")
+time_boxplot(scale, thr, "TC", timing_metric = "Time")
+time_boxplot(scale, thr, "TC", timing_metric = "Triangles")
 

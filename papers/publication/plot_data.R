@@ -7,7 +7,7 @@
 ###
 scale <- 22
 bpc <- "cyan"
-filename <- paste0("parsed",scale,"-32.csv")
+filename <- paste0("parsed-kron-",scale,"-32.csv")
 x <- read.csv(filename, header = FALSE)
 colnames(x) <- c("Sys","Algo","Metric","Time")
 
@@ -90,20 +90,20 @@ dev.off()
 ###
 threadcnts <- c(1,2,4,8,16,32,64,72)
 scale <- 20
-measure_scale <- function(algo) {
+measure_scale <- function(algo, scale) {
 	# Read in and average the data for BFS for each thread
 	# It is wasteful to reread the parsed*-1.csv but it simplifies the code
-	x <- read.csv(paste0("parsed",scale,"-1.csv"), header = FALSE)
+	x <- read.csv(paste0("parsed-kron-",scale,"-1.csv"), header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
 	x$Sys <- factor(x$Sys, ordered = TRUE)
-	systems <- levels(subset(x$Sys, x$Algo == algo, c("Sys")))
+	systems <- unique(subset(x$Sys, x$Algo == algo, c("Sys")))
 	algo_time <- data.frame(
 			matrix(ncol = length(threadcnts), nrow = length(systems)),
 			row.names = systems)
 	colnames(algo_time) <- threadcnts
 	for (ti in seq(length(threadcnts))) {
 		thread <- threadcnts[ti]
-		Y <- read.csv(paste0("parsed",scale,"-",thread,".csv"),
+		Y <- read.csv(paste0("parsed-kron-",scale,"-",thread,".csv"),
 				header = FALSE)
 		ti_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
 				c(V1,V4))
@@ -112,7 +112,7 @@ measure_scale <- function(algo) {
 	return(algo_time)
 }
 
-bfs_scale <- measure_scale("BFS")
+bfs_scale <- measure_scale("BFS", scale)
 
 colors <- rainbow(nrow(bfs_scale))
 colors <- gsub("F", "C", colors) # You want it darker
@@ -124,10 +124,12 @@ for (ti in rev(seq(length(threadcnts)))) {
 }
 
 # Plot the strong scalability for BFS
+# Actually, this is called Parallel Efficiency!
 pdf("graphics/bfs_ss.pdf", width = 7, height = 4)
+systems <- rownames(bfs_ss)
 plot(as.numeric(bfs_ss[1,]), xaxt = "n", type = "b", ylim = c(0,1),
 		ylab = "", xlab = "Threads", col = colors[1],
-		main = "BFS Strong Scaling", cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
+		main = "BFS Parallel Efficiency", cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
 for (pli in seq(2,nrow(bfs_ss))) {
 	lines(as.numeric(bfs_ss[pli,]), col = colors[pli], type = "b",
 			lwd = 3, pch = pli, lty = pli) # XXX: lty may repeat after 8
@@ -140,7 +142,7 @@ legend(legend = c("Linear", rownames(bfs_ss)), x = "topright",
 		box.lwd = 1, lwd = c(2, rep(3,length(systems))),
 		col = c("#000000FF", colors),
 		bg = "white")
-mtext(paste0("Scale = ", scale), side = 3)
+mtext(paste("Scale =", scale, "edges =", 16*2^scale), side = 3)
 mtext(expression(italic(over(T[1],n*T[n]))),
 		side = 2, las = 1, xpd = NA, outer = TRUE, adj = -0.2)
 dev.off()
@@ -149,7 +151,7 @@ dev.off()
 pdf("graphics/bfs_speedup.pdf", width = 7, height = 4)
 bfs_spd <- data.frame(t(apply(bfs_ss, 1, function(x){x*threadcnts})))
 colnames(bfs_spd) <- threadcnts
-plot(as.numeric(bfs_spd[1,]), xaxt = "n", type = "b", ylim = c(1,10),
+plot(as.numeric(bfs_spd[1,]), xaxt = "n", type = "b", ylim = c(1,18),
 		ylab = "Speedup", xlab = "Threads", col = colors[1], log = "y",
 		main = "BFS Speedup", cex.main=1.4, lty = 1, pch = 1, lwd = 3)
 for (pli in seq(2,nrow(bfs_ss))) {
