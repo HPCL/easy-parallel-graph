@@ -40,7 +40,7 @@ module load tau # Also loads the PAPI environment variable
 export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't think this is needed when sampling
 export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
-XPS_DIR="$LIB_DIR/xpscode/MSTSC"
+XPS_DIR="$LIB_DIR/xpscode/MST_CC"
 GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
 OUTPUTDIR="$(pwd)/output"
 ENSURE_CONNECTED='no' # yes if you want to run bfs.out
@@ -228,12 +228,14 @@ build_Galois()
 	# Copy from easy-parallel-graph's RAPL wrappers.
     cd "$GALOIS_DIR/build"
 	if [ "$POWER_PROFILING" = "1" ]; then
+		echo "Building with Power Profiling"
 		mkdir -p power
 		cd power
 		cp "$LIB_DIR/../../../power/power_rapl.c" "$GALOIS_DIR/apps/boruvka"
 		cp "$LIB_DIR/../../../power/power_rapl.h" "$GALOIS_DIR/apps/boruvka"
 		cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -DPOWER_PROFILING=1 -DPAPI="$PAPI" -Wno-dev ../../ 
 	else
+		echo "Building without Power Profiling"
 		mkdir -p release
 		cd release
 		cmake -DCMAKE_Fortran_COMPILER=gfortran-4.8 -Wno-dev ../../ 
@@ -274,7 +276,6 @@ build_XPS()
 	fi
 	make cE
 	make tEx
-	make bfs
 }
 
 run_autoperf()
