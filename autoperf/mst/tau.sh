@@ -66,3 +66,6 @@ chown -R spollard MULTI__*
 # -tau:makefile <file> Specify TAU stub Makefile
 # TODO: Must convert from their nanojoules to joules: (* 1e-9)
 # TODO: no -pdt in makefile? Should it be there or not?
+
+# Then analyze with paraprof or pprof
+
