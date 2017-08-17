@@ -501,8 +501,12 @@ parse_one()
 {
 	if [ "$POWER_PROFILING" = "1" ]; then
 		# Galois
-		echo "Galois has not been formulated for batches and power."
-		INFO="${DATA_FORMAT},1"
+		if [ "$NUM_BATCHES" -gt 1 ]; then
+			echo "Warning: Galois has not been formulated for both batches and power."
+			INFO="${DATA_FORMAT},1"
+		else
+			INFO="${DATA_FORMAT}"
+		fi
 		awk -v PKG=$PKG -v INFO="$INFO" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "$GALOISLOG" >> "$PFN"
 		awk -v PKG=$PKG -v INFO="$INFO" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "Galois,All,%s,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' "${GALOISLOG}" >> "$PFN"
 		awk -v PKG=$PKG -v INFO="$INFO" '/^[0-9]+\.[0-9]+ s/{printf "Galois,All,%s,RAPL Time (s),%s\n",INFO,$1;exit}' ${GALOISLOG} >> "$PFN"
