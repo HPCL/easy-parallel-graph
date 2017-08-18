@@ -1,17 +1,26 @@
-# library(ggplot2)
-
-usage <- "usage: Rscript experiment_analysis.R <filename> <scale> <changed_vertices> <insertion %> <num_batches>"
-
+library(ggplot2)
+# e.g.
+# Rscript experiment_analysis.R cc-experiment/parsed-power-aggregate.txt 24 100 1000000 32 G
+# Alternatively you could interactively call within R
+# commandArgs <- function(trailingOnly=TRUE) c("cc-experiment/parsed-power-aggregate.txt","24","100","1000000","32","G")
+# source("experiment_analysis.R")
+usage <- "usage: Rscript experiment_analysis.R <filename> <scale> <insertion_%> <changed_vertices> <num_threads> <rmat_type>"
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) != 5) {
+if (length(args) != 6) {
 	stop(usage)
 }
 filename <- args[1]
-scale_num <- args[2]
-num_batches <- args[3]
-cverts <- args[4]
-ins_pct <- args[5]
-num_threads <- 72
+scale_num <- as.numeric(args[2])
+ins_pct <- as.numeric(args[3])
+cverts <- as.numeric(args[4])
+num_threads <- as.numeric(args[5])
+rmat_type <- args[6]
+num_batches <- 1
+if (num_batches <= 1) {
+	with_batches <- FALSE
+} else {
+	with_batches <- TRUE
+}
 
 # This takes a filename, reads it in, then filters it down by the parameters
 # and adds a column for their interations.
@@ -25,8 +34,8 @@ get_method_time <- function(filename, scale_num, ins_pct, cverts, num_threads,
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
 	salient_cols <- c("algorithm", "execution_phase", "batch", "measurement", "value")
 	method_time <- subset(x,
-			x$scale==scale &
-			x$RMAT_type==rmat &
+			x$scale==scale_num &
+			x$RMAT_type==rmat_type &
 			x$edges_per_vertex==epv &
 			x$changed_vertices==cverts &
 			x$insertion_percent==ins_pct &
@@ -193,19 +202,23 @@ plot_strong_scaling <- function(scaling_data, scale)
 # execution_phase: All, rooting tree, first pass, insertion, deletion
 # possible values for measurement_type:
 # "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
-power_boxplot_with_batches <- function(
-		filename, scale_num, ins_pct, cverts, num_threads,
-		measurement_type = "Total CPU Energy (J)", rmat = "ER")
+power_boxplot <- function(
+		filename, scale_num, ins_pct, cverts, num_threads, rmat_type,
+		measurement_type = "Total CPU Energy (J)",
+		with_batches = FALSE)
 {
 	x <- read.csv(filename, header = TRUE)
 	# algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
-	plotfilename <- paste0("plot-",measurement_type,"-",scale_num,epv,"_",ins_pct,"i_",cverts,"_10b.pdf")
 	nedges <- epv * 2^scale_num
-	salient_cols <- c("algorithm", "execution_phase", "batch", "measurement", "value")
+	if (with_batches) {
+		salient_cols <- c("algorithm", "execution_phase", "batch", "measurement", "value")
+	} else {
+		salient_cols <- c("algorithm", "execution_phase", "measurement", "value")
+	}
 	method_time <- subset(x,
-			x$scale==scale &
-			x$RMAT_type==rmat &
+			x$scale==scale_num &
+			x$RMAT_type==rmat_type &
 			x$edges_per_vertex==epv &
 			x$changed_vertices==cverts &
 			x$insertion_percent==ins_pct &
@@ -220,28 +233,34 @@ power_boxplot_with_batches <- function(
 	method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
 	
 	if (measurement_type == "Time (s)") {
-		plot_title <- paste0("Time with RMAT Scale ", scale)
+		plot_title <- paste0("Time with RMAT Scale ", scale_num)
 	} else if (measurement_type == "Average CPU Power (W)") {
-		plot_title <- paste0("Power Usage with RMAT Scale ", scale)
-	} else if (measurement_type == "Average CPU Energy (J)") {
-		plot_title <- paste0("Power Usage with RMAT Scale ", scale)
+		plot_title <- paste0("Power Usage with RMAT Scale ", scale_num)
+	} else if (measurement_type == "Total CPU Energy (J)") {
+		plot_title <- paste0("Power Usage with RMAT Scale ", scale_num)
+	} else {
+		stop("Unrecognized measurement type '", measurement_type, "'")
 	}
 	plot_subtitle <- paste(2^scale_num, "vertices", epv, "edges per vertex")
 	# Generate a figure
-	pdf(plotfilename, width = 3.3, height = 3.3)
+	plotfilename <- paste0("plot-",measurement_type,"-",scale_num,epv,"_",ins_pct,"i_",cverts,"_10b.pdf")
+	pdf(plotfilename, width = 3.7, height = 3.7)
 	box <- ggplot(aes(y = value, x = algo_and_phase), data = method_time) +
 		ylab(measurement_type) +
 		xlab("Execution Phase.Algorithm") +
 		geom_boxplot() +
-		labs(title = plot_title, subtitle = plot_subtitle)
-	box + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+		labs(title = plot_title, subtitle = plot_subtitle) +
+		theme(axis.text.x = element_text(angle = 90, hjust = 1))
+	print(box)
 	dev.off()
-
+	message("plot written to ", plotfilename)
 }
 
 # "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
-power_boxplot_with_batches(filename, scale_num, ins_pct, cverts, num_threads,
-						   measurement_type = "Total CPU Energy (J)")
+power_boxplot(
+		filename, scale_num, ins_pct, cverts, num_threads, rmat_type,
+		measurement_type = "Total CPU Energy (J)",
+		with_batches = FALSE)
 
 # time_boxplot_with_batches("parsed-238_ER+B_75i_10000_64t_10batches.csv",
 # 						  23, 10000, 75, 64)
