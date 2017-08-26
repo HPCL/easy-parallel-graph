@@ -16,7 +16,9 @@ cverts <- as.numeric(args[4])
 num_threads <- as.numeric(args[5])
 rmat_type <- args[6]
 num_batches <- 1
-epv <- 8
+x <- read.csv(filename, header = TRUE)
+epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
+rm(x)
 if (num_batches <= 1) {
 	with_batches <- FALSE
 } else {
@@ -29,7 +31,7 @@ if (num_batches <= 1) {
 # Expects the header to be
 # algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
 get_method_time <- function(filename, scale_num, ins_pct, cverts, num_threads,
-							rmat_type = "ER", measurement_type = "Time (s)")
+                            rmat_type = "ER", measurement_type = "Time (s)")
 {
 	x <- read.csv(filename, header = TRUE)
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
@@ -153,21 +155,23 @@ measure_scalability <- function(filename, scale_num,
 	# 		x$scale == scale_num & x$changed_vertices == 5000 & x$insertion_percent == 75
 	# 		& x$RMAT_type == "ER" & x$execution_phase == "All",
 	# 		c("algorithm", "execution_phase", "threads", "value"))
-    systems <- levels(subset(yy$algorithm, yy$execution_phase == "All", c("algorithm")))
-    algo_time <- data.frame(
-            matrix(ncol = length(threads), nrow = length(systems)),
-            row.names = systems)
-    colnames(algo_time) <- threads
-    for (ti in seq(length(threads))) {
-        thr <- threads[ti]
-        thr_time <- subset(yy,
+	systems <- levels(factor(subset(
+			yy$algorithm, yy$execution_phase == "All", c("algorithm"))))
+	algo_time <- data.frame(
+			matrix(ncol = length(threads), nrow = length(systems)),
+			row.names = systems)
+	colnames(algo_time) <- threads
+	for (ti in seq(length(threads))) {
+		thr <- threads[ti]
+		thr_time <- subset(yy,
 				yy$threads == thr & yy$execution_phase == "All")
-		one_time <- aggregate(thr_time$value, list(thr_time$algorithm), mean)
+		one_time <- aggregate(as.numeric(as.character(thr_time$value)),
+		                      list(thr_time$algorithm), mean)
 		for (sysi in seq(length(one_time[[1]]))) { # For each algorithm
 			algo_time[rownames(algo_time) == one_time[sysi,1], ti] <- one_time[sysi,2]
 		}
-    }
-    return(algo_time)
+	}
+	return(algo_time)
 }
 
 # Plots just runtime
@@ -281,7 +285,8 @@ power_boxplot <- function(
 	# Remove zero rows---they're invalid and don't work with the log plot
 	# If some factors were coerced into NAs then there was some issue parsing
 	#method_time <- algo_time[!algo_time$Time == 0.0, ]
-	method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
+	method_time$algo_and_phase <- interaction(
+			method_time$execution_phase, method_time$algorithm)
 	
 	if (measurement_type == "Time (s)") {
 		plot_title <- paste0("Time with RMAT Scale ", scale_num)
@@ -310,6 +315,16 @@ power_boxplot <- function(
 }
 
 # "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
+message("Using parameters
+filename: ", args[1], "
+scale_num: ", as.numeric(args[2]), "
+ins_pct: ", as.numeric(args[3]), "
+cverts: ", as.numeric(args[4]), "
+num_threads: ", as.numeric(args[5]), "
+rmat_type: ", args[6], "
+num_batches: ", 1, "
+epv: ", epv)
+
 power_boxplot(
 		filename, scale_num, ins_pct, cverts, num_threads, rmat_type,
 		measurement_type = "Total CPU Energy (J)",
