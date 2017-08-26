@@ -4,11 +4,18 @@ library(ggplot2)
 # Alternatively you could interactively call within R
 # commandArgs <- function(trailingOnly=TRUE) c("cc-experiment/parsed-power-aggregate.txt","24","100","1000000","32","G")
 # source("experiment_analysis.R")
+
+#
+# 24_mst_scaling.pdf etc. generated with
+# commandArgs <- function(trailingOnly=TRUE) c("/Users/spollard/Documents/uo/research/easy-parallel-graph/papers/journal/mst/parsed-power-aggregate.txt","24","100","1000000","32","G")
+# 24_cc_scaling.pdf etc. generated with
+# commandArgs <- function(trailingOnly=TRUE) c("/Users/spollard/Documents/uo/research/easy-parallel-graph/papers/journal/cc/parsed-power-aggregate.txt","24","100","1000000","32","G")
 usage <- "usage: Rscript experiment_analysis.R <filename> <scale> <insertion_%> <changed_vertices> <num_threads> <rmat_type>"
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 6) {
 	stop(usage)
 }
+xps_algorithm <- "CC" # Choose either CC or MST
 filename <- args[1]
 scale_num <- as.numeric(args[2])
 ins_pct <- as.numeric(args[3])
@@ -120,7 +127,7 @@ percent_insertions <- function(filename, scale_num, cverts,
 			x$threads==num_threads &
 			x$execution_phase=="All" &
 			x$changed_vertices==cverts &
-			x$algorithm=="MST",
+			x$algorithm==xps_algorithm,
 			salient_cols)
 	# method_time$value <- as.numeric(as.character(algo_time$Time)) # May not be necessary
 	# Remove zero rows---they're invalid and don't work with the log plot
@@ -185,7 +192,7 @@ plot_strong_scaling <- function(scaling_data, scale_num,
     systems <- rownames(scaling_data)
 	log_axes <- ifelse(max(scaling_data) / min(scaling_data) > 100, "y", "")
 
-	out_fn <- paste0(scale_num,"_scaling.pdf")
+	out_fn <- paste0(scale_num,"_",xps_algorithm,"_scaling.pdf")
 	message("Writing to ", out_fn)
 	pdf(out_fn, width = 7, height = 4)
 	plot(as.numeric(scaling_data[1,]), xaxt = "n", type = "b",
@@ -193,7 +200,8 @@ plot_strong_scaling <- function(scaling_data, scale_num,
 			ylim = c(min(scaling_data)*0.9,
 					max(scaling_data)*ifelse(log_axes=="y", 2, 1.1)),
 			ylab = measurement_type, xlab = "Threads", col = colors[1],
-			main = paste0("Runtime for CC and Galois at Scale ", scale_num),
+			main = paste0("Runtime for ",xps_algorithm,
+			              " and Galois at Scale ", scale_num),
 			cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
 	for (pli in seq(2,nrow(scaling_data))) {
 			lines(as.numeric(scaling_data[pli,]), col = colors[pli], type = "b",
@@ -221,7 +229,7 @@ plot_parallel_efficiency <- function(scaling_data, scale_num)
 	colors <- rainbow(nrow(alg_ss))
 	colors <- gsub("F", "C", colors) # You want it darker
 	colors <- gsub("CC$", "FF", colors) # But keep it opaque
-	out_fn <- paste0(scale_num,"_parallel_eff.pdf")
+	out_fn <- paste0(scale_num,"_",xps_algorithm,"_parallel_eff.pdf")
 	message("Writing to ", out_fn)
 	pdf(out_fn, width = 7, height = 4)
 	plot(as.numeric(alg_ss[1,]), xaxt = "n", type = "b",
@@ -299,7 +307,7 @@ power_boxplot <- function(
 	}
 	plot_subtitle <- paste(2^scale_num, "vertices", epv, "edges per vertex")
 	# Generate a figure
-	plotfilename <- paste0("plot-",
+	plotfilename <- paste0("plot-",xps_algorithm,"-",
 			measurement_type,"-",scale_num,epv,"_",ins_pct,"i_",
 			cverts,"c_",num_threads,"t_",rmat_type,".pdf")
 	pdf(plotfilename, width = 3.7, height = 3.7)
