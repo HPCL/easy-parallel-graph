@@ -139,12 +139,14 @@ percent_insertions <- function(filename, scale_num, cverts,
 	dev.off()
 }
 
-measure_scalability <- function(filename, scale_num)
+measure_scalability <- function(filename, scale_num,
+		measurement_type = "Total CPU Energy (J)")
 {
     x <- read.csv(filename, header = TRUE)
 	yy <- subset(x,
 			x$scale == scale_num & x$changed_vertices == cverts &
-			x$insertion_percent == ins_pct & x$RMAT_type == rmat_type)
+			x$insertion_percent == ins_pct & x$RMAT_type == rmat_type &
+			x$measurement == measurement_type)
 	threads <- unique(yy$threads)
 	# TEST
 	# subset(x,
@@ -169,7 +171,8 @@ measure_scalability <- function(filename, scale_num)
 }
 
 # Plots just runtime
-plot_strong_scaling <- function(scaling_data, scale_num)
+plot_strong_scaling <- function(scaling_data, scale_num,
+		measurement_type = "Total CPU Energy (J)")
 {
 	colors <- rainbow(nrow(scaling_data))
 	colors <- gsub("F", "C", colors) # You want it darker
@@ -185,7 +188,7 @@ plot_strong_scaling <- function(scaling_data, scale_num)
 			log = log_axes,
 			ylim = c(min(scaling_data)*0.9,
 					max(scaling_data)*ifelse(log_axes=="y", 2, 1.1)),
-			ylab = "Time (seconds)", xlab = "Threads", col = colors[1],
+			ylab = measurement_type, xlab = "Threads", col = colors[1],
 			main = paste0("Runtime for CC and Galois at Scale ", scale_num),
 			cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
 	for (pli in seq(2,nrow(scaling_data))) {
@@ -205,10 +208,10 @@ plot_strong_scaling <- function(scaling_data, scale_num)
 
 plot_parallel_efficiency <- function(scaling_data, scale_num)
 {
-	threads <- as.numeric(colnames(scaling_data))
+	threadcnts <- as.numeric(colnames(scaling_data))
 	alg_ss <- scaling_data
-	for (ti in rev(seq(length(threads)))) {
-		alg_ss[ti] <- scaling_data[1] / (threads[ti] * scaling_data[ti])
+	for (ti in rev(seq(length(threadcnts)))) {
+		alg_ss[ti] <- scaling_data[1] / (threadcnts[ti] * scaling_data[ti])
 	}
 	systems <- rownames(alg_ss)
 	colors <- rainbow(nrow(alg_ss))
@@ -217,9 +220,10 @@ plot_parallel_efficiency <- function(scaling_data, scale_num)
 	out_fn <- paste0(scale_num,"_parallel_eff.pdf")
 	message("Writing to ", out_fn)
 	pdf(out_fn, width = 7, height = 4)
-	plot(as.numeric(alg_ss[1,]), xaxt = "n", type = "b", ylim = c(0,1),
+	plot(as.numeric(alg_ss[1,]), xaxt = "n", type = "b",
+			ylim = c(0, ifelse(max(alg_ss) > 1, max(alg_ss), 1)),
 			ylab = "", xlab = "Threads", col = colors[1],
-			main = paste0("Strong Scaling"),
+			main = paste0("Parallel Efficiency"),
 			cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
 	for (pli in seq(2,nrow(alg_ss))) {
 			lines(as.numeric(alg_ss[pli,]), col = colors[pli], type = "b",
@@ -311,7 +315,8 @@ power_boxplot(
 		measurement_type = "Total CPU Energy (J)",
 		with_batches = FALSE)
 
-ss_time <- measure_scalability(filename, scale_num)
-plot_strong_scaling(ss_time, scale_num)
+ss_time <- measure_scalability(filename, scale_num,
+		measurement_type = "Time (s)")
+plot_strong_scaling(ss_time, scale_num, measurement_type = "Time (s)")
 ss <- plot_parallel_efficiency(ss_time, scale_num)
 
