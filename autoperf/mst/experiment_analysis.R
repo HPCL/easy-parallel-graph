@@ -15,7 +15,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 6) {
 	stop(usage)
 }
-xps_algorithm <- "CC" # Choose either CC or MST
+xps_algorithm <- "MST" # Choose either CC or MST
 filename <- args[1]
 scale_num <- as.numeric(args[2])
 ins_pct <- as.numeric(args[3])
@@ -24,8 +24,11 @@ num_threads <- as.numeric(args[5])
 rmat_type <- args[6]
 num_batches <- 1
 x <- read.csv(filename, header = TRUE)
+lvl <- levels(factor(x$algorithm))
+xps_algorithm <- ifelse(
+		lvl[length(lvl)] == "Galois", lvl[length(lvl)-1], lvl[length(lvl)])
 epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
-rm(x)
+rm(x, lvl)
 if (num_batches <= 1) {
 	with_batches <- FALSE
 } else {
@@ -162,8 +165,9 @@ measure_scalability <- function(filename, scale_num,
 	# 		x$scale == scale_num & x$changed_vertices == 5000 & x$insertion_percent == 75
 	# 		& x$RMAT_type == "ER" & x$execution_phase == "All",
 	# 		c("algorithm", "execution_phase", "threads", "value"))
-	systems <- levels(factor(subset(
-			yy$algorithm, yy$execution_phase == "All", c("algorithm"))))
+	systems <- levels(factor(
+			subset(yy$algorithm, yy$execution_phase == "All", c("algorithm")),
+			c(xps_algorithm, "Galois")))
 	algo_time <- data.frame(
 			matrix(ncol = length(threads), nrow = length(systems)),
 			row.names = systems)
@@ -208,7 +212,7 @@ plot_strong_scaling <- function(scaling_data, scale_num,
 					lwd = 3, pch = pli, lty = pli) # XXX: lty may repeat after 8
 	}
 	axis(1, at = seq(length(threadcnts)), labels = threadcnts)
-	legend(legend = rownames(scaling_data), x = "topright",
+	legend(legend = systems, x = "topright",
 			lty = c(1:length(systems)),
 			pch = c(1:length(systems)),
 			box.lwd = 1, lwd = c(rep(3,length(systems))),
