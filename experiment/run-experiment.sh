@@ -8,16 +8,19 @@
 # Recommended usage for bash
 #   ./run-experiment.sh $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
 #   disown %<jobnum> # This can be found out using jobs
-USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
+USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] [--num-roots=<n>] <scale> <num-threads>
 	scale: 2^scale = number of vertices
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets
-	--outdir: output directory. Default: ./output"
+	--outdir: output directory. Default: ./output
+	--num-roots: Number of roots to run search on or number of
+	             experiments to run. Default: 32"
 
 # The edge factor (number of edges per vertex) is the default of 16.
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
 OUTDIR="$(pwd)/output"
+NRT=32 # Number of roots
 for arg in "$@"; do
 	case $arg in
 	--libdir=*)
@@ -34,6 +37,23 @@ for arg in "$@"; do
 			OUTDIR="$(pwd)/$OUTDIR"
 		fi
 		shift
+	;;
+	--num-roots=*)
+		NRT=${arg#*=}
+		case $NRT in
+		''|0|*[!0-9]*)
+			echo "num-roots must be a positive integer"
+			exit 2
+			;;
+		*)
+			if [ "$NRT" -gt 32 ]; then
+				# XXX: This is a hacky way to deal with this issue
+				echo "Error: num-roots in gen-datasets.sh should be <= 32"
+				echo "If you want more than 32 you must change NRT to be 2*num-roots"
+				exit 2
+			fi
+			;;
+		esac
 	;;
 	-h|--help|-help)
 		echo "$USAGE"
@@ -67,7 +87,6 @@ mkdir -p "$OUTDIR/kron-$S"
 # NOTE: GraphMat doesn't seem to compute iterations in the same way.
 MAXITER=50 # Maximum iterations for PageRank
 TOL=0.00000006
-NRT=32 # Number of roots
 export SKIP_VALIDATION=1
 
 echo Note: Files of the form
