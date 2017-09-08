@@ -8,7 +8,8 @@ The general workflow could consist of the following steps. You can find an examp
 1. Download the systems and build them with `./get-libraries.sh`. You may also supply a location where the libraries should be installed but the default is `./lib`.
 2. Generate some synthetic datasets with `./gen-datasets.sh 20`. The 20 here will generate an RMAT matrix to the Graph500 specifications with 2^20 = 1,048,576 vertices with an average of 16 edges per vertex.
 	* Alternatively, you could run `./gen-datasets -f=<your_file>`. Currently, this only supports files of the `.el` and `.wel` forms. These are explained [here](https://gist.github.com/sampollard/f9169c4eb04669390a834884682c080d). It should accept any graph file you can find from [SNAP Dataset](https://snap.stanford.edu/data/index.html) too.
-3. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g. `./run-experiment.sh 20 4`
+3. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g.
+```./run-experiment.sh 20 4```
 4. Parse the log files to get a .csv using `parse-output.sh`
 	* Note: `run-power.sh` also parses the log files.
 5. Analyze the data. Some examples can be found in `papers/publication/plot_data.R` and`experiment/experiment_analysis.R`.
@@ -18,9 +19,6 @@ The general workflow could consist of the following steps. You can find an examp
 2. Single Source Shortest Paths (SSSP)
 3. PageRank: This uses a stopping criterion of `sum(|π_i - π_(i-1)|)` where `π_i` is the PageRank at iteration `i` and the alpha parameter is ɑ = 0.15.
 4. Triangle Counting (TriangleCount) - Counts the number of triangles in an undirected graph. If the input graph is directed, it is symmetrized beforehand.
-
-### Graphalytics
-You can download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
 
 ### Power and Energy
 If you want to build for power measurement, you may use `power/build-power.sh`
@@ -56,6 +54,11 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 
 ### Graph500 & GAP Benchmark Suite
 1. A C++ compiler with OpenMP Support
+
+## Features that are not ready
+
+### Graphalytics
+You can download and build the systems for Graphalytics, package them, and run them with `graphalytics/get-graphalytics.sh`.
 
 ### `get-graphalytics.sh`
 1. Java

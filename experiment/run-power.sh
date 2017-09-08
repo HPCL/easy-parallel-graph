@@ -78,8 +78,8 @@ sudo "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --rootfi
 
 # Baseline (do nothing, just sleep)
 sudo "$GAPDIR"/sleep_baseline >> "$FN" 2>> "$ERRFN"
-sudo chown spollard "$FN"
-sudo chown spollard "$ERRFN"
+sudo chown $USER "$FN"
+sudo chown $USER "$ERRFN"
 
 # CPU
 # CPU Average Power and CPU Total Energy
@@ -127,5 +127,5 @@ grep -A 31 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY
 # Baseline
 grep -A 31 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Baseline,Sleep,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
 
-sudo chown spollard "$PFN"
+sudo chown $USER "$PFN"
 

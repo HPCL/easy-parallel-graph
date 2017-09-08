@@ -144,7 +144,7 @@ plot_speedup <- function(strong_scaling, threadcnts, algo)
 ###
 # Generate some figures
 ###
-thr <- threads[length(threads) - 1] # Choose the second to last arbitrarily
+thr <- focus_thread
 # Possiblities: BFS, SSSP, PageRank, TC
 bfs_scale <- measure_scale(scale, threads, "BFS")
 bfs_ss <- plot_strong_scaling(bfs_scale, scale, threads, "BFS")

@@ -21,9 +21,8 @@ if [ "$?" -ne 0 ]; then FAILED="$FAILED GAP"; fi
 # GraphBIG:
 cd "$LIBDIR"
 git clone https://github.com/sampollard/graphBIG.git
-cd graphBIG; make
-cd GraphBIG/benchmark
-make clean all
+cd graphBIG/benchmark
+make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED GraphBIG"; fi
 
 # GraphMat:
@@ -56,12 +55,6 @@ make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED PowerGraph"; fi
 cd "$LIBDIR"
 
-# Others (maybe added later)
-# PBGL: (not used here)
-# module load boost/boost_1_62_0_gcc-5
-# mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
-# export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
-
 # Galois:
 cd "$LIBDIR"
 wget -nc http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
@@ -81,9 +74,15 @@ if [ -z "$FAILED" ]; then
 	echo All libraries downloaded and built correctly.
 else
 	echo "$FAILED failed to load. Possible issues:"
-	echo "GraphMat requires icpc."
+	echo "This version of GraphMat requires icpc."
 	echo "Galois is known to work with gcc 4.8.5 but has issues with gcc 4.9 or gcc 5.4.0. It's finicky."
 	echo "Your version of boost may cause issues as well; try using boost 1.55.0 or greater."
 	echo "Other dependencies can be found in the README.md"
 fi
+
+# Others (maybe added later)
+# PBGL: (not used here)
+# module load boost/boost_1_62_0_gcc-5
+# mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
+# export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
 

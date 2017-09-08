@@ -50,7 +50,6 @@ if [ -z "$FILE" ]; then
 	esac
 fi
 
-OUTFN="$OUTDIR/parsed-$FILE_PREFIX.csv"
 LOG_DIR="$OUTDIR/$FILE_PREFIX"
 # Assumes the experiment is run $NRT times ($NRT roots or $NRT PageRanks)
 NRT=32
@@ -217,7 +216,7 @@ echo #\n
 
 # Naive error handling: If something wasn't parsed then there will
 # be lines with extra fields.
-grep -E '.*,.*,.*,.*,.*' "$OUTDIR"/parsed-*
+grep -E '.*,.*,.*,.*,.*' "$OUTDIR/parsed-$FILE_PREFIX-"*.csv
 if [ $? -eq 0 ]; then
 	echo One or more csv files is ill-formed. This is probably because an experiment failed.
 fi

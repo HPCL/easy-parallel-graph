@@ -74,7 +74,7 @@ echo Note: Files of the form
 echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph,Galois}-{BFS,SSSP,PR,TC}.out"
 echo get overwritten.
 
-echo Starting experiment at $(date)
+echo Starting experiment with $OMP_NUM_THREADS threads at $(date)
 
 echo -n "Running Graph500 BFS"
 #omp-csr/omp-csr -s $S -o "$DDIR/kron-$S/kron-${S}.graph500" -r "$DDIR/kron-$S/kron-${S}.roots"
