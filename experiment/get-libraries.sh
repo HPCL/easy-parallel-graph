@@ -75,7 +75,8 @@ if [ -z "$FAILED" ]; then
 else
 	echo "$FAILED failed to load. Possible issues:"
 	echo "This version of GraphMat requires icpc."
-	echo "Galois is known to work with gcc 4.8.5 but has issues with gcc 4.9 or gcc 5.4.0. It's finicky."
+	echo "Galois is known to work with gcc 4.8.5 but has issues with gcc 4.9 or gcc 5.4.0. It's finicky.
+	you can try others via -DCMAKE_CXX_COMPILER and -DCMAKE_C_COMPILER"
 	echo "Your version of boost may cause issues as well; try using boost 1.55.0 or greater."
 	echo "Other dependencies can be found in the README.md"
 fi

@@ -186,8 +186,12 @@ else
 	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" # TODO
 	"$GAPDIR/converter" -g $S -e "$DDIR/$d/$d.el"
 
-	# Symmetrize (make undirected) # TODO: RESULTS IN IDENTICAL OUTPUT
-	# "$GAPDIR/converter" -g $S -s -e "$DDIR/$d/${d}-undir.el"
+	# Symmetrize (make undirected)
+	# Making the graph undirected results in identical output for all but TC.
+	# TODO: Investigate if the same holds for TC. If you want it directed, use below instead:
+	#EL_FILE="$DDIR/$d/${d}.el"
+	EL_FILE="$DDIR/$d/${d}-undir.el"
+	"$GAPDIR/converter" -g $S -s -e "$EL_FILE"
 
 	# Convert to GAP serialized format
 	"$GAPDIR/converter" -g $S -s -b "$DDIR/$d/$d.sg"
@@ -201,23 +205,23 @@ else
 	rm tmp.txt
 
 	# Convert to GraphBIG format
-	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$DDIR/$d/${d}.el" > "$DDIR/$d/edge.csv"
+	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$EL_FILE" > "$DDIR/$d/edge.csv"
 	echo ID > "$DDIR/$d/vertex.csv"
-	cat "$DDIR/$d/${d}.el" | tr '[:blank:]' '\n' | sort -n | uniq >> "$DDIR/$d/vertex.csv"
+	cat "$EL_FILE" | tr '[:blank:]' '\n' | sort -n | uniq >> "$DDIR/$d/vertex.csv"
 
 	# Convert to GraphMat format
 	# GraphMat requires edge weights---Just make them all 1 for the .wel format
 	# TODO: What happens when you remove selfloops and duplicated edges.
-	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$DDIR/$d/${d}.el" > "$DDIR/$d/$d.1el"
+	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$EL_FILE" > "$DDIR/$d/$d.1el"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$DDIR/$d/vertex.csv" | tail -n 1) + 1 ))
-	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$DDIR/$d/$d.1el" "$DDIR/$d/$d.graphmat"
+	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$EL_FILE" "$DDIR/$d/$d.graphmat"
 
 	# Convert to Galois format.
 	# Currently, their unweighted graph format (vgr) doesn't work so we add 1s as weights.
 	# "$GALOISDIR/tools/graph-convert/graph-convert" -edgelist2vgr "$DDIR/$d/$d.el" "$DDIR/$d/$d.vgr"
-	awk '{print $1 " " $2 " " 1}' "$DDIR/$d/$d.el" > "$DDIR/$d/$d.wel"
+	awk '{print $1 " " $2 " " 1}' "$EL_FILE" > "$DDIR/$d/$d.wel"
 	"$GALOISDIR/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
 	echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
 	"$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/$d.gr" "$DDIR/$d/${d}-t.gr"
