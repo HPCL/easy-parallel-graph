@@ -54,6 +54,7 @@ for arg in "$@"; do
 			fi
 			;;
 		esac
+		shift
 	;;
 	-h|--help|-help)
 		echo "$USAGE"

@@ -3,12 +3,13 @@
 # generating some figures.
 # Synthetic datasets are stored in output/kron-$S
 mkdir -p output
-THREADS="1 2 4 8 16 32 64 72"
-S=22
+THREADS="1 2 4 8 16 24 32 40 48 56"
+S=12
+NUM_ROOTS=16
 ./get-libraries.sh
 ./gen-datasets.sh $S
 for T in $THREADS; do
-	./run-experiment.sh $S $T
+	./run-experiment.sh --num-roots=$NUM_ROOTS $S $T
 done
 ./parse-output.sh $S
 
