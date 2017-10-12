@@ -1,9 +1,12 @@
 #!/bin/bash
 # Converts edge list to matrix market format
 # el (in SNAP form) has # as comments
+# Assumes zero-indexed and unweighted--change below if not
+# usage: awk -f el2mtx.awk file.el > file.mtx
 BEGIN {
 	zero_indexed = "yes" # Change this to "no" if 1-indexed
-
+	weighted = "no"
+	
 	first = "yes"
 	ncomments = 0
 	if (zero_indexed == "yes") {
@@ -32,9 +35,14 @@ BEGIN {
 		print (nrow+offs) " " (nrow+offs) " " (n - ncomments)
 	}
 	first = ""
-	if (zero_indexed == "yes") {
-		print ($1 + offs) " " ($2 + offs) " " "1.00e+00"
+	if (weighted == "yes") {
+		wt = $3
 	} else {
-		print ($1 + offs) " " ($2 + offs) " " "1.00e+00"
+		wt = "1.00e+00"
+	}
+	if (zero_indexed == "yes") {
+		print ($1 + offs) " " ($2 + offs) " " wt
+	} else {
+		print ($1 + offs) " " ($2 + offs) " " wt
 	}
 }
