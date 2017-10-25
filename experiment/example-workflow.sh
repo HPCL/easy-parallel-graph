@@ -18,7 +18,7 @@ echo "# Config file for experiment_analysis.R. threads a vector, scale an int.
 prefix <- './output/'
 threads <- c(${THREADS// /,})
 focus_thread <- ${THREAD_ARR[-2]} # Pick the second to last thread arbitrarily
-scale <- $S
+focus_scale <- $S
 " > example_config.R # Warning: this file is sourced in experiment_analysis.R
 mkdir -p graphics
 Rscript experiment_analysis.R example_config.R

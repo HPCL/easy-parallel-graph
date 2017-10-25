@@ -4,7 +4,9 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
 	stop(usage)
 }
+# Default arguments. See config_template.R for an explanation
 prefix <- "./output/" # The default.
+coalesce <- FALSE
 
 # source sets scale and threads
 source(args[1]) # This is a security vulnerability... just be careful
@@ -113,7 +115,7 @@ plot_strong_scaling <- function(scaling_data, scale, threadcnts, algo) {
 	return(alg_ss)
 }
 
-plot_speedup <- function(strong_scaling, threadcnts, algo)
+plot_speedup <- function(strong_scaling, scale, threadcnts, algo)
 {
 	spd <- data.frame(t(apply(strong_scaling, 1, function(x){x*threadcnts})))
 	colnames(spd) <- threadcnts
@@ -142,20 +144,30 @@ plot_speedup <- function(strong_scaling, threadcnts, algo)
 }
 
 ###
-# Generate some figures
+# Generate some figures for a single graph size
 ###
 thr <- focus_thread
+s <- focus_scale
 # Possiblities: BFS, SSSP, PageRank, TC
-bfs_scale <- measure_scale(scale, threads, "BFS")
-bfs_ss <- plot_strong_scaling(bfs_scale, scale, threads, "BFS")
-bfs_spd <- plot_speedup(bfs_ss, threads, "BFS")
+bfs_scale <- measure_scale(s, threads, "BFS")
+bfs_ss <- plot_strong_scaling(bfs_scale, s, threads, "BFS")
+bfs_spd <- plot_speedup(bfs_ss, s, threads, "BFS")
 
 message("Saving boxplots of various measurements. These may need to be edited")
-time_boxplot(scale, thr, "BFS", timing_metric = "Time")
-time_boxplot(scale, thr, "BFS", timing_metric = "Data structure build")
-time_boxplot(scale, thr, "SSSP", timing_metric = "Time")
-time_boxplot(scale, thr, "PageRank", timing_metric = "Time")
-time_boxplot(scale, thr, "PageRank", timing_metric = "Iterations")
-time_boxplot(scale, thr, "TC", timing_metric = "Time")
-time_boxplot(scale, thr, "TC", timing_metric = "Triangles")
+time_boxplot(s, thr, "BFS", timing_metric = "Time")
+time_boxplot(s, thr, "BFS", timing_metric = "Data structure build")
+time_boxplot(s, thr, "SSSP", timing_metric = "Time")
+time_boxplot(s, thr, "PageRank", timing_metric = "Time")
+time_boxplot(s, thr, "PageRank", timing_metric = "Iterations")
+# time_boxplot(s, thr, "TC", timing_metric = "Time")
+# time_boxplot(s, thr, "TC", timing_metric = "Triangles")
+
+###
+# Dump performance data in a csv
+###
+algorithms <- c("BFS", "SSSP", "PageRank", "TC")
+if (coalesce == TRUE) {
+	message("Writing all experimental data to ", coalesce_filename)
+	write.csv(bfs_scale, coalesce_filename)
+}
 
