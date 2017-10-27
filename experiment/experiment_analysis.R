@@ -1,4 +1,5 @@
 # Given the results from parse-output.sh, generate some plots of the data
+# TODO: Change 16 to nvertices
 usage <- "usage: Rscript experiment_analysis.R <config_file>"
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
@@ -147,27 +148,59 @@ plot_speedup <- function(strong_scaling, scale, threadcnts, algo)
 # Generate some figures for a single graph size
 ###
 thr <- focus_thread
-s <- focus_scale
+scl <- focus_scale
 # Possiblities: BFS, SSSP, PageRank, TC
-bfs_scale <- measure_scale(s, threads, "BFS")
-bfs_ss <- plot_strong_scaling(bfs_scale, s, threads, "BFS")
-bfs_spd <- plot_speedup(bfs_ss, s, threads, "BFS")
+bfs_scale <- measure_scale(scl, threads, "BFS")
+bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
+bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
 
 message("Saving boxplots of various measurements. These may need to be edited")
-time_boxplot(s, thr, "BFS", timing_metric = "Time")
-time_boxplot(s, thr, "BFS", timing_metric = "Data structure build")
-time_boxplot(s, thr, "SSSP", timing_metric = "Time")
-time_boxplot(s, thr, "PageRank", timing_metric = "Time")
-time_boxplot(s, thr, "PageRank", timing_metric = "Iterations")
-# time_boxplot(s, thr, "TC", timing_metric = "Time")
-# time_boxplot(s, thr, "TC", timing_metric = "Triangles")
+time_boxplot(scl, thr, "BFS", timing_metric = "Time")
+time_boxplot(scl, thr, "BFS", timing_metric = "Data structure build")
+time_boxplot(scl, thr, "SSSP", timing_metric = "Time")
+time_boxplot(scl, thr, "PageRank", timing_metric = "Time")
+time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
+# time_boxplot(scl, thr, "TC", timing_metric = "Time")
+# time_boxplot(scl, thr, "TC", timing_metric = "Triangles")
 
 ###
 # Dump performance data in a csv
 ###
-algorithms <- c("BFS", "SSSP", "PageRank", "TC")
+# TODO: Add in parallel efficiency
+header <- c("package", "algorithm", "nvertices", "nedges", "nthreads",
+            "runtime")
+# XXX: This isn't big enough so it's not preallocated, but it's not too slow.
+perf_df <- data.frame(
+		matrix(nrow = length(threads) * length(algos) * length(kron_scales),
+		       ncol = length(header)))
+colnames(perf_df) <- header
 if (coalesce == TRUE) {
+	ri = 1
+	for (scl in kron_scales) {
+		for (thr in threads) {
+			# nedges \approx 16 * 2^scale
+			in_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
+			if (!file.exists(in_fn)) {
+				next
+			}
+			x <- read.csv(in_fn, header = FALSE)
+			# TODO: Get the actual number of edges and vertices
+			# We collect just the mean runtime from the parsed results
+			avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+			combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+			combo <- cbind(combo, 2^scl, 16 * 2^scl, thr)
+			# This is the actual order of the parsed data
+			colnames(combo) <- c("package", "algorithm", "runtime",
+			                     "nvertices", "nedges", "nthreads")
+			combo <- combo[ ,header] # it must be reordered
+			# Note: This converts factors to integers.
+			# TODO: May want to also store a mapping from integers -> factors
+			perf_df[ri:(ri+nrow(combo)-1), ] <- combo
+			ri <- ri + nrow(combo)
+		}
+	}
 	message("Writing all experimental data to ", coalesce_filename)
-	write.csv(bfs_scale, coalesce_filename)
+	write.csv(perf_df, file = coalesce_filename,
+	          quote = FALSE, row.names = FALSE)
 }
 

@@ -6,10 +6,21 @@
 *.synctex.gz
 *.log
 
+# R files
+.RData
+.Rhistory
+
 # OS generated files
 .DS_Store
 
 # Output of experiments
+experiment/output
+experiment/lib
+experiment/graphics
+experiment/datasets
 out*.log
 out*.err
 parsed*.csv
+
+# Other
+*.vim
