@@ -70,6 +70,7 @@ measure_scale <- function(scale, threads, algo) {
         Y <- read.csv(in_fn, header = FALSE)
         ti_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
                 c(V1,V4))
+		ti_time$V4 <- as.numeric(as.character(ti_time$V4))
 		one_ti <- aggregate(ti_time$V4, list(ti_time$V1), mean)
 		for (sysi in seq(length(one_ti[[1]]))) {
 			algo_time[rownames(algo_time) == one_ti[sysi,1], ti] <- one_ti[sysi,2]
@@ -151,6 +152,13 @@ thr <- focus_thread
 scl <- focus_scale
 # Possiblities: BFS, SSSP, PageRank, TC
 bfs_scale <- measure_scale(scl, threads, "BFS")
+result_pkgs <- complete.cases(bfs_scale)
+if (!all(result_pkgs )) {
+	message("Removing ",
+			paste(rownames(bfs_scale)[!result_pkgs ], collapse=", "),
+			" from results")
+}
+bfs_scale <- bfs_scale[result_pkgs, ]
 bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
 bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
 
