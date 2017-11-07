@@ -13,3 +13,6 @@ done
 # This is another way to do it in R but this hasn't been tested.
 # Rscript -e 'for (f in commandArgs(TRUE)){embedFonts(f, options="-dEmbedAllFonts=true")}' $(ls *.pdf *.eps)
 
+# If you're getting compilation errors you may want to wrap all your \cite's in mboxes. This can be done in vim with
+# %s/\\cite{\(.\{-}\)}/\\mbox\{\\cite\{\1\}\}/g
+
