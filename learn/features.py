@@ -30,7 +30,7 @@ def features(graph_url,g_name):
 
 	fname=g_name
 	filename="%s.csv" %fname
-	path="/home/sudharshan/University/Research/repo/easy-parallel-graph/learn/datasets/%s" %g_name 
+	path="easy-parallel-graph/learn/datasets/%s" %g_name 
 	filepath=os.path.join(path,'features.csv')
 	print filepath
 	with open(filepath, 'wb') as myfile:
