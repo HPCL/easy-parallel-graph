@@ -20,7 +20,7 @@ while read -r line; do
 	elif [ "$(expr $cnt % 3 = 2)" -eq 1 ]; then
 		data_url="$line"
 	fi
-	if [ "$cnt" -gt 0 ] && [ "$(expr $cnt % 3 = 0)" -eq 1 ]; then
+	if [ "$(expr $cnt % 3 = 2)" -eq 1 ]; then
 		echo "Downloading and decompressing into $dir_name..."
 		mkdir -p datasets/$dir_name
 		zipped_file="datasets/$dir_name/${data_url##*/}"
