@@ -3,7 +3,7 @@
 import sys
 import numpy as np
 import pandas
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
@@ -44,6 +44,6 @@ entropy_pred = clf_entropy.predict(X_test)
 #print(entropy_pred)
 
 target_names = ['good', 'bad']
-results = metrics.classification_report(Y_test, gini_pred, target_names)
+results = classification_report(Y_test, gini_pred, target_names)
 print(results)
 print(accuracy_score(Y_test, gini_pred))

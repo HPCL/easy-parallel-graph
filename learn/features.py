@@ -3,6 +3,14 @@ import urllib2
 import requests
 import os
 import csv
+import sys
+
+data_dir = "../experiment/datasets"
+if len(sys.argv) > 2:
+    print("usage: python features.py <data_dir> (default: ../experiments/datasets)")
+    sys.exit(2)
+if len(sys.argv) == 2:
+    data_dir = str(sys.argv[1])
 
 config='datasets.txt'
 with open(config) as f:
@@ -34,10 +42,10 @@ def features(graph_url,g_name):
             hdr.append(final)
 
     fname=g_name
-    filename="%s.csv" %fname
-    path="datasets/%s" %g_name 
+    filename="{}.csv".format(fname)
+    path=os.path.join(data_dir, g_name)
     filepath=os.path.join(path,'features.csv')
-    print filepath
+    print("Writing features to {}".format(filepath))
     with open(filepath, 'wb') as myfile:
         wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
         wr.writerow(hdr)
