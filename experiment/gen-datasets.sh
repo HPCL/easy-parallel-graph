@@ -1,9 +1,10 @@
 #!/bin/bash
 USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<fn>|<scale>
-	You may either provide a filename or generate an RMAT graph with 2^<scale>
+	You may either provide a file path or generate an RMAT graph with 2^<scale>
 		vertices. The current filetypes supported are of the form
-		<edge1> <edge2> one per line OR
-		<edge1> <edge2> <weight> with an optional comment lines beginning with #
+		<edge1> <edge2> with optional comment lines beginning with #
+		OR
+		<edge1> <edge2> <weight> with optional comment lines beginning with #
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets"
 # Generate an unweighted, undirected Kronecker (RMAT) graph in the file formats
@@ -100,23 +101,26 @@ GRAPHMATDIR="$LIBDIR/GraphMat"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 
 ###
-# Real world datasets as provided by Graphalytics
+# Real world datasets as provided by Graphalytics or SNAP
 ###
 if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	d="$FILE_PREFIX" # For convenience
 	mkdir -p "$DDIR/$d"
-	echo Converting $FILE into the correct formats...
+	echo Converting $FILE into the correct formats, basename $d...
 	# If it's from SNAP then there may be some comments
 	if [ ! -f "$DDIR/$d.e" ]; then
 		if [ ! -f "$FILE" ]; then
-			echo "Cannot find file $FILE relative from $(pwd)"
+			echo "Cannot find file $FILE (cwd is $(pwd))"
 			exit 1
 		fi
+		# Delete carriage returns and comments
+		tr -d $'\r' < "$FILE" > "$FILE.bak"
+		mv "$FILE.bak" "$FILE"
 		awk '!/^#/{print}' "$FILE" > "$DDIR/$d.e"
 	fi
 	OLDPWD=$(pwd)
 	cd $DDIR
-	if [ ! -f "$d.v" ] || [ $(wc -l "$d.v") -gt 0 ]; then
+	if [ ! -f "$d.v" ] || [ "$(wc -l < $d.v)" -eq 0 ]; then
 		echo "Creating $d.v..."
 		cat  "$d.e" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
 	fi
