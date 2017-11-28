@@ -11,5 +11,8 @@ algos <- c("BFS","SSSP","PageRank")  # Which algorithms you ran experiments for.
 # Any variables following coalesce are only used if coalesce is TRUE.
 coalesce <- TRUE
 coalesce_filename <- paste0(prefix,'combined.csv')
-kron_scales <- c(10,13,22)  # Select whichever scales on which you ran the synthetic datasets
+data_dir <- "datasets"     # The directory where the datasets (and features) are stored
+kron_scales <- c(10,13) # Select whichever scales on which you ran the synthetic datasets
+realworld_datasets <- read.csv('../learn/datasets.txt', header = FALSE) # Just get the directory names
+realworld_datasets <- as.character(realworld_datasets[seq(1, nrow(realworld_datasets), 3), 1])
 

@@ -1,5 +1,6 @@
 # Given the results from parse-output.sh, generate some plots of the data
 # TODO: Change 16 to nvertices
+library(plyr)
 usage <- "usage: Rscript experiment_analysis.R <config_file>"
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
@@ -175,38 +176,69 @@ time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
 # Dump performance data in a csv
 ###
 # TODO: Add in parallel efficiency
-header <- c("package", "algorithm", "nvertices", "nedges", "nthreads",
-            "runtime")
+synth_header <- c("package", "algorithm", "nvertices", "nedges", "nthreads",
+                  "runtime") # How it should appear for machine learning
+synth_colnames <- c("package", "algorithm", "runtime", "nvertices", "nedges",
+                     "nthreads") # How it appears in the parsed output
+realworld_colnames <- c("package","algorithm","runtime")
 # XXX: This isn't big enough so it's not preallocated, but it's not too slow.
-perf_df <- data.frame(
-		matrix(nrow = length(threads) * length(algos) * length(kron_scales),
-		       ncol = length(header)))
-colnames(perf_df) <- header
+# perf_df <- data.frame(
+# 		matrix(nrow = length(threads) * length(algos) * length(kron_scales),
+# 		       ncol = length(synth_header)))
+perf_df <- data.frame(matrix(ncol = length(synth_header), nrow = 0))
+colnames(perf_df) <- synth_header
 if (coalesce == TRUE) {
-	ri = 1
-	for (scl in kron_scales) {
-		for (thr in threads) {
-			# nedges \approx 16 * 2^scale
-			in_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
-			if (!file.exists(in_fn)) {
-				next
+	if (exists("kron_scales")) {
+		for (scl in kron_scales) {
+			for (thr in threads) {
+				# nedges \approx 16 * 2^scale
+				in_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
+				if (!file.exists(in_fn)) {
+					next
+				}
+				x <- read.csv(in_fn, header = FALSE)
+				# TODO: Get the actual number of edges and vertices
+				# We collect just the mean runtime from the parsed results
+				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+				combo <- cbind(combo, 2^scl, 16 * 2^scl, thr)
+				# This is the actual order of the parsed data
+				colnames(combo) <- synth_colnames
+				combo <- combo[ ,synth_header] # it must be reordered
+				# Note: This converts factors to integers.
+				# TODO: May want to also store a mapping from integers -> factors
+				perf_df <- rbind.fill(perf_df, combo)
 			}
-			x <- read.csv(in_fn, header = FALSE)
-			# TODO: Get the actual number of edges and vertices
-			# We collect just the mean runtime from the parsed results
-			avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
-			combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
-			combo <- cbind(combo, 2^scl, 16 * 2^scl, thr)
-			# This is the actual order of the parsed data
-			colnames(combo) <- c("package", "algorithm", "runtime",
-			                     "nvertices", "nedges", "nthreads")
-			combo <- combo[ ,header] # it must be reordered
-			# Note: This converts factors to integers.
-			# TODO: May want to also store a mapping from integers -> factors
-			perf_df[ri:(ri+nrow(combo)-1), ] <- combo
-			ri <- ri + nrow(combo)
 		}
 	}
+	if (exists("realworld_datasets")) {
+		for (rw in realworld_datasets) {
+			message("Collecting data for ", rw)
+			# Also want to include the features downloaded from SNAP
+			feature_fn <- file.path(data_dir, rw, "features.csv")
+			feature_df <- read.csv(feature_fn)
+			for (nthreads in threads) {
+				perf_fn <- paste0(prefix, "parsed-", rw, "-", nthreads, ".csv")
+				if (!file.exists(perf_fn)) {
+					next
+				}
+				x <- read.csv(perf_fn, header = FALSE)
+				# TODO: Get the actual number of edges and vertices
+				# We collect just the mean runtime from the parsed results
+				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+				colnames(combo) <- realworld_colnames
+				combo <- cbind(combo, nthreads, feature_df)
+				colnames(combo)[colnames(combo) == "Nodes"] <- "nvertices"
+				colnames(combo)[colnames(combo) == "Edges"] <- "nedges"
+				# Instead, we move runtime later. But I like this trick.
+				# combo <- combo[, c((1:ncol(combo))[-3], 3)] # Move runtime to the end
+				perf_df <- rbind.fill(perf_df, combo)
+			}
+		}
+	}
+	time_col <- which(colnames(perf_df) == "runtime")
+	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
 	message("Writing all experimental data to ", coalesce_filename)
 	write.csv(perf_df, file = coalesce_filename,
 	          quote = FALSE, row.names = FALSE)
