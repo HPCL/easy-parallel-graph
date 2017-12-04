@@ -10,6 +10,7 @@ algos <- c("BFS","SSSP","PageRank")  # Which algorithms you ran experiments for.
 # Whether to coalese performance data into one giant CSV (useful for input to machine learning).
 # Any variables following coalesce are only used if coalesce is TRUE.
 coalesce <- TRUE
+ignore_extra_features <- TRUE # Whether to use features.csv for realworld datasets. OFF by default
 coalesce_filename <- paste0(prefix,'combined.csv')
 data_dir <- "datasets"     # The directory where the datasets (and features) are stored
 kron_scales <- c(10,13) # Select whichever scales on which you ran the synthetic datasets

@@ -9,6 +9,7 @@ if (length(args) != 1) {
 # Default arguments. See config_template.R for an explanation
 prefix <- "./output/" # The default.
 coalesce <- FALSE
+ignore_extra_features <- FALSE
 
 # source sets scale and threads
 source(args[1]) # This is a security vulnerability... just be careful
@@ -228,11 +229,13 @@ if (coalesce == TRUE) {
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
 				colnames(combo) <- realworld_colnames
-				combo <- cbind(combo, nthreads, feature_df)
+				if (ignore_extra_features) {
+					combo <- cbind(combo, nthreads, feature_df[ ,c("Nodes", "Edges")])
+				} else {
+					combo <- cbind(combo, nthreads, feature_df)
+				}
 				colnames(combo)[colnames(combo) == "Nodes"] <- "nvertices"
 				colnames(combo)[colnames(combo) == "Edges"] <- "nedges"
-				# Instead, we move runtime later. But I like this trick.
-				# combo <- combo[, c((1:ncol(combo))[-3], 3)] # Move runtime to the end
 				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}

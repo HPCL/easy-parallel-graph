@@ -27,7 +27,6 @@ if [ "$?" -ne 0 ]; then FAILED="$FAILED GraphBIG"; fi
 
 # GraphMat:
 cd "$LIBDIR"
-module load intel/17
 git clone https://github.com/sampollard/GraphMat.git
 cd GraphMat; make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED GraphMat"; fi
