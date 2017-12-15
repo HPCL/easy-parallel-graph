@@ -172,6 +172,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		exit 1
 	fi
 	awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$d/$d-roots.v"
+	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	rm tmp.log
 	sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
 	echo "ID" > "$DDIR/$d/vertex.csv"
@@ -207,6 +208,7 @@ else
 	cat "$DDIR/$d/${d}-roots.v" | sort -n > tmp.txt
 	cp tmp.txt "$DDIR/$d/${d}-roots.v"
 	rm tmp.txt
+	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 
 	# Convert to GraphBIG format
 	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$EL_FILE" > "$DDIR/$d/edge.csv"

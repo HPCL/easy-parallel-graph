@@ -46,4 +46,5 @@ entropy_pred = clf_entropy.predict(X_test)
 target_names = ['good', 'bad']
 results = classification_report(Y_test, gini_pred, target_names)
 print(results)
-print(accuracy_score(Y_test, gini_pred))
+print('Accuracy is {}'.format(accuracy_score(Y_test, gini_pred)))
+

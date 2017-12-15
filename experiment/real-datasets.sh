@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o history -o histexpand
 # Runs a real dataset given either a filename or a prefix of a filename.
 # e.g. if you called gen-datasets.sh -f=data.out then you could specify
 # either data or data.out as the first argument.
@@ -52,8 +53,14 @@ POWERGRAPHDIR="$LIBDIR/PowerGraph"
 OUTPUT_PREFIX="$(pwd)/output/${FILE_PREFIX}/${OMP_NUM_THREADS}t"
 mkdir -p "$(pwd)/output/${FILE_PREFIX}"
 
-# icpc required for GraphMat
-module load intel/17
+# input: Exit code of the previously-run command
+# output: prints the command if the exit code is nonzero
+check_status ()
+{
+	if [ "$1" -ne 0 ]; then
+		echo "There was a problem with $(history 1)"
+	fi 
+}
 
 d="$FILE_PREFIX" # For convenience
 if [ -f "$DDIR/$d/${d}.wel" ]; then
@@ -68,28 +75,36 @@ else
 fi
 echo Starting experiment at $(date)
 
-echo "Cleaning $OUTPUT_PREFIX-*"
-rm -f "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph}-{BFS,SSSP,PR,TriangleCount}.out"
+echo Note: Files of the form
+echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph,Galois}-{BFS,SSSP,PR,TC}.out"
+echo get overwritten.
+rm -f "${OUTPUT_PREFIX}"-{GAP,GraphMat,PowerGraph,Galois}-{BFS,SSSP,PR,TC}.out
+rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TC}.{out,err}
+
 echo "Running GAP BFS"
 # It would be nice if you could read in a file for the roots
 head -n $NRT "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-${NRT}roots.v"
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
 	"$GAPDIR"/bfs -r $ROOT -f $GAP_EDGELISTFILE -n 1 >> "${OUTPUT_PREFIX}-GAP-BFS.out"
+	check_status $?
 done
 
 echo "Running GraphBIG BFS"
 # For this, one needs a vertex.csv file and and an edge.csv.
 "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
+check_status $?
 
 echo "Running GraphMat BFS"
 for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 	echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
 	"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+	check_status $?
 done
 
 echo "Running GAP SSSP"
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
-	"$GAPDIR"/sssp -r $ROOT -f $GAP_EDGELISTFILE -n 1 >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+	"$GAPDIR"/sssp -r $ROOT -f "$DDIR/$d/${d}.el" -n 1 >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+	check_status $?
 done
 
 echo "Running GraphBIG SSSP"
@@ -99,6 +114,7 @@ echo "Running GraphMat SSSP"
 for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 	echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
 	"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+	check_status $?
 done
 
 echo "Running PowerGraph SSSP"
@@ -111,6 +127,7 @@ else
 fi
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$EDGELISTFILE" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
+	check_status $?
 done
 
 echo "Running GAP PageRank"
@@ -118,6 +135,7 @@ echo "Running GAP PageRank"
 # error = sum(|newPR - oldPR|)
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
 	"$GAPDIR"/pr -f $GAP_EDGELISTFILE -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out" 
+	check_status $?
 done
 
 echo "Running GraphBIG PageRank"
@@ -125,6 +143,7 @@ echo "Running GraphBIG PageRank"
 # GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
 	"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out" 
+	check_status $?
 done
 
 echo "Running Graphmat PageRank"
@@ -132,32 +151,38 @@ echo "Running Graphmat PageRank"
 # GraphMat has been modified so alpha = 0.15
 for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 	"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
+	check_status $?
 done
 
 echo "Running PowerGraph PageRank"
 for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 	"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$EDGELISTFILE" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
+	check_status $?
 done
 
 echo "Running GAP TriangleCount"
 "$GAPDIR"/tc -f "$GAP_EDGELISTFILE" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TriangleCount.out"
+check_status $?
 
 echo "Running PowerGraph TriangleCount"
 for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 	"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$EDGELISTFILE" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TriangleCount.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TriangleCount.err"
+	check_status $?
 done
 
 # TODO: Currently wrong for facebook_combined
-# echo "Running GraphMat TriangleCount"
-# for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
-#     "$GRAPHMATDIR/bin/TriangleCounting"  "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TriangleCount.out"
-# done
+echo "Running GraphMat TriangleCount"
+for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	"$GRAPHMATDIR/bin/TriangleCounting"  "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TriangleCount.out"
+	check_status $?
+done
 
 # TODO: Fix this---currently counts 0 triangles for facebook_combined
-# echo "Running GraphBIG TriangleCount"
-# for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-# 	"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TriangleCount.out"
-# done
+echo "Running GraphBIG TriangleCount"
+for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+	"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TriangleCount.out"
+	check_status $?
+done
 
 echo Finished experiment at $(date)
 
