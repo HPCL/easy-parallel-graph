@@ -4,7 +4,7 @@
 USAGE="usage: run-multi-thread.sh <scale> <dataset_file>
 	(default dataset file: ../learn/datasets.txt)
 	You can also change the THREADS variable in this script"
-THREADS="1 2 4 8 16 24 32 40 48 54 64 72"
+THREADS="1 2 4 8 16 24 32 40 48 56 64 72"
 # THREADS="1 2" # Just for testing
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then

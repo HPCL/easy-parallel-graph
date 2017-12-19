@@ -177,22 +177,27 @@ time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
 # Dump performance data in a csv
 ###
 # TODO: Add in parallel efficiency
+# TODO: If runtime is 0 maybe make it some small value
 synth_header <- c("package", "algorithm", "nvertices", "nedges", "nthreads",
                   "runtime") # How it should appear for machine learning
 synth_colnames <- c("package", "algorithm", "runtime", "nvertices", "nedges",
-                     "nthreads") # How it appears in the parsed output
-realworld_colnames <- c("package","algorithm","runtime")
-# XXX: This isn't big enough so it's not preallocated, but it's not too slow.
+                     "nthreads") # How it appears in the parsed output. CHANGE THIS WITH CAUTION
+realworld_colnames <- c("package","algorithm","runtime") # CHANGE THIS WITH CAUTION
+# XXX: perf_df isn't big enough so it's not preallocated, but it's not too slow.
 # perf_df <- data.frame(
 # 		matrix(nrow = length(threads) * length(algos) * length(kron_scales),
 # 		       ncol = length(synth_header)))
+
+package_mappings = data.frame(matrix(ncol = 2, nrow = 0))
+algorithm_mappings = data.frame(matrix(ncol = 2, nrow = 0))
+
 perf_df <- data.frame(matrix(ncol = length(synth_header), nrow = 0))
 colnames(perf_df) <- synth_header
 if (coalesce == TRUE) {
 	if (exists("kron_scales")) {
 		for (scl in kron_scales) {
 			for (thr in threads) {
-				# nedges \approx 16 * 2^scale
+				# nedges \approx 16 * 2^scl
 				in_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
 				if (!file.exists(in_fn)) {
 					next
@@ -201,13 +206,21 @@ if (coalesce == TRUE) {
 				# TODO: Get the actual number of edges and vertices
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
+					message(in_fn, " with ", scl, " scale and ", thr,
+							" threads has NA for time. This is probably because an experiment failed")
+					next
+				}
 				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+				package_mappings <- rbind(package_mappings,
+						data.frame(as.character(combo$package), as.numeric(combo$package)))
+				algorithm_mappings <- rbind(algorithm_mappings,
+						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
 				combo <- cbind(combo, 2^scl, 16 * 2^scl, thr)
 				# This is the actual order of the parsed data
 				colnames(combo) <- synth_colnames
 				combo <- combo[ ,synth_header] # it must be reordered
 				# Note: This converts factors to integers.
-				# TODO: May want to also store a mapping from integers -> factors
 				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}
@@ -224,11 +237,20 @@ if (coalesce == TRUE) {
 					next
 				}
 				x <- read.csv(perf_fn, header = FALSE)
-				# TODO: Get the actual number of edges and vertices
+				# XXX: We should get the actual number of edges and vertices
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
+					message(in_fn, " with ", scl, " scale and ", thr,
+							" threads has NA for time. This is probably because an experiment failed")
+					next
+				}
 				colnames(combo) <- realworld_colnames
+				package_mappings <- rbind(package_mappings,
+						data.frame(as.character(combo$package), as.numeric(combo$package)))
+				algorithm_mappings <- rbind(algorithm_mappings,
+						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
 				if (ignore_extra_features) {
 					combo <- cbind(combo, nthreads, feature_df[ ,c("Nodes", "Edges")])
 				} else {
@@ -246,4 +268,19 @@ if (coalesce == TRUE) {
 	write.csv(perf_df, file = coalesce_filename,
 	          quote = FALSE, row.names = FALSE)
 }
+
+# Write the mappings from integer to package and integer to algorithm
+pkg_fn <- paste0(prefix, "package_mappings.csv")
+message("Writing package index mappings to ", pkg_fn)
+colnames(package_mappings) <- c("package", "index")
+package_mappings <- unique(package_mappings)
+write.csv(package_mappings,
+		file = pkg_fn, quote = FALSE, row.names = FALSE)
+
+algo_fn <- paste0(prefix, "algorithm_mappings.csv")
+message("Writing algorithm index mappings to ", algo_fn)
+colnames(algorithm_mappings) <- c("algorithm", "index")
+algorithm_mappings <- unique(algorithm_mappings)
+write.csv(algorithm_mappings,
+		file = algo_fn, quote = FALSE, row.names = FALSE)
 
