@@ -6,6 +6,9 @@
 # Set and check where everything is going to be stored
 BASE_DIR=
 DATASET_DIR=
+# Sensible defaults:
+#BASE_DIR=../experiment/libpower
+#BASE_DIR=../experiment/datasets
 if [ -z "$BASE_DIR" ]; then
 	echo "Please set BASE_DIR to be where all the benchmarks and output will be stored."
 	exit 1;
@@ -22,6 +25,7 @@ if [ ! -d "$BASE_DIR/gapbs" ]; then
 fi
 GAPBS_DIR="$BASE_DIR/gapbs"
 cd "$GAPBS_DIR"
+cp sleep_baseline.c "$GAPBS_DIR"
 sed -i 's/BUILD_RAPL = No/BUILD_RAPL = Yes/' Makefile
 make
 make test
