@@ -16,7 +16,11 @@ if [ -n "$2" ]; then
 fi
 dataset_file="$1"
 cnt=0
+oldwd=$(pwd)
 while read -r line; do
+	if [ "${line:0:1}" = '#' ]; then
+		continue
+	fi
 	if [ "$(expr $cnt % 3 = 0)" -eq 1 ]; then
 		dir_name="$line"
 	elif [ "$(expr $cnt % 3 = 1)" -eq 1 ]; then
@@ -26,10 +30,26 @@ while read -r line; do
 	fi
 	if [ "$(expr $cnt % 3 = 2)" -eq 1 ]; then
 		echo "Downloading and decompressing into $dir_name..."
-		mkdir -p datasets/$dir_name
-		zipped_file="$DATA_DIR/$dir_name/${data_url##*/}"
-		curl "$data_url" > "$zipped_file"
-		gunzip "$zipped_file"
+		mkdir -p $DATA_DIR/$dir_name
+		zf="${data_url##*/}"
+		cd $DATA_DIR/$dir_name
+		curl -z "$zf" "$data_url" > "$zf"
+		case $zf in
+			*.tar.bz2) tar xvjf $zf   ;;
+			*.tar.gz)  tar xvzf $zf   ;;
+			*.bz2)     bunzip2 -k $zf ;;
+			*.gz)      gunzip -k $zf  ;;
+			*.tar)     tar xvf $zf    ;;
+			*.tbz2)    tar xvjf $zf   ;;
+			*.tgz)     tar xvzf $zf   ;;
+			*.zip)     unzip $zf      ;;
+			*)         echo 'Unknown file extension' ;;
+		esac
+		if [ -d "$dir_name" ]; then
+			mv "$dir_name"/* .
+			rmdir "$dir_name"
+		fi
+		cd $oldwd
 	fi
 	cnt=$(expr $cnt + 1)
 done < "$dataset_file"
