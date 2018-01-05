@@ -1,14 +1,17 @@
 #!/bin/bash
 # Unzips the datasets and saves them into the specified directory.
 # The dataset config file has the following three-line pattern:
+# dataset name\ndataset homepage\ndataset url
+# e.g.
 # facebook_combined
 # https://snap.stanford.edu/data/egonets-Facebook.html
 # https://snap.stanford.edu/data/facebook_combined.txt.gz
 
+USAGE='usage: unzipper.sh <dataset file> <dataset_dir>
+		dataset_dir default: ../experiment/datasets>'
 DATA_DIR="../experiment/datasets"
 if [ -z "$1" ]; then
-	echo "usage: unzipper.sh <dataset file> <dataset_dir>
-		dataset_dir default: ../experiment/datasets>"
+	echo $USAGE
 	exit 2
 fi
 if [ -n "$2" ]; then

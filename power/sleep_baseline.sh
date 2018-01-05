@@ -6,7 +6,7 @@ PKG=2 # The number of physical CPU sockets
 THREADS="1 2 4 8 16 24 32 40 48 56 64 72"
 FN=sleep_baseline.out
 PFN=parsed_sleep_baseline.csv
-NUM_TRIALS=32
+NUM_TRIALS=16
 
 # Run serial:
 CFLAGS="-I${PAPI_HOME}/include -DPOWER_PROFILING=1 -g -Wall"

@@ -1,10 +1,10 @@
 #!/bin/bash
-USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<fn>|<scale>
-	You may either provide a file path or generate an RMAT graph with 2^<scale>
-		vertices. The current filetypes supported are of the form
-		<edge1> <edge2> with optional comment lines beginning with #
-		OR
-		<edge1> <edge2> <weight> with optional comment lines beginning with #
+USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<filename>|<scale>
+	You may either provide a file path an integer <scale> to generate an RMAT graph
+	with 2^<scale> vertices. The current filetypes supported are of the form
+		<edge1> <edge2> with optional comment lines beginning with # or %
+	OR
+		<edge1> <edge2> <weight> with optional comment lines beginning with # or %
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets"
 # Generate an unweighted, undirected Kronecker (RMAT) graph in the file formats
@@ -67,6 +67,11 @@ for arg in "$@"; do
 	-f=*)
 		FILE=${arg#*=}
 		FILE_PREFIX=$(basename ${FILE%.*})
+		# Handle KONECT style where the file looks like out.actor-collaboration
+		if [ "$FILE_PREFIX" = 'out' ]; then
+			FILE_PREFIX=$(basename $FILE)
+			FILE_PREFIX=${FILE_PREFIX#out.}
+		fi
 		shift
 	;;
 	*)	# Default
@@ -80,7 +85,7 @@ if [ -z "$FILE" ]; then
 		exit 2
 	fi
 	case $1 in
-	[1-9]|[1-9][0-9]*) # scale between 1--99 is robust enough
+	[1-9]|[0-9][0-9]*) # scale between 1--99 is robust enough
 		S=$1
 		FILE_PREFIX="kron-$S"
 	;;
@@ -101,7 +106,7 @@ GRAPHMATDIR="$LIBDIR/GraphMat"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 
 ###
-# Real world datasets as provided by Graphalytics or SNAP
+# Real world datasets as provided by Graphalytics, SNAP, or KONECT
 ###
 if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	d="$FILE_PREFIX" # For convenience
@@ -114,9 +119,10 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 			exit 1
 		fi
 		# Delete carriage returns and comments
+		# SNAP comment is #, KONECT comment is %
 		tr -d $'\r' < "$FILE" > "$FILE.bak"
 		mv "$FILE.bak" "$FILE"
-		awk '!/^#/{print}' "$FILE" > "$DDIR/$d.e"
+		awk '!/^#/ && !/^%/{print}' "$FILE" > "$DDIR/$d.e"
 	fi
 	OLDPWD=$(pwd)
 	cd $DDIR
