@@ -5,11 +5,13 @@ set -o history -o histexpand
 # either data or data.out as the first argument.
 USAGE="usage: real-datasets.sh [--libdir=<dir>] [--ddir=<dir>] <filename> <num_threads>
 	--libdir: repositories directory. Default: ./lib
-	--ddir: dataset directory. Default: ./datasets"
+	--ddir: dataset directory. Default: ./datasets
+	--copy-to=<tmpdir>: copy to temporary storage, delete after experiment"
 
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
 NRT=32 # Number of roots
+unset COPY # can copy to a faster, temporary filesystem
 for arg in "$@"; do
 	case $arg in
 	--libdir=*)
@@ -19,10 +21,6 @@ for arg in "$@"; do
 	--ddir=*)
 		DDIR=${arg#*=}
 		shift
-	;;
-	-h|--help|-help)
-		echo "$USAGE"
-		exit 2
 	;;
 	--num-roots=*)
 		NRT=${arg#*=}
@@ -41,6 +39,14 @@ for arg in "$@"; do
 			;;
 		esac
 		shift
+	;;
+	--copy-to=*)
+		COPY=${arg#*=}
+		shift
+	;;
+	-h|--help|-help)
+		echo "$USAGE"
+		exit 2
 	;;
 	*)	# Default
 		# Do nothing
@@ -100,6 +106,10 @@ elif [ "$(head -n 1 $DDIR/$d/edge.csv)" = "SRC,DEST,WEIGHT" ]; then
 else
 	echo "Please put an edge-list or weighted edge-list file at $DDIR/$d/$d.{wel,el}"
 	exit 2
+fi
+if [ -n "$COPY" ]; then
+	mkdir -p "$COPY/$d"
+	cp $DDIR/$d/$d* "$COPY/$d"
 fi
 echo Starting experiment at $(date)
 
@@ -235,6 +245,11 @@ for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 done
 
 # No triangle count for Galois
+
+if [ -n "$COPY" ]; then
+	rm "$COPY/$d"/*
+	rmdir "$COPY/$d"
+fi
 
 echo Finished experiment at $(date)
 

@@ -52,7 +52,6 @@ cd release/toolkits/graph_analytics
 # I could do -j4 but that tends to be buggy
 make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED PowerGraph"; fi
-cd "$LIBDIR"
 
 # Galois:
 cd "$LIBDIR"
@@ -64,7 +63,13 @@ ex -s src/Barrier.cpp '+:%s/\Vpthread_barrier_init(&bar, 0, ~0)/pthread_barrier_
 cd build
 mkdir -p default
 cd default
-cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DCMAKE_C_COMPILER=gcc-4.8 ../..
+gcc --version | grep -q '4\.8'
+if [ $? -ne 0 ]; then
+	echo "Galois requires gcc 4.8. You can comment out this check and try a lower version,
+		but it doesn't seem to work at all with 4.9 or 5.*"
+	exit 2
+fi
+cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ../..
 make
 cd "$LIBDIR/.."
 if [ "$?" -ne 0 ]; then FAILED="$FAILED Galois"; fi

@@ -36,12 +36,13 @@ while read -r line; do
 		mkdir -p $DATA_DIR/$dir_name
 		zf="${data_url##*/}"
 		cd $DATA_DIR/$dir_name
-		curl -z "$zf" "$data_url" > "$zf"
+		curl "$data_url" > "$zf"
+		# TODO: The compressed files are currently deleted. -k option isn't on Talapas
 		case $zf in
 			*.tar.bz2) tar xvjf $zf   ;;
 			*.tar.gz)  tar xvzf $zf   ;;
-			*.bz2)     bunzip2 -k $zf ;;
-			*.gz)      gunzip -k $zf  ;;
+			*.bz2)     bunzip2 $zf    ;;
+			*.gz)      gunzip $zf     ;;
 			*.tar)     tar xvf $zf    ;;
 			*.tbz2)    tar xvjf $zf   ;;
 			*.tgz)     tar xvzf $zf   ;;

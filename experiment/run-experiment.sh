@@ -14,13 +14,16 @@ USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] [--num-roots=<n>
 	--ddir: dataset directory. Default: ./datasets
 	--outdir: output directory. Default: ./output
 	--num-roots: Number of roots to run search on or number of
-	             experiments to run. Default: 32"
+	             experiments to run. Default: 32
+	--copy-to=<tmpdir>: copy to <tmpdir>/kron-<scale>, delete after experiment
+	"
 
 # The edge factor (number of edges per vertex) is the default of 16.
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
 OUTDIR="$(pwd)/output"
 NRT=32 # Number of roots
+unset COPY # can copy to a faster, temporary filesystem
 for arg in "$@"; do
 	case $arg in
 	--libdir=*)
@@ -56,6 +59,10 @@ for arg in "$@"; do
 		esac
 		shift
 	;;
+	--copy-to=*)
+		COPY=${arg#*=}
+		shift
+	;;
 	-h|--help|-help)
 		echo "$USAGE"
 		exit 2
@@ -80,6 +87,10 @@ POWERGRAPHDIR="$LIBDIR/PowerGraph"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 OUTPUT_PREFIX="$OUTDIR/kron-$S/${OMP_NUM_THREADS}t"
 mkdir -p "$OUTDIR/kron-$S"
+if [ -n "$COPY" ]; then
+	mkdir -p "$COPY/$d"
+	cp $DDIR/$d/$d* "$COPY/$d"
+fi
 
 # Set some other variables used throughout the experiment
 # PageRank is usually represented as a 32-bit float,
@@ -231,5 +242,9 @@ done
 
 # No triangle count for Galois
 
+if [ -n "$COPY" ]; then
+	rm "$COPY/$d"/*
+	rmdir "$COPY/$d"
+fi
 echo Finished experiment at $(date)
 
