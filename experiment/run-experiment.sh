@@ -48,8 +48,8 @@ for arg in "$@"; do
 		*)
 			if [ "$NRT" -gt 32 ]; then
 				# XXX: This is a hacky way to deal with this issue
-				echo "Error: num-roots in gen-datasets.sh should be <= 32"
-				echo "If you want more than 32 you must change NRT to be 2*num-roots"
+				echo 'Error: num-roots must be <=32. If you really want it to be more'
+				echo 'than this, change NRT to 2*(roots you want) in gen-datasets.sh'
 				exit 2
 			fi
 			;;

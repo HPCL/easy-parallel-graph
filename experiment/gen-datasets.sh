@@ -28,9 +28,9 @@ USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<filename>|<sca
 # If you have a real dataset with filename pre.whatever;
 # extensions of .wel and .gr if weighted, .el and .vgr if unweighted.
 # $DDIR/
-#     pre.e
-#     pre.v
 #     pre/
+#         pre.v
+#         pre.e
 #         pre.graphmat
 #         pre.roots
 #         pre-roots.v
@@ -98,7 +98,6 @@ fi
 echo "Starting data set generation at $(date)"
 
 mkdir -p "$DDIR"
-export OMP_NUM_THREADS=64
 NRT=64
 GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
@@ -113,7 +112,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	mkdir -p "$DDIR/$d"
 	echo Converting $FILE into the correct formats, basename $d...
 	# If it's from SNAP then there may be some comments
-	if [ ! -f "$DDIR/$d.e" ]; then
+	if [ ! -f "$DDIR/$d/$d.e" ]; then
 		if [ ! -f "$FILE" ]; then
 			echo "Cannot find file $FILE (cwd is $(pwd))"
 			exit 1
@@ -122,10 +121,10 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# SNAP comment is #, KONECT comment is %
 		tr -d $'\r' < "$FILE" > "$FILE.bak"
 		mv "$FILE.bak" "$FILE"
-		awk '!/^#/ && !/^%/{print}' "$FILE" > "$DDIR/$d.e"
+		awk '!/^#/ && !/^%/{print}' "$FILE" > "$DDIR/$d/$d.e"
 	fi
 	OLDPWD=$(pwd)
-	cd $DDIR
+	cd "$DDIR/$d"
 	if [ ! -f "$d.v" ] || [ "$(wc -l < $d.v)" -eq 0 ]; then
 		echo "Creating $d.v..."
 		cat  "$d.e" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
@@ -135,27 +134,28 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	echo -n  "Checking whether $d.e is weighted or unweighted..."
 	if [ $(awk '{print NF; exit}' "$d.e") -eq 2 ]; then
 		echo " unweighted."
-		echo "SRC,DEST" > "$d/edge.csv"
+		echo "SRC,DEST" > "edge.csv"
 		# Add 1 to ensure it's at least 1-indexed. It won't hurt.
-		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d/$d.el"
+		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.el"
 		# Get the roots by running SSSP and making sure you can visit a good
 		# number of vertices GAP output is e.g. "took 382 iterations".
 		# We don't want it to take 1 iteration.
 		echo "Getting roots."
-		"$GAPDIR/sssp" -f "$d/$d.el" -n $(($NRT*2)) > tmp.log
+		"$GAPDIR/sssp" -f "$d.el" -n $(($NRT*2)) > tmp.log
 		# We write a serialized graph to speed up GAP
-		"$GAPDIR/converter" -s -f "$d/$d.el" -b "$d/$d.sg"
+		"$GAPDIR/converter" -s -f "$d.el" -b "$d.sg"
 
 		echo Writing the graph transpose to "$DDIR/$d/${d}-t.el"
 		awk '{print $2 " " $1}' "$DDIR/$d/$d.el" > "$DDIR/$d/${d}-t.el"
 
 		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d.el" "$d.graphmat"
 		# Convert to Galois format
-		echo "Galois file format for unweighted real world graphs currently unsupported." # TODO
-		# But if it were, we would also need the transpose:
-		# echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
-		# "$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/${d}.gr" "$DDIR/$d/${d}-t.gr"
+		echo "Converting to Galois format. Adding unit weights"
+		awk '{print $1 " " $2 " " 1}' "$DDIR/$d/$d.el" > "$DDIR/$d/$d.wel"
+		"$GALOISDIR/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
+		echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
+		"$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/$d.gr" "$DDIR/$d/${d}-t.gr"
 
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted. Weighted graphs are currently not supported because of a bug in GraphMat."
@@ -180,9 +180,9 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$d/$d-roots.v"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	rm tmp.log
-	sed 's/[:space:]+/,/' "$DDIR/$d.e" >> "$DDIR/$d/edge.csv"
+	sed 's/[:space:]+/,/' "$DDIR/$d/$d.e" >> "$DDIR/$d/edge.csv"
 	echo "ID" > "$DDIR/$d/vertex.csv"
-	sed 's/[:space:]+/,/' "$DDIR/$d.v" >> "$DDIR/$d/vertex.csv"
+	sed 's/[:space:]+/,/' "$DDIR/$d/$d.v" >> "$DDIR/$d/vertex.csv"
 ###
 # Synthetic datasets to the Graph500 specification
 ###
