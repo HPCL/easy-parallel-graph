@@ -109,7 +109,8 @@ else
 fi
 if [ -n "$COPY" ]; then
 	mkdir -p "$COPY/$d"
-	cp $DDIR/$d/$d* "$COPY/$d"
+	cp $DDIR/$d/* "$COPY/$d"
+	DDIR="$COPY"
 fi
 echo Starting experiment at $(date)
 

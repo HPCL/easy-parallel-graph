@@ -89,7 +89,8 @@ OUTPUT_PREFIX="$OUTDIR/kron-$S/${OMP_NUM_THREADS}t"
 mkdir -p "$OUTDIR/kron-$S"
 if [ -n "$COPY" ]; then
 	mkdir -p "$COPY/$d"
-	cp $DDIR/$d/$d* "$COPY/$d"
+	cp $DDIR/$d/* "$COPY/$d"
+	DDIR="$COPY"
 fi
 
 # Set some other variables used throughout the experiment
@@ -243,7 +244,7 @@ done
 # No triangle count for Galois
 
 if [ -n "$COPY" ]; then
-	rm "$COPY/$d"/*
+	rm $COPY/$d/*
 	rmdir "$COPY/$d"
 fi
 echo Finished experiment at $(date)
