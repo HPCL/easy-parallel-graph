@@ -111,6 +111,7 @@ if [ -n "$COPY" ]; then
 	mkdir -p "$COPY/$d"
 	cp $DDIR/$d/* "$COPY/$d"
 	DDIR="$COPY"
+	echo "Copied data to $DDIR"
 fi
 echo Starting experiment at $(date)
 

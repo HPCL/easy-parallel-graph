@@ -88,9 +88,10 @@ GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 OUTPUT_PREFIX="$OUTDIR/kron-$S/${OMP_NUM_THREADS}t"
 mkdir -p "$OUTDIR/kron-$S"
 if [ -n "$COPY" ]; then
-	mkdir -p "$COPY/$d"
-	cp $DDIR/$d/* "$COPY/$d"
+	mkdir -p "$COPY/kron-$S"
+	cp $DDIR/kron-$S/* "$COPY/kron-$S"
 	DDIR="$COPY"
+	echo "Copied data to $DDIR"
 fi
 
 # Set some other variables used throughout the experiment
@@ -244,8 +245,8 @@ done
 # No triangle count for Galois
 
 if [ -n "$COPY" ]; then
-	rm $COPY/$d/*
-	rmdir "$COPY/$d"
+	rm $COPY/kron-$S/*
+	rmdir "$COPY/kron-$S"
 fi
 echo Finished experiment at $(date)
 

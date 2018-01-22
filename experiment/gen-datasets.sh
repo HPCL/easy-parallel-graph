@@ -145,31 +145,31 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		# We write a serialized graph to speed up GAP
 		"$GAPDIR/converter" -s -f "$d.el" -b "$d.sg"
 
-		echo Writing the graph transpose to "$DDIR/$d/${d}-t.el"
-		awk '{print $2 " " $1}' "$DDIR/$d/$d.el" > "$DDIR/$d/${d}-t.el"
+		echo Writing the graph transpose to "${d}-t.el"
+		awk '{print $2 " " $1}' "$d.el" > "${d}-t.el"
 
 		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
 		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d.el" "$d.graphmat"
 		# Convert to Galois format
 		echo "Converting to Galois format. Adding unit weights"
-		awk '{print $1 " " $2 " " 1}' "$DDIR/$d/$d.el" > "$DDIR/$d/$d.wel"
+		awk '{print $1 " " $2 " " 1}' "$d.el" > "$d.wel"
 		"$GALOISDIR/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
 		echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
 		"$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/$d.gr" "$DDIR/$d/${d}-t.gr"
 
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
-		echo " weighted. Weighted graphs are currently not supported because of a bug in GraphMat."
-		echo "SRC,DEST,WEIGHT" > "$d/edge.csv"
-		awk '{printf "%d %d %s\n", ($1+1), ($2+1), $3}' "$d.e" > "$d/$d.wel"
-		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d/$d.el" # For GraphMat
+		echo " weighted."
+		echo "SRC,DEST,WEIGHT" > "edge.csv"
+		awk '{printf "%d %d %s\n", ($1+1), ($2+1), $3}' "$d.e" > "$d.wel"
+		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.el" # For GraphMat
 
 		echo "Getting roots."
-		"$GAPDIR/sssp" -f "$d/$d.el" -n $(( $NRT * 2 )) > tmp.log
+		"$GAPDIR/sssp" -f "$d.el" -n $(( $NRT * 2 )) > tmp.log
 		# TODO: Use this in real-datasets, change WeightT to float if need be and recompile GAPBS
-		"$GAPDIR/converter" -s -f "$d/$d.wel" -b "$d/$d.wsg"
+		"$GAPDIR/converter" -s -f "$d.wel" -wb "$d.wsg"
 		# We make no assumptions so we output double precision edge weights
 		# "$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 1 --outputedgeweights 0 --edgeweighttype 1 --nvertices $nvertices "$d/$d.wel" "$d/$d.graphmat"
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d/$d.el" "$d/$d.graphmat"
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d.el" "$d.graphmat"
 		# Convert to Galois format
 		"$GALOISDIR/tools/graph-convert/graph-convert" -doubleedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
 	else

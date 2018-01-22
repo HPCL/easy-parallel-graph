@@ -150,28 +150,30 @@ plot_speedup <- function(strong_scaling, scale, threadcnts, algo)
 ###
 # Generate some figures for a single graph size
 ###
-thr <- focus_thread
-scl <- focus_scale
-# Possiblities: BFS, SSSP, PageRank, TC
-bfs_scale <- measure_scale(scl, threads, "BFS")
-result_pkgs <- complete.cases(bfs_scale)
-if (!all(result_pkgs )) {
-	message("Removing ",
-			paste(rownames(bfs_scale)[!result_pkgs ], collapse=", "),
-			" from results")
-}
-bfs_scale <- bfs_scale[result_pkgs, ]
-bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
-bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
+if (exists("focus_scale") && exists("focus_thread")) {
+	thr <- focus_thread
+	scl <- focus_scale
+	# Possiblities: BFS, SSSP, PageRank, TC
+	bfs_scale <- measure_scale(scl, threads, "BFS")
+	result_pkgs <- complete.cases(bfs_scale)
+	if (!all(result_pkgs )) {
+		message("Removing ",
+				paste(rownames(bfs_scale)[!result_pkgs ], collapse=", "),
+				" from results")
+	}
+	bfs_scale <- bfs_scale[result_pkgs, ]
+	bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
+	bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
 
-message("Saving boxplots of various measurements. These may need to be edited")
-time_boxplot(scl, thr, "BFS", timing_metric = "Time")
-time_boxplot(scl, thr, "BFS", timing_metric = "Data structure build")
-time_boxplot(scl, thr, "SSSP", timing_metric = "Time")
-time_boxplot(scl, thr, "PageRank", timing_metric = "Time")
-time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
-# time_boxplot(scl, thr, "TC", timing_metric = "Time")
-# time_boxplot(scl, thr, "TC", timing_metric = "Triangles")
+	message("Saving boxplots of various measurements. These may need to be edited")
+	time_boxplot(scl, thr, "BFS", timing_metric = "Time")
+	time_boxplot(scl, thr, "BFS", timing_metric = "Data structure build")
+	time_boxplot(scl, thr, "SSSP", timing_metric = "Time")
+	time_boxplot(scl, thr, "PageRank", timing_metric = "Time")
+	time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
+	# time_boxplot(scl, thr, "TC", timing_metric = "Time")
+	# time_boxplot(scl, thr, "TC", timing_metric = "Triangles")
+}
 
 ###
 # Dump performance data in a csv

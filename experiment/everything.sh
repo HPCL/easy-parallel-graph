@@ -19,11 +19,12 @@ COPY='--copy-to=/tmp' # Leave blank for no copying of datasetes
 JS_TIME=20:00:00
 JS_CPUS=28
 JS_PARTITION=short
+JS_MEMORY=128G
 
 if [ "$DRYRUN" = 'True' ]; then
 	ANALYZE='echo '
 else
-	ANALYZE='' # We assume you want to run analysis interactively. It doesn't take long.
+	ANALYZE='' # We assume you can run analysis, installation, etc. interactively. It doesn't take long.
 fi
 
 # usage: run [-serror error_file] [-soutput output_file] [-sjob job_name] executable [args]...
@@ -31,7 +32,7 @@ run()
 {
 	local cmd
 	if [ $SLURM = 'True' ]; then
-		cmd="sbatch -t $JS_TIME --cpus-per-task=$JS_CPUS --partition=$JS_PARTITION"
+		cmd="sbatch -t $JS_TIME --cpus-per-task=$JS_CPUS --partition=$JS_PARTITION --mem=$JS_MEMORY"
 	fi
 	if [ "$DRYRUN" = 'True' ]; then
 		cmd="echo $cmd"
@@ -62,7 +63,7 @@ ${ANALYZE}./get-libraries.sh
 run -serror run_logs/gen${S}.err -soutput run_logs/gen${S}.out ./gen-datasets.sh $S
 
 # Synthetic datasets
-echo -e '\n# Generating Graphalytics datasets'
+echo -e '\n# Running Synthetic datasets'
 for T in $THREADS; do
 	run -serror run_logs/${S}-${T}t.err -soutput run_logs/${S}-${T}t.out -sjob epg${T}t-$S ./run-experiment.sh --num-roots=$NUM_ROOTS $COPY $S $T
 done
@@ -92,7 +93,7 @@ done
 echo -e '\n# Running Graphalytics datasets'
 for DSET in $GA_DATASETS; do
 	for T in $THREADS; do
-		run -serror run_logs/$DSET-${T}t.err -soutput run_logs/${DSET}-${T}t.out -sjob epg${T}t-${DSET} ./run-experiment.sh --num-roots=$NUM_ROOTS datasets/$DSET/$DSET $T
+		run -serror run_logs/$DSET-${T}t.err -soutput run_logs/${DSET}-${T}t.out -sjob epg${T}t-${DSET} ./run-realworld.sh --num-roots=$NUM_ROOTS datasets/$DSET/$DSET $T
 	done
 done
 # Run SNAP and KONECT datasets
