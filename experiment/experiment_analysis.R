@@ -263,6 +263,8 @@ if (coalesce == TRUE) {
 				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}
+	} else {
+		message("realworld_datasets not found. Not coalescing")
 	}
 	time_col <- which(colnames(perf_df) == "runtime")
 	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
