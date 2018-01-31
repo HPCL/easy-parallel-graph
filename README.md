@@ -26,7 +26,7 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 `build-power.sh` downloads and compiles the various projects for power measurement. Installs to `./powerlib` by default.
 
 ## Analysis
-`experiment_analysis.R:`
+`experiment_analysis.R:` This script takes in a config file. You can see an example in `config_template.R`. Notice here there are both synthetic and realworld experiments that can be analyzed at once. If you just want to do one or the other, uncomment out `focus_scale` and `focus_thread` for synthetic and `realworld_datasets` for realworld datasets.
 
 ### Other Scripts
 `graphalytics/get-graphalytics.sh`: This script gathers, installs, and runs various

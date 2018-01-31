@@ -123,9 +123,6 @@ DATASETS="$GA_DATASETS $S_K_DATASETS"
 for DSET in $DATASETS; do
 	${ANALYZE}./parse-output.sh -f=$DSET
 done
-for DSET in $S_K_DATASETS; do
-	${ANALYZE}./parse-output.sh -f=$DSET
-done
 echo "# Config file for realworld_analysis.R. threads a vector, scale an int.
 prefix <- './output/'
 threads <- ${THREAD_ARR[-2]} # Pick the second to last thread arbitrarily
