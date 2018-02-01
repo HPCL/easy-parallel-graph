@@ -4,11 +4,15 @@ set -o history -o histexpand
 # e.g. if you called gen-datasets.sh -f=data.out then you could specify
 # either data or data.out as the first argument.
 USAGE="usage: real-realworld.sh [--libdir=<dir>] [--ddir=<dir>] <filename> <num_threads>
+	<filename> can be the whole file or the prefix. e.g. datasets/cit-Patents
+		or datasets/cit-Patents/cit-Patents.el
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets
-	--copy-to=<tmpdir>: copy to temporary storage, delete after experiment
+	--copy-to=<tmpdir>: copy to temporary storage, delete after experiment.
+		Default: Don't copy.
 	NOTE: Things I haven't added as command line options but you change:
-	RUN_* (run each of the experiments). Set this to 0 if you don't want to run that package"
+	RUN_* (run each of the experiments). Set this to 0 if you don't want
+		to run that package"
 
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
@@ -95,8 +99,12 @@ mkdir -p "$(pwd)/output/${FILE_PREFIX}"
 check_status ()
 {
 	if [ "$1" -ne 0 ]; then
+		# Get the last command and remove all the loops and ifs
 		LASTCMD=$(history 1)
-		echo "There was a problem with $LASTCMD"
+		LASTCMD=${LASTCMD##*do }
+		LASTCMD=${LASTCMD%%;*}
+		LASTCMD=${LASTCMD%%>*}
+		echo "There was a problem with $(eval echo $LASTCMD)"
 		exit 1
 	fi 
 }
