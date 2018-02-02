@@ -21,6 +21,7 @@ RUN_GAP=1
 RUN_GALOIS=1
 RUN_GRAPHMAT=1
 RUN_GRAPHBIG=1
+RUN_POWERGRAPH=1
 
 unset COPY # can copy to a faster, temporary filesystem
 for arg in "$@"; do
@@ -96,6 +97,7 @@ mkdir -p "$(pwd)/output/${FILE_PREFIX}"
 
 # input: Exit code of the previously-run command
 # output: prints the command if the exit code is nonzero
+set -o history
 check_status ()
 {
 	if [ "$1" -ne 0 ]; then
@@ -135,12 +137,11 @@ echo Starting experiment at $(date)
 echo Note: Files of the form
 echo "${OUTPUT_PREFIX}-{GAP,GraphMat,PowerGraph,Galois}-{BFS,SSSP,PR,TC}.out"
 echo get overwritten.
-rm -f "${OUTPUT_PREFIX}"-{GAP,GraphMat,PowerGraph,Galois}-{BFS,SSSP,PR,TC}.out
-rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TC}.{out,err}
 
 # It would be nice if you could read in a file for the roots
 if [ "$RUN_GAP" = 1 ]; then 
 	echo "Running GAP BFS"
+	rm -f "${OUTPUT_PREFIX}-GAP-"{BFS,SSSP,PR,TC}.out
 	head -n $NRT "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-${NRT}roots.v"
 	for ROOT in $(cat "$DDIR/$d/${d}-${NRT}roots.v"); do
 		"$GAPDIR"/bfs -r $ROOT -f $GAP_EDGELISTFILE -n 1 >> "${OUTPUT_PREFIX}-GAP-BFS.out"
@@ -169,6 +170,7 @@ fi
 
 if [ "$RUN_GRAPHBIG" = 1 ]; then 
 	echo "Running GraphBIG BFS"
+	rm -f "${OUTPUT_PREFIX}-GraphBIG-"{BFS,SSSP,PR,TC}.out
 	# For this, one needs a vertex.csv file and and an edge.csv.
 	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/${d}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
 	check_status $?
@@ -195,6 +197,7 @@ fi
 
 if [ "$RUN_GRAPHMAT" = 1 ]; then 
 	echo "Running GraphMat BFS"
+	rm -f "${OUTPUT_PREFIX}-GraphMat-"{BFS,SSSP,PR,TC}.out
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
 		"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
@@ -226,6 +229,7 @@ fi
 
 if [ "$RUN_POWERGRAPH" = 1 ]; then 
 	echo "Running PowerGraph SSSP"
+	rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TC}.{out,err}
 	# Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
 	if [ "$OMP_NUM_THREADS" -gt 128 ]; then
 		export GRAPHLAB_THREADS_PER_WORKER=128
