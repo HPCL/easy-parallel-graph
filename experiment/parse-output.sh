@@ -69,20 +69,20 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 	# T=0 and 1 business because there are two times, one for iterations and one for everything else
 	if [ "$ALGO" = BFS ]; then
 		echo -n "GraphBIG,BFS,File reading," >> "$OUTFN"
-		grep -A 7 "Benchmark: BFS" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -A 7 "Benchmark: BFS" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep -A $((4 * $NRT + 4)) "Benchmark: BFS" "$FN" | tail -n+5 | awk '/time/{print "GraphBIG,BFS,Time," $3}' >> "$OUTFN"
 	elif [ "$ALGO" = SSSP ]; then
 		echo -n 'GraphBIG,SSSP,File reading,' >> "$OUTFN"
-		grep -A 7 'Benchmark: sssp' "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -A 7 'Benchmark: sssp' "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep -A $((2 * $NRT + 4)) 'Benchmark: sssp' "$FN" | tail -n+5 | awk '/time/{print "GraphBIG,SSSP,Time," $3}' >> "$OUTFN"
 	elif [ "$ALGO" = PR ]; then
 		echo -n 'GraphBIG,PageRank,File reading,' >> "$OUTFN"
-		grep -A 7 "Degree Centrality" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -A 7 "Degree Centrality" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep 'iteration #' "$FN" | awk '{print "GraphBIG,PageRank,Iterations," $4}' >> "$OUTFN"
 		grep -A 11 "Degree Centrality" "$FN" | awk -v T=1 '/time/{if(T%2==0){print "GraphBIG,PageRank,Time," $3} T++}' >> "$OUTFN"
 	elif [ "$ALGO" = TC ]; then
 		echo -n 'GraphBIG,TC,File reading,' >> "$OUTFN"
-		grep -A 4 "Benchmark: triangle count" "$FN" | awk '/time/{print $3}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -A 4 "Benchmark: triangle count" "$FN" | awk '/time/{print $3}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep 'total triangle count' "$FN" | awk '{print "GraphBIG,TC,Triangles," $5}' >> "$OUTFN"
 		grep -A 3 "computing triangle count" "$FN" | awk '/time/{print "GraphBIG,TC,Time," $3}' >> "$OUTFN"
 	fi
@@ -114,7 +114,7 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphMat-*.out'); do
 	echo -n "; $ALGO $T threads"
 	if [ "$ALGO" = BFS ]; then
 		echo -n "GraphMat,BFS,File reading," >> "$OUTFN"
-		grep -A 4 'BFS root:' "$FN" | awk -F ':' '/, time/{print $2}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -A 4 'BFS root:' "$FN" | awk -F ':' '/, time/{print $2}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		# The time to build, sort, allocate the data structure
 		# XXX: This surprisingly takes between 0.7-2.9 seconds. Why the discrepancy?
 		grep -A 17 'BFS root:' "$FN" | awk '/A from memory/{print "GraphMat,BFS,Data structure build," $(NF-1)}' >> "$OUTFN"
@@ -122,19 +122,19 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphMat-*.out'); do
 		grep -A 20 'BFS root:' "$FN" | awk '/Time/{print "GraphMat,BFS,Time," ($3/1000)}' >> "$OUTFN"
 	elif [ "$ALGO" = SSSP ]; then
 		echo -n 'GraphMat,SSSP,File reading,' >> "$OUTFN"
-		grep -A 4 'SSSP root:' "$FN" | awk -F ':' '/, time/{print $2}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -A 4 'SSSP root:' "$FN" | awk -F ':' '/, time/{print $2}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep -A 17 'SSSP root:' "$FN" | awk '/A from memory/{print "GraphMat,SSSP,Data structure build," $(NF-1)}' >> "$OUTFN"
 		grep -A 20 'SSSP root:' "$FN" | awk '/Time/{print "GraphMat,SSSP,Time," ($3/1000)}' >> "$OUTFN"
 	elif [ "$ALGO" = PR ]; then
 		# NOTE: GraphMat PageRank goes for 149 iterations
 		echo -n 'GraphMat,PageRank,File reading,' >> "$OUTFN"
-		grep -B 18 "PR Time" "$FN" | awk -F ':' '/, time/{print $2}' | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		grep -B 18 "PR Time" "$FN" | awk -F ':' '/, time/{print $2}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep -B 5 "PR Time" "$FN" | awk '/A from memory/{print "GraphMat,PageRank,Data structure build," $(NF-1)}' >> "$OUTFN"
 		grep -B 1 "PR Time" "$FN" | awk '/Completed/{print "GraphMat,PageRank,Iterations," $2}' >> "$OUTFN"
 		awk '/PR Time/{print "GraphMat,PageRank,Time," ($4/1000)}' "$FN" >> "$OUTFN"
 	elif [ "$ALGO" = TC ]; then
 		echo -n 'GraphMat,TC,File reading,' >> "$OUTFN"
-		awk -F ':' '/Finished file read /{print $NF}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk -F ':' '/Finished file read /{print $NF}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk '/A from memory/{print "GraphMat,TC,Data structure build," $(NF-1)}' "$FN" >> "$OUTFN"
 		awk '/Total triangles/{print "GraphMat,TC,Triangles," $4}' "$FN" >> "$OUTFN"
 		awk '/Time =/{print "GraphMat,TC,Time," ($3/1000)}' "$FN" >> "$OUTFN"
@@ -152,23 +152,23 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GAP-*.out'); do
 	echo -n "; $ALGO $T threads"
 	if [ "$ALGO" = BFS ]; then
 		echo -n "GAP,BFS,File reading," >> "$OUTFN"
-		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,BFS,Data structure build," $3}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,BFS,Time," $3}' "$FN" >> "$OUTFN"
 	elif [ "$ALGO" = SSSP ]; then
 		echo -n 'GAP,SSSP,File reading,' >> "$OUTFN"
-		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,SSSP,Data structure build," $3}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,SSSP,Time," $3}' "$FN" >> "$OUTFN"
 	elif [ "$ALGO" = PR ]; then
 		echo -n 'GAP,PageRank,File reading,' >> "$OUTFN"
-		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,PageRank,Data structure build," $3}' "$FN" >> "$OUTFN"
 		grep -B 2 'Average Time:' "$FN" | awk '/^\s*[0-9]+/{print "GAP,PageRank,Iterations," $1}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,PageRank,Time," $3}' "$FN" >> "$OUTFN"
 	elif [ "$ALGO" = TC ]; then
 		echo -n 'GAP,TC,File reading,' >> "$OUTFN"
-		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print s/NR}' >> "$OUTFN"
+		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,TC,Time," $3}' "$FN" >> "$OUTFN"
 	fi
 done

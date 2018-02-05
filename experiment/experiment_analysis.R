@@ -150,28 +150,30 @@ plot_speedup <- function(strong_scaling, scale, threadcnts, algo)
 ###
 # Generate some figures for a single graph size
 ###
-thr <- focus_thread
-scl <- focus_scale
-# Possiblities: BFS, SSSP, PageRank, TC
-bfs_scale <- measure_scale(scl, threads, "BFS")
-result_pkgs <- complete.cases(bfs_scale)
-if (!all(result_pkgs )) {
-	message("Removing ",
-			paste(rownames(bfs_scale)[!result_pkgs ], collapse=", "),
-			" from results")
-}
-bfs_scale <- bfs_scale[result_pkgs, ]
-bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
-bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
+if (exists("focus_scale") && exists("focus_thread")) {
+	thr <- focus_thread
+	scl <- focus_scale
+	# Possiblities: BFS, SSSP, PageRank, TC
+	bfs_scale <- measure_scale(scl, threads, "BFS")
+	result_pkgs <- complete.cases(bfs_scale)
+	if (!all(result_pkgs )) {
+		message("Removing ",
+				paste(rownames(bfs_scale)[!result_pkgs ], collapse=", "),
+				" from results")
+	}
+	bfs_scale <- bfs_scale[result_pkgs, ]
+	bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
+	bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
 
-message("Saving boxplots of various measurements. These may need to be edited")
-time_boxplot(scl, thr, "BFS", timing_metric = "Time")
-time_boxplot(scl, thr, "BFS", timing_metric = "Data structure build")
-time_boxplot(scl, thr, "SSSP", timing_metric = "Time")
-time_boxplot(scl, thr, "PageRank", timing_metric = "Time")
-time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
-# time_boxplot(scl, thr, "TC", timing_metric = "Time")
-# time_boxplot(scl, thr, "TC", timing_metric = "Triangles")
+	message("Saving boxplots of various measurements. These may need to be edited")
+	time_boxplot(scl, thr, "BFS", timing_metric = "Time")
+	time_boxplot(scl, thr, "BFS", timing_metric = "Data structure build")
+	time_boxplot(scl, thr, "SSSP", timing_metric = "Time")
+	time_boxplot(scl, thr, "PageRank", timing_metric = "Time")
+	time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
+	# time_boxplot(scl, thr, "TC", timing_metric = "Time")
+	# time_boxplot(scl, thr, "TC", timing_metric = "Triangles")
+}
 
 ###
 # Dump performance data in a csv
@@ -198,16 +200,16 @@ if (coalesce == TRUE) {
 		for (scl in kron_scales) {
 			for (thr in threads) {
 				# nedges \approx 16 * 2^scl
-				in_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
-				if (!file.exists(in_fn)) {
+				perf_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
+				if (!file.exists(perf_fn)) {
 					next
 				}
-				x <- read.csv(in_fn, header = FALSE)
+				x <- read.csv(perf_fn, header = FALSE)
 				# TODO: Get the actual number of edges and vertices
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
-					message(in_fn, " with ", scl, " scale and ", thr,
+					message(perf_fn, " with ", scl, " scale and ", thr,
 							" threads has NA for time. This is probably because an experiment failed")
 					next
 				}
@@ -238,12 +240,14 @@ if (coalesce == TRUE) {
 				}
 				x <- read.csv(perf_fn, header = FALSE)
 				# XXX: We should get the actual number of edges and vertices
+
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
-				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
-					message(in_fn, " with ", scl, " scale and ", thr,
-							" threads has NA for time. This is probably because an experiment failed")
+				if (any(is.na(combo[[3]]))) { # Column 4 is Runtime
+					warning(perf_fn, " with ", nthreads, " threads has NA for time.",
+							" This is probably because an experiment failed. Here are some rows:")
+					print(head(combo[which(is.na(combo[[3]])),]))
 					next
 				}
 				colnames(combo) <- realworld_colnames
@@ -261,6 +265,8 @@ if (coalesce == TRUE) {
 				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}
+	} else {
+		message("realworld_datasets not found. Not coalescing")
 	}
 	time_col <- which(colnames(perf_df) == "runtime")
 	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
