@@ -13,8 +13,11 @@ if len(sys.argv) == 2:
     data_dir = str(sys.argv[1])
 
 config='datasets.txt'
+config_data = []
 with open(config) as f:
-    config_data=f.read().splitlines()
+    for line in f:
+        if line[0] != '#':
+            config_data.append(line.strip())
 
 graph_name=config_data[::3]
 url=config_data[1::3]
