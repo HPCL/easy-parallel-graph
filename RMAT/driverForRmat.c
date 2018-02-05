@@ -33,12 +33,14 @@ int main(int argc, char** argv) {
     printf("Usage: %s <SCALE> <SC-WT> <EPV> <a b c [d]> <Output filename>\n", argv[0]);
     printf("Details: SCALE = #Vertices = 2^SCALE  -- #Edges = EPV*#Vertices\n");
     printf("SC-WT: Random weights in the range zero to 2^SC-WT will be assigned\n");
+    printf("\tIf you want unweighted, set SC-WT to a negative number.\n");
     printf("a,b,c,d: probabilities for R-MAT such that a+b+c+d=1.0.\n");
     printf("You can optionally not provide <d> and d=1-a-b-c.\n");
     printf("Output filename: File in which the graph will be stored\n");
     exit(-1);
   }
   
+  int weighted = 1;
   int scale    = atoi(argv[1]);
   int scale_wt = atoi(argv[2]);
   int epv      = atoi(argv[3]);
@@ -54,12 +56,16 @@ int main(int argc, char** argv) {
   }
 
   /* Step 2: Parse the graph in Matrix Market format */
+  if (scale_wt < 0) {
+    scale_wt = 0.0;
+    weighted = 0;
+  }
   graph* G = generateRMAT(scale, scale_wt, epv, a, b, c, d);
 
   displayGraphCharacteristics(G);
 
   printf("Graph will be written in Pajek format in file: %s\n", argv[argc-1]);
-  writeSimpleGraphFormatNewD(G, argv[argc-1]);
+  writeSimpleGraphFormatNewD(G, argv[argc-1], weighted);
   
   /* Step 5: Clean up */
   free(G->edgeListPtrs);

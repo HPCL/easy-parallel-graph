@@ -26,7 +26,7 @@
 
 #include "defs.h"
 
-void writeSimpleGraphFormatNewD(graph* G, char * filename)
+void writeSimpleGraphFormatNewD(graph* G, char * filename, int weighted)
 {
   //Get the iterators for the graph:
   long NVer     = G->numVertices;
@@ -57,7 +57,10 @@ void writeSimpleGraphFormatNewD(graph* G, char * filename)
     //Edge lines: <adjacent> <weight>
     for(long k = adj1; k < adj2; k++ ) {
       if(verInd[k].tail > v)
-	fprintf(fout, "%ld %ld %g\n", v+1, verInd[k].tail+1, verInd[k].weight );
+        if (weighted)
+          fprintf(fout, "%ld %ld %g\n", v+1, verInd[k].tail+1, verInd[k].weight );
+        else
+          fprintf(fout, "%ld %ld\n", v+1, verInd[k].tail+1);
     } //End of for loop to traverse adjacency of v
   }
   fclose(fout);

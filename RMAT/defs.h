@@ -37,7 +37,7 @@ extern "C" {
 #endif
   graph * generateRMAT(int SCALE, int SCALE_WT, int epv, double a, double b, double c, double d);
   void displayGraphCharacteristics(graph *G);
-  void writeSimpleGraphFormatNewD(graph* G, char * filename);
+  void writeSimpleGraphFormatNewD(graph* G, char * filename, int weighted);
 
 #ifdef __cplusplus
 } /* closing brace for extern "C" */

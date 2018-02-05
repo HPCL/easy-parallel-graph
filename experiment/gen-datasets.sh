@@ -1,12 +1,16 @@
 #!/bin/bash
-USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] -f=<filename>|<scale>
-	You may either provide a file path an integer <scale> to generate an RMAT graph
-	with 2^<scale> vertices. The current filetypes supported are of the form
+USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] [--rmat=<params>] -f=<filename>|<scale>
+	You may either provide a file path (e.g. gen-datasets.sh -f=datasets/file.wel) or an
+	integer (e.g. gen-datasets.sh 20) to generate an RMAT graph with 2^<scale> vertices.
+	The current filetypes supported are of the form
 		<edge1> <edge2> with optional comment lines beginning with # or %
 	OR
 		<edge1> <edge2> <weight> with optional comment lines beginning with # or %
 	--libdir: repositories directory. Default: ./lib
-	--ddir: dataset directory. Default: ./datasets"
+	--ddir: dataset directory. Default: ./datasets
+	--rmat: Use <params> for the RMAT parameters. These are space-separated, so you'll
+		have to quote them. You can provide 3 or 4. For example, --rmat='0.5 0.2 0.2'.
+		only use if with <scale> (not -f)"
 # Generate an unweighted, undirected Kronecker (RMAT) graph in the file formats
 # for graph500, GraphMat, GraphBIG, and GAP
 # for BFS, SSSP, and PageRank
@@ -50,6 +54,7 @@ if [ -z "$1" ]; then
 fi
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
+RMAT_PARAMS="0.57 0.19 0.19 0.05"
 for arg in "$@"; do
 	case $arg in
 	--libdir=*)
@@ -72,6 +77,10 @@ for arg in "$@"; do
 			FILE_PREFIX=$(basename $FILE)
 			FILE_PREFIX=${FILE_PREFIX#out.}
 		fi
+		shift
+	;;
+	--rmat=*)
+		RMAT_PARAMS=${arg#*=}
 		shift
 	;;
 	*)	# Default
@@ -190,12 +199,10 @@ else
 	# Generate graph (Graph500 can only save to its binary format)
 	d="$FILE_PREFIX"
 	mkdir -p "$DDIR/$d"
-	# FIXME: make-edgelist only generates files at most 2.0Gb
-	# "$GRAPH500DIR/make-edgelist" -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
-
-	# Convert to edgelist
+	# Various ways to generate RMAT
+	../RMAT/driverForRmat $S -1 16 $RMAT_PARAMS "$DDIR/$d/$d.el"
 	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" # TODO
-	"$GAPDIR/converter" -g $S -e "$DDIR/$d/$d.el"
+	#"$GAPDIR/converter" -g $S -e "$DDIR/$d/$d.el"
 
 	# Symmetrize (make undirected)
 	# Making the graph undirected results in identical output for all but TC.

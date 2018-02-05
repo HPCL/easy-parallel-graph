@@ -24,12 +24,12 @@ LIBDIR="$(pwd)/lib"
 OUTDIR="$(pwd)/output"
 NRT=32 # Number of roots
 unset COPY # can copy to a faster, temporary filesystem
-RUN_GRAPH500=0
-RUN_GAP=0
-RUN_GALOIS=0
+RUN_GRAPH500=1
+RUN_GAP=1
+RUN_GALOIS=1
 RUN_GRAPHMAT=1
-RUN_GRAPHBIG=0
-RUN_POWERGRAPH=0
+RUN_GRAPHBIG=1
+RUN_POWERGRAPH=1
 
 for arg in "$@"; do
 	case $arg in

@@ -9,6 +9,14 @@ LIBDIR="$(pwd)/lib"
 if [ -n "$1" ]; then
 	LIBDIR="$1"
 fi
+
+FAILED=''
+echo "Building RMAT generator"
+cd ../RMAT
+make
+cd -
+if [ "$?" -ne 0 ]; then FAILED="$FAILED RMAT"; fi
+
 echo "Installing into $LIBDIR ..."
 
 mkdir -p "$LIBDIR"
@@ -57,9 +65,8 @@ if [ "$?" -ne 0 ]; then FAILED="$FAILED PowerGraph"; fi
 cd "$LIBDIR"
 wget -nc http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
 tar -xf Galois-2.2.1.tar.gz
+patch -p0 < galois.patch
 cd "$LIBDIR/Galois-2.2.1"
-# Chose some large maximum number of threads, say 8096
-ex -s src/Barrier.cpp '+:%s/\Vpthread_barrier_init(&bar, 0, ~0)/pthread_barrier_init(\&bar, 0, 8096)/g' '+:x'
 cd build
 mkdir -p default
 cd default
