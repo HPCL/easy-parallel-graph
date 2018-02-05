@@ -200,16 +200,16 @@ if (coalesce == TRUE) {
 		for (scl in kron_scales) {
 			for (thr in threads) {
 				# nedges \approx 16 * 2^scl
-				in_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
-				if (!file.exists(in_fn)) {
+				perf_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
+				if (!file.exists(perf_fn)) {
 					next
 				}
-				x <- read.csv(in_fn, header = FALSE)
+				x <- read.csv(perf_fn, header = FALSE)
 				# TODO: Get the actual number of edges and vertices
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
-					message(in_fn, " with ", scl, " scale and ", thr,
+					message(perf_fn, " with ", scl, " scale and ", thr,
 							" threads has NA for time. This is probably because an experiment failed")
 					next
 				}
@@ -240,12 +240,14 @@ if (coalesce == TRUE) {
 				}
 				x <- read.csv(perf_fn, header = FALSE)
 				# XXX: We should get the actual number of edges and vertices
+
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
-				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
-					message(in_fn, " with ", scl, " scale and ", thr,
-							" threads has NA for time. This is probably because an experiment failed")
+				if (any(is.na(combo[[3]]))) { # Column 4 is Runtime
+					warning(perf_fn, " with ", nthreads, " threads has NA for time.",
+							" This is probably because an experiment failed. Here are some rows:")
+					print(head(combo[which(is.na(combo[[3]])),]))
 					next
 				}
 				colnames(combo) <- realworld_colnames
