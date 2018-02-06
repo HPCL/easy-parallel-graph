@@ -19,6 +19,14 @@ if [ "$?" -ne 0 ]; then FAILED="$FAILED RMAT"; fi
 
 echo "Installing into $LIBDIR ..."
 
+echo 'Building SNAP feature calculator'
+cd "$LIBDIR"
+git clone https://github.com/sampollard/snap.git
+cd snap
+make
+if [ "$?" -ne 0 ]; then FAILED="$FAILED SNAP"; fi
+
+
 mkdir -p "$LIBDIR"
 cd "$LIBDIR"
 # GAP:

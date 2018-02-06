@@ -112,6 +112,7 @@ GAPDIR="$LIBDIR/gapbs"
 GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
+SNAPDIR="$LIBDIR/snap/examples/feature_csv"
 
 ###
 # Real world datasets as provided by Graphalytics, SNAP, or KONECT
@@ -192,6 +193,10 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	sed 's/[:space:]+/,/' "$DDIR/$d/$d.e" >> "$DDIR/$d/edge.csv"
 	echo "ID" > "$DDIR/$d/vertex.csv"
 	sed 's/[:space:]+/,/' "$DDIR/$d/$d.v" >> "$DDIR/$d/vertex.csv"
+	# Generate features
+	if ! [ -f "$DDIR/$d/features.csv" ]; then
+		$SNAPDIR/feature_csv "$DDIR/$d/$d.el" > "$DDIR/$d/features.csv"
+	fi
 ###
 # Synthetic datasets to the Graph500 specification
 ###
@@ -244,6 +249,8 @@ else
 	"$GALOISDIR/tools/graph-convert/graph-convert" -intedgelist2gr "$DDIR/$d/$d.wel" "$DDIR/$d/$d.gr"
 	echo Writing the graph transpose to "$DDIR/$d/${d}-t.gr"
 	"$GALOISDIR/tools/graph-convert/graph-convert" -gr2tintgr "$DDIR/$d/$d.gr" "$DDIR/$d/${d}-t.gr"
+	# Generate features
+	$SNAPDIR/feature_csv "$DDIR/$d/$d.el" > "$DDIR/$d/features.csv"
 fi
 cd "$OLDPWD"
 echo "Completed data set generation at $(date)"
