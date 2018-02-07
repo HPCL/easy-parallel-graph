@@ -202,7 +202,11 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 ###
 else
 	# Generate graph (Graph500 can only save to its binary format)
-	d="$FILE_PREFIX"
+	if ! [ "$RMAT_PARAMS" = "0.57 0.19 0.19 0.05" ]; then
+		d="${FILE_PREFIX}_$(echo $RMAT_PARAMS | tr ' ' '_')"
+	else
+		d="$FILE_PREFIX"
+	fi
 	mkdir -p "$DDIR/$d"
 	# Various ways to generate RMAT
 	../RMAT/driverForRmat $S -1 16 $RMAT_PARAMS "$DDIR/$d/$d.el"

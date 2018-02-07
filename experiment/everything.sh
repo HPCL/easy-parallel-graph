@@ -80,7 +80,7 @@ done
 # Generating SNAP and KONECT datasets'
 echo -e '\n# Generating SNAP and KONECT datasets'
 ${ANALYZE}../learn/unzipper.sh ../learn/datasets.txt datasets
-S_K_DATASETS=$(awk -v ORS=' ' 'FNR%3 == 1 {print}' ../learn/datasets.txt )
+S_K_DATASETS=$(awk -v ORS=' ' 'FNR%3 == 1 && !/^#/ {print}' ../learn/datasets.txt )
 for DSET in $S_K_DATASETS; do
 	if [ -f "datasets/$DSET/out.$DSET" ]; then # KONECT
 		run -serror run_logs/gen${DSET}.err -soutput run_logs/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/out.${DSET}
