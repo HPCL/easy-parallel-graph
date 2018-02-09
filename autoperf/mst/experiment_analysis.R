@@ -4,11 +4,18 @@ library(ggplot2)
 # Alternatively you could interactively call within R
 # commandArgs <- function(trailingOnly=TRUE) c("cc-experiment/parsed-power-aggregate.txt","24","100","1000000","32","G")
 # source("experiment_analysis.R")
+
+#
+# 24_mst_scaling.pdf etc. generated with
+# commandArgs <- function(trailingOnly=TRUE) c("/Users/spollard/Documents/uo/research/easy-parallel-graph/papers/journal/mst/parsed-power-aggregate.txt","24","100","1000000","32","G")
+# 24_cc_scaling.pdf etc. generated with
+# commandArgs <- function(trailingOnly=TRUE) c("/Users/spollard/Documents/uo/research/easy-parallel-graph/papers/journal/cc/parsed-power-aggregate.txt","24","100","1000000","32","G")
 usage <- "usage: Rscript experiment_analysis.R <filename> <scale> <insertion_%> <changed_vertices> <num_threads> <rmat_type>"
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 6) {
 	stop(usage)
 }
+xps_algorithm <- "MST" # Choose either CC or MST
 filename <- args[1]
 scale_num <- as.numeric(args[2])
 ins_pct <- as.numeric(args[3])
@@ -16,7 +23,12 @@ cverts <- as.numeric(args[4])
 num_threads <- as.numeric(args[5])
 rmat_type <- args[6]
 num_batches <- 1
-epv <- 8
+x <- read.csv(filename, header = TRUE)
+lvl <- levels(factor(x$algorithm))
+xps_algorithm <- ifelse(
+		lvl[length(lvl)] == "Galois", lvl[length(lvl)-1], lvl[length(lvl)])
+epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
+rm(x, lvl)
 if (num_batches <= 1) {
 	with_batches <- FALSE
 } else {
@@ -29,7 +41,7 @@ if (num_batches <= 1) {
 # Expects the header to be
 # algorithm,execution_phase,scale,edges_per_vertex,RMAT_type,insertion_percent,changed_vertices,threads,measurement,value
 get_method_time <- function(filename, scale_num, ins_pct, cverts, num_threads,
-							rmat_type = "ER", measurement_type = "Time (s)")
+                            rmat_type = "ER", measurement_type = "Time (s)")
 {
 	x <- read.csv(filename, header = TRUE)
 	epv <- x$edges_per_vertex[1] # Assume the same throughout experiments
@@ -118,7 +130,7 @@ percent_insertions <- function(filename, scale_num, cverts,
 			x$threads==num_threads &
 			x$execution_phase=="All" &
 			x$changed_vertices==cverts &
-			x$algorithm=="MST",
+			x$algorithm==xps_algorithm,
 			salient_cols)
 	# method_time$value <- as.numeric(as.character(algo_time$Time)) # May not be necessary
 	# Remove zero rows---they're invalid and don't work with the log plot
@@ -139,37 +151,43 @@ percent_insertions <- function(filename, scale_num, cverts,
 	dev.off()
 }
 
-measure_scalability <- function(filename, scale_num)
+measure_scalability <- function(filename, scale_num,
+		measurement_type = "Total CPU Energy (J)")
 {
     x <- read.csv(filename, header = TRUE)
 	yy <- subset(x,
 			x$scale == scale_num & x$changed_vertices == cverts &
-			x$insertion_percent == ins_pct & x$RMAT_type == rmat_type)
+			x$insertion_percent == ins_pct & x$RMAT_type == rmat_type &
+			x$measurement == measurement_type)
 	threads <- unique(yy$threads)
 	# TEST
 	# subset(x,
 	# 		x$scale == scale_num & x$changed_vertices == 5000 & x$insertion_percent == 75
 	# 		& x$RMAT_type == "ER" & x$execution_phase == "All",
 	# 		c("algorithm", "execution_phase", "threads", "value"))
-    systems <- levels(subset(yy$algorithm, yy$execution_phase == "All", c("algorithm")))
-    algo_time <- data.frame(
-            matrix(ncol = length(threads), nrow = length(systems)),
-            row.names = systems)
-    colnames(algo_time) <- threads
-    for (ti in seq(length(threads))) {
-        thr <- threads[ti]
-        thr_time <- subset(yy,
+	systems <- levels(factor(
+			subset(yy$algorithm, yy$execution_phase == "All", c("algorithm")),
+			c(xps_algorithm, "Galois")))
+	algo_time <- data.frame(
+			matrix(ncol = length(threads), nrow = length(systems)),
+			row.names = systems)
+	colnames(algo_time) <- threads
+	for (ti in seq(length(threads))) {
+		thr <- threads[ti]
+		thr_time <- subset(yy,
 				yy$threads == thr & yy$execution_phase == "All")
-		one_time <- aggregate(thr_time$value, list(thr_time$algorithm), mean)
+		one_time <- aggregate(as.numeric(as.character(thr_time$value)),
+		                      list(thr_time$algorithm), mean)
 		for (sysi in seq(length(one_time[[1]]))) { # For each algorithm
 			algo_time[rownames(algo_time) == one_time[sysi,1], ti] <- one_time[sysi,2]
 		}
-    }
-    return(algo_time)
+	}
+	return(algo_time)
 }
 
 # Plots just runtime
-plot_strong_scaling <- function(scaling_data, scale_num)
+plot_strong_scaling <- function(scaling_data, scale_num,
+		measurement_type = "Total CPU Energy (J)")
 {
 	colors <- rainbow(nrow(scaling_data))
 	colors <- gsub("F", "C", colors) # You want it darker
@@ -178,22 +196,23 @@ plot_strong_scaling <- function(scaling_data, scale_num)
     systems <- rownames(scaling_data)
 	log_axes <- ifelse(max(scaling_data) / min(scaling_data) > 100, "y", "")
 
-	out_fn <- paste0(scale_num,"_scaling.pdf")
+	out_fn <- paste0(scale_num,"_",xps_algorithm,"_scaling.pdf")
 	message("Writing to ", out_fn)
 	pdf(out_fn, width = 7, height = 4)
 	plot(as.numeric(scaling_data[1,]), xaxt = "n", type = "b",
 			log = log_axes,
 			ylim = c(min(scaling_data)*0.9,
 					max(scaling_data)*ifelse(log_axes=="y", 2, 1.1)),
-			ylab = "Time (seconds)", xlab = "Threads", col = colors[1],
-			main = paste0("Runtime for CC and Galois at Scale ", scale_num),
+			ylab = measurement_type, xlab = "Threads", col = colors[1],
+			main = paste0("Runtime for ",xps_algorithm,
+			              " and Galois at Scale ", scale_num),
 			cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
 	for (pli in seq(2,nrow(scaling_data))) {
 			lines(as.numeric(scaling_data[pli,]), col = colors[pli], type = "b",
 					lwd = 3, pch = pli, lty = pli) # XXX: lty may repeat after 8
 	}
 	axis(1, at = seq(length(threadcnts)), labels = threadcnts)
-	legend(legend = rownames(scaling_data), x = "topright",
+	legend(legend = systems, x = "topright",
 			lty = c(1:length(systems)),
 			pch = c(1:length(systems)),
 			box.lwd = 1, lwd = c(rep(3,length(systems))),
@@ -205,21 +224,22 @@ plot_strong_scaling <- function(scaling_data, scale_num)
 
 plot_parallel_efficiency <- function(scaling_data, scale_num)
 {
-	threads <- as.numeric(colnames(scaling_data))
+	threadcnts <- as.numeric(colnames(scaling_data))
 	alg_ss <- scaling_data
-	for (ti in rev(seq(length(threads)))) {
-		alg_ss[ti] <- scaling_data[1] / (threads[ti] * scaling_data[ti])
+	for (ti in rev(seq(length(threadcnts)))) {
+		alg_ss[ti] <- scaling_data[1] / (threadcnts[ti] * scaling_data[ti])
 	}
 	systems <- rownames(alg_ss)
 	colors <- rainbow(nrow(alg_ss))
 	colors <- gsub("F", "C", colors) # You want it darker
 	colors <- gsub("CC$", "FF", colors) # But keep it opaque
-	out_fn <- paste0(scale_num,"_parallel_eff.pdf")
+	out_fn <- paste0(scale_num,"_",xps_algorithm,"_parallel_eff.pdf")
 	message("Writing to ", out_fn)
 	pdf(out_fn, width = 7, height = 4)
-	plot(as.numeric(alg_ss[1,]), xaxt = "n", type = "b", ylim = c(0,1),
+	plot(as.numeric(alg_ss[1,]), xaxt = "n", type = "b",
+			ylim = c(0, ifelse(max(alg_ss) > 1, max(alg_ss), 1)),
 			ylab = "", xlab = "Threads", col = colors[1],
-			main = paste0("Strong Scaling"),
+			main = paste0("Parallel Efficiency"),
 			cex.main = 1.4, lty = 1, pch = 1, lwd = 3)
 	for (pli in seq(2,nrow(alg_ss))) {
 			lines(as.numeric(alg_ss[pli,]), col = colors[pli], type = "b",
@@ -277,7 +297,8 @@ power_boxplot <- function(
 	# Remove zero rows---they're invalid and don't work with the log plot
 	# If some factors were coerced into NAs then there was some issue parsing
 	#method_time <- algo_time[!algo_time$Time == 0.0, ]
-	method_time$algo_and_phase <- interaction(method_time$execution_phase, method_time$algorithm)
+	method_time$algo_and_phase <- interaction(
+			method_time$execution_phase, method_time$algorithm)
 	
 	if (measurement_type == "Time (s)") {
 		plot_title <- paste0("Time with RMAT Scale ", scale_num)
@@ -290,7 +311,7 @@ power_boxplot <- function(
 	}
 	plot_subtitle <- paste(2^scale_num, "vertices", epv, "edges per vertex")
 	# Generate a figure
-	plotfilename <- paste0("plot-",
+	plotfilename <- paste0("plot-",xps_algorithm,"-",
 			measurement_type,"-",scale_num,epv,"_",ins_pct,"i_",
 			cverts,"c_",num_threads,"t_",rmat_type,".pdf")
 	pdf(plotfilename, width = 3.7, height = 3.7)
@@ -306,12 +327,23 @@ power_boxplot <- function(
 }
 
 # "Time (s)" "Total CPU Energy (J)" "Average CPU Power (W)" "RAPL Time (s)"
+message("Using parameters
+filename: ", args[1], "
+scale_num: ", as.numeric(args[2]), "
+ins_pct: ", as.numeric(args[3]), "
+cverts: ", as.numeric(args[4]), "
+num_threads: ", as.numeric(args[5]), "
+rmat_type: ", args[6], "
+num_batches: ", 1, "
+epv: ", epv)
+
 power_boxplot(
 		filename, scale_num, ins_pct, cverts, num_threads, rmat_type,
 		measurement_type = "Total CPU Energy (J)",
 		with_batches = FALSE)
 
-ss_time <- measure_scalability(filename, scale_num)
-plot_strong_scaling(ss_time, scale_num)
+ss_time <- measure_scalability(filename, scale_num,
+		measurement_type = "Time (s)")
+plot_strong_scaling(ss_time, scale_num, measurement_type = "Time (s)")
 ss <- plot_parallel_efficiency(ss_time, scale_num)
 

@@ -21,9 +21,10 @@ nws = ['ER','G']
 insperc = ['100','75']
 
 
-# In[4]:
+# In[13]:
 
-def genBoxPlot(insertion, deletion, filename, title,galois=None):
+def genBoxPlot(insertion, deletion, filename, title,galois):
+    # Create a dataframe and plot
     columns = ['Key','Threads',alg+'-ins',alg+'-del']
     if galois: columns = ['Key','Threads',alg+'-ins',alg+'-del','Galois']
     df = pd.DataFrame(columns = columns)
@@ -31,7 +32,7 @@ def genBoxPlot(insertion, deletion, filename, title,galois=None):
       threads = int(k.split('_')[-1])
       if galois:
           for ind in range( min( len(insertion[k]), len(galois[k]) ) ):
-            df2 = pd.DataFrame([ [ k, threads, galois[k][ind], insertion[k][ind], deletion[k][ind]] ], columns=columns)
+            df2 = pd.DataFrame([ [ k, threads, insertion[k][ind], deletion[k][ind], galois[k][ind]] ], columns=columns)
       else:
           for ind in range( min( len(insertion[k]), len(deletion[k]) ) ):
             df2 = pd.DataFrame([ [k, threads, insertion[k][ind], deletion[k][ind]] ], columns=columns)
@@ -54,7 +55,15 @@ def genBoxPlot(insertion, deletion, filename, title,galois=None):
     plt.title(title)
 
     plt.savefig(fname)
-    plt.show()
+    #plt.show()
+
+    
+#===========================================================================
+# Generate plots for the different networks, epv, and insertion percentatges
+#===========================================================================
+# Uncomment the following two lines and comment out the first for loop to have single plots for both network types
+#nw=None  
+#if True:
 
 for nw in nws:
     for alg in algs:
@@ -71,7 +80,7 @@ for nw in nws:
                         parts = line.strip().split(',')
                         # Filter by epv, network type, insertion percentage
                         if parts[3] != epv: continue
-                        if parts[4] != nw: continue
+                        if nw and parts[4] != nw: continue
                         if parts[5] != ins: continue
                         key = '_'.join(parts[2:8])
                         if parts[0] == 'algorithm': continue # Header

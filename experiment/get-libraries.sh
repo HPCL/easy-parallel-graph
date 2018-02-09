@@ -9,7 +9,23 @@ LIBDIR="$(pwd)/lib"
 if [ -n "$1" ]; then
 	LIBDIR="$1"
 fi
+
+FAILED=''
+echo "Building RMAT generator"
+cd ../RMAT
+make
+cd -
+if [ "$?" -ne 0 ]; then FAILED="$FAILED RMAT"; fi
+
 echo "Installing into $LIBDIR ..."
+
+echo 'Building SNAP feature calculator'
+cd "$LIBDIR"
+git clone https://github.com/sampollard/snap.git
+cd snap
+make
+if [ "$?" -ne 0 ]; then FAILED="$FAILED SNAP"; fi
+
 
 mkdir -p "$LIBDIR"
 cd "$LIBDIR"
@@ -21,14 +37,12 @@ if [ "$?" -ne 0 ]; then FAILED="$FAILED GAP"; fi
 # GraphBIG:
 cd "$LIBDIR"
 git clone https://github.com/sampollard/graphBIG.git
-cd graphBIG; make
-cd GraphBIG/benchmark
-make clean all
+cd graphBIG/benchmark
+make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED GraphBIG"; fi
 
 # GraphMat:
 cd "$LIBDIR"
-module load intel/17
 git clone https://github.com/sampollard/GraphMat.git
 cd GraphMat; make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED GraphMat"; fi
@@ -54,25 +68,23 @@ cd release/toolkits/graph_analytics
 # I could do -j4 but that tends to be buggy
 make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED PowerGraph"; fi
-cd "$LIBDIR"
-
-# Others (maybe added later)
-# PBGL: (not used here)
-# module load boost/boost_1_62_0_gcc-5
-# mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
-# export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
 
 # Galois:
 cd "$LIBDIR"
 wget -nc http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz
 tar -xf Galois-2.2.1.tar.gz
+patch -p0 < galois.patch
 cd "$LIBDIR/Galois-2.2.1"
-# Chose some large maximum number of threads, say 8096
-ex -s src/Barrier.cpp '+:%s/\Vpthread_barrier_init(&bar, 0, ~0)/pthread_barrier_init(\&bar, 0, 8096)/g' '+:x'
 cd build
 mkdir -p default
 cd default
-cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DCMAKE_C_COMPILER=gcc-4.8 ../..
+gcc --version | grep -q '4\.8'
+if [ $? -ne 0 ]; then
+	echo "Galois requires gcc 4.8. You can comment out this check and try a lower version,
+		but it doesn't seem to work at all with 4.9 or 5.*"
+	exit 2
+fi
+cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ../..
 make
 cd "$LIBDIR/.."
 if [ "$?" -ne 0 ]; then FAILED="$FAILED Galois"; fi
@@ -81,9 +93,16 @@ if [ -z "$FAILED" ]; then
 	echo All libraries downloaded and built correctly.
 else
 	echo "$FAILED failed to load. Possible issues:"
-	echo "GraphMat requires icpc."
-	echo "Galois is known to work with gcc 4.8.5 but has issues with gcc 4.9 or gcc 5.4.0. It's finicky."
+	echo "This version of GraphMat requires icpc."
+	echo "Galois is known to work with gcc 4.8.5 but has issues with gcc 4.9 or gcc 5.4.0. It's finicky.
+	you can try others via -DCMAKE_CXX_COMPILER and -DCMAKE_C_COMPILER"
 	echo "Your version of boost may cause issues as well; try using boost 1.55.0 or greater."
 	echo "Other dependencies can be found in the README.md"
 fi
+
+# Others (maybe added later)
+# PBGL: (not used here)
+# module load boost/boost_1_62_0_gcc-5
+# mpicxx -I/usr/local/packages/boost/1_62_0/gcc-5/include -L/usr/local/packages/boost/1_62_0/gcc-5/lib -o pbMST pbMST.cpp -lboost_graph_parallel -lboost_mpi -lboost_serialization -lboost_system
+# export LD_LIBRARY_PATH=/usr/local/packages/boost/1_62_0/gcc-5/lib
 

@@ -1,0 +1,25 @@
+unchanged:
+--- Galois-2.2.1/src/Barrier.cpp	2014-02-27 11:56:27.000000000 -0800
++++ Galois-2.2.1patched/src/Barrier.cpp	2018-01-29 13:21:48.744849000 -0800
+@@ -49,7 +49,7 @@
+ public:
+   PthreadBarrier() {
+     //uninitialized barriers block a lot of threads to help with debugging
+-    int rc = pthread_barrier_init(&bar, 0, ~0);
++    int rc = pthread_barrier_init(&bar, 0, 8096);
+     checkResults(rc);
+   }
+   
+only in patch2:
+unchanged:
+--- Galois-2.2.1/src/ll/HWTopoLinux.cpp	2014-02-27 11:56:27.000000000 -0800
++++ Galois-2.2.1patched/src/ll/HWTopoLinux.cpp	2018-02-05 12:42:55.808123445 -0800
+@@ -152,7 +152,7 @@
+   if (!f) {
+     free(path2);
+     free(path);
+-    GALOIS_SYS_DIE("failed opening ", path2);
++    // GALOIS_SYS_DIE("failed opening ", path2);
+     return vals; //Shouldn't get here
+   }
+ 

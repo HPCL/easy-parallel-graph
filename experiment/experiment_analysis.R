@@ -1,10 +1,15 @@
 # Given the results from parse-output.sh, generate some plots of the data
+# TODO: Change 16 to nvertices
+library(plyr)
 usage <- "usage: Rscript experiment_analysis.R <config_file>"
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
 	stop(usage)
 }
+# Default arguments. See config_template.R for an explanation
 prefix <- "./output/" # The default.
+coalesce <- FALSE
+ignore_extra_features <- FALSE
 
 # source sets scale and threads
 source(args[1]) # This is a security vulnerability... just be careful
@@ -67,6 +72,7 @@ measure_scale <- function(scale, threads, algo) {
         Y <- read.csv(in_fn, header = FALSE)
         ti_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
                 c(V1,V4))
+		ti_time$V4 <- as.numeric(as.character(ti_time$V4))
 		one_ti <- aggregate(ti_time$V4, list(ti_time$V1), mean)
 		for (sysi in seq(length(one_ti[[1]]))) {
 			algo_time[rownames(algo_time) == one_ti[sysi,1], ti] <- one_ti[sysi,2]
@@ -113,7 +119,7 @@ plot_strong_scaling <- function(scaling_data, scale, threadcnts, algo) {
 	return(alg_ss)
 }
 
-plot_speedup <- function(strong_scaling, threadcnts, algo)
+plot_speedup <- function(strong_scaling, scale, threadcnts, algo)
 {
 	spd <- data.frame(t(apply(strong_scaling, 1, function(x){x*threadcnts})))
 	colnames(spd) <- threadcnts
@@ -142,20 +148,145 @@ plot_speedup <- function(strong_scaling, threadcnts, algo)
 }
 
 ###
-# Generate some figures
+# Generate some figures for a single graph size
 ###
-thr <- threads[length(threads) - 1] # Choose the second to last arbitrarily
-# Possiblities: BFS, SSSP, PageRank, TC
-bfs_scale <- measure_scale(scale, threads, "BFS")
-bfs_ss <- plot_strong_scaling(bfs_scale, scale, threads, "BFS")
-bfs_spd <- plot_speedup(bfs_ss, threads, "BFS")
+if (exists("focus_scale") && exists("focus_thread")) {
+	thr <- focus_thread
+	scl <- focus_scale
+	# Possiblities: BFS, SSSP, PageRank, TC
+	bfs_scale <- measure_scale(scl, threads, "BFS")
+	result_pkgs <- complete.cases(bfs_scale)
+	if (!all(result_pkgs )) {
+		message("Removing ",
+				paste(rownames(bfs_scale)[!result_pkgs ], collapse=", "),
+				" from results")
+	}
+	bfs_scale <- bfs_scale[result_pkgs, ]
+	bfs_ss <- plot_strong_scaling(bfs_scale, scl, threads, "BFS")
+	bfs_spd <- plot_speedup(bfs_ss, scl, threads, "BFS")
 
-message("Saving boxplots of various measurements. These may need to be edited")
-time_boxplot(scale, thr, "BFS", timing_metric = "Time")
-time_boxplot(scale, thr, "BFS", timing_metric = "Data structure build")
-time_boxplot(scale, thr, "SSSP", timing_metric = "Time")
-time_boxplot(scale, thr, "PageRank", timing_metric = "Time")
-time_boxplot(scale, thr, "PageRank", timing_metric = "Iterations")
-time_boxplot(scale, thr, "TC", timing_metric = "Time")
-time_boxplot(scale, thr, "TC", timing_metric = "Triangles")
+	message("Saving boxplots of various measurements. These may need to be edited")
+	time_boxplot(scl, thr, "BFS", timing_metric = "Time")
+	time_boxplot(scl, thr, "BFS", timing_metric = "Data structure build")
+	time_boxplot(scl, thr, "SSSP", timing_metric = "Time")
+	time_boxplot(scl, thr, "PageRank", timing_metric = "Time")
+	time_boxplot(scl, thr, "PageRank", timing_metric = "Iterations")
+	# time_boxplot(scl, thr, "TC", timing_metric = "Time")
+	# time_boxplot(scl, thr, "TC", timing_metric = "Triangles")
+}
+
+###
+# Dump performance data in a csv
+###
+# TODO: Add in parallel efficiency
+# TODO: If runtime is 0 maybe make it some small value
+synth_header <- c("package", "algorithm", "nvertices", "nedges", "nthreads",
+                  "runtime") # How it should appear for machine learning
+synth_colnames <- c("package", "algorithm", "runtime", "nvertices", "nedges",
+                     "nthreads") # How it appears in the parsed output. CHANGE THIS WITH CAUTION
+realworld_colnames <- c("package","algorithm","runtime") # CHANGE THIS WITH CAUTION
+# XXX: perf_df isn't big enough so it's not preallocated, but it's not too slow.
+# perf_df <- data.frame(
+# 		matrix(nrow = length(threads) * length(algos) * length(kron_scales),
+# 		       ncol = length(synth_header)))
+
+package_mappings = data.frame(matrix(ncol = 2, nrow = 0))
+algorithm_mappings = data.frame(matrix(ncol = 2, nrow = 0))
+
+perf_df <- data.frame(matrix(ncol = length(synth_header), nrow = 0))
+colnames(perf_df) <- synth_header
+if (coalesce == TRUE) {
+	if (exists("kron_scales")) {
+		for (scl in kron_scales) {
+			for (thr in threads) {
+				# nedges \approx 16 * 2^scl
+				perf_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
+				if (!file.exists(perf_fn)) {
+					next
+				}
+				x <- read.csv(perf_fn, header = FALSE)
+				# TODO: Get the actual number of edges and vertices
+				# We collect just the mean runtime from the parsed results
+				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
+					message(perf_fn, " with ", scl, " scale and ", thr,
+							" threads has NA for time. This is probably because an experiment failed")
+					next
+				}
+				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+				package_mappings <- rbind(package_mappings,
+						data.frame(as.character(combo$package), as.numeric(combo$package)))
+				algorithm_mappings <- rbind(algorithm_mappings,
+						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
+				combo <- cbind(combo, 2^scl, 16 * 2^scl, thr)
+				# This is the actual order of the parsed data
+				colnames(combo) <- synth_colnames
+				combo <- combo[ ,synth_header] # it must be reordered
+				# Note: This converts factors to integers.
+				perf_df <- rbind.fill(perf_df, combo)
+			}
+		}
+	}
+	if (exists("realworld_datasets")) {
+		for (rw in realworld_datasets) {
+			message("Collecting data for ", rw)
+			# Also want to include the features downloaded from SNAP
+			feature_fn <- file.path(data_dir, rw, "features.csv")
+			feature_df <- read.csv(feature_fn)
+			for (nthreads in threads) {
+				perf_fn <- paste0(prefix, "parsed-", rw, "-", nthreads, ".csv")
+				if (!file.exists(perf_fn)) {
+					next
+				}
+				x <- read.csv(perf_fn, header = FALSE)
+				# XXX: We should get the actual number of edges and vertices
+
+				# We collect just the mean runtime from the parsed results
+				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+				if (any(is.na(combo[[3]]))) { # Column 4 is Runtime
+					warning(perf_fn, " with ", nthreads, " threads has NA for time.",
+							" This is probably because an experiment failed. Here are some rows:")
+					print(head(combo[which(is.na(combo[[3]])),]))
+					next
+				}
+				colnames(combo) <- realworld_colnames
+				package_mappings <- rbind(package_mappings,
+						data.frame(as.character(combo$package), as.numeric(combo$package)))
+				algorithm_mappings <- rbind(algorithm_mappings,
+						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
+				if (ignore_extra_features) {
+					combo <- cbind(combo, nthreads, feature_df[ ,c("Nodes", "Edges")])
+				} else {
+					combo <- cbind(combo, nthreads, feature_df)
+				}
+				colnames(combo)[colnames(combo) == "Nodes"] <- "nvertices"
+				colnames(combo)[colnames(combo) == "Edges"] <- "nedges"
+				perf_df <- rbind.fill(perf_df, combo)
+			}
+		}
+	} else {
+		message("realworld_datasets not found. Not coalescing")
+	}
+	time_col <- which(colnames(perf_df) == "runtime")
+	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
+	message("Writing all experimental data to ", coalesce_filename)
+	write.csv(perf_df, file = coalesce_filename,
+	          quote = FALSE, row.names = FALSE)
+}
+
+# Write the mappings from integer to package and integer to algorithm
+pkg_fn <- paste0(prefix, "package_mappings.csv")
+message("Writing package index mappings to ", pkg_fn)
+colnames(package_mappings) <- c("package", "index")
+package_mappings <- unique(package_mappings)
+write.csv(package_mappings,
+		file = pkg_fn, quote = FALSE, row.names = FALSE)
+
+algo_fn <- paste0(prefix, "algorithm_mappings.csv")
+message("Writing algorithm index mappings to ", algo_fn)
+colnames(algorithm_mappings) <- c("algorithm", "index")
+algorithm_mappings <- unique(algorithm_mappings)
+write.csv(algorithm_mappings,
+		file = algo_fn, quote = FALSE, row.names = FALSE)
 
