@@ -1,0 +1,332 @@
+Galois Benchmark Suite v2.2.1 (r0)
+Copyright (C) 2014 The University of Texas at Austin
+http://iss.ices.utexas.edu/galois/
+
+application: Boruvka's Minimum Spanning Tree Algorithm
+Computes the minimum spanning forest of a graph
+http://iss.ices.utexas.edu/?p=projects/galois/benchmarks/mst
+
+INFO: CommandLine /home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/Galois-2.2.1/build/power/apps/boruvka/boruvka -t=2 /home/users/norris/research/easy-parallel-graph/experiment/datasets/rmat2416_G_75i_1000000.gr
+INFO: Hostname arya
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Nodes: 16777216 edges: 1074505156 heaviest edge: 99
+43.0959 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+43.0959 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+43.0959 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+43.0959 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+43.0959 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+43.0959 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+43.0959 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+43.0959 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+43.0959 s 0.0009 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+43.0959 s 0.0004 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+43.0959 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+43.0959 s 0.0005 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+43.0959 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+43.0959 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+43.0959 s 107650724.9273 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+43.0959 s 107650724.9273 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+43.0959 s 107540508.1935 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+43.0959 s 107540508.1935 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+43.0959 s 107755226.7193 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+43.0959 s 107755226.7193 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+43.0959 s 106431809.4938 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+43.0959 s 106431809.4938 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+43.0959 s 2482.7701 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.0959 s 57.6103 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.0959 s 1012.3494 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.0959 s 23.4906 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.0959 s 16.5067 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+43.0959 s 8.0880 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+43.0959 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+43.0959 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+MST weight: 1.21449e+08 (121448569)
+Num trees: 53489
+Tree edges: 16723727
+STATTYPE,LOOP,CATEGORY,n,sum,T0,T1
+STAT,(NULL),InitializeSortTime,2,17255,17255,0
+STAT,(NULL),InitializeTime,2,128475,128475,0
+STAT,(NULL),LoopTime,2,60346,60346,0
+STAT,(NULL),MeminfoPost,2,511,251,260
+STAT,(NULL),MeminfoPre,2,0,0,0
+STAT,(NULL),Rounds,2,21,21,0
+STAT,(NULL),Threads,2,2,2,0
+STAT,(NULL),Time,2,43095,43095,0
+STAT,map_reduce,LoopTime,2,244,244,0
+Galois Benchmark Suite v2.2.1 (r0)
+Copyright (C) 2014 The University of Texas at Austin
+http://iss.ices.utexas.edu/galois/
+
+application: Boruvka's Minimum Spanning Tree Algorithm
+Computes the minimum spanning forest of a graph
+http://iss.ices.utexas.edu/?p=projects/galois/benchmarks/mst
+
+INFO: CommandLine /home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/Galois-2.2.1/build/power/apps/boruvka/boruvka -t=2 /home/users/norris/research/easy-parallel-graph/experiment/datasets/rmat2416_G_75i_1000000.gr
+INFO: Hostname arya
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Nodes: 16777216 edges: 1074505156 heaviest edge: 99
+43.3053 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+43.3053 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+43.3053 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+43.3053 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+43.3053 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+43.3053 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+43.3053 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+43.3053 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+43.3053 s 0.0009 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+43.3053 s 0.0004 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+43.3053 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+43.3053 s 0.0005 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+43.3053 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+43.3053 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+43.3053 s 107130088.5701 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+43.3053 s 107130088.5701 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+43.3053 s 107020404.8828 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+43.3053 s 107020404.8828 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+43.3053 s 107234084.9551 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+43.3053 s 107234084.9551 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+43.3053 s 105917068.2357 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+43.3053 s 105917068.2357 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+43.3053 s 2491.7728 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.3053 s 57.5396 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.3053 s 1032.4894 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.3053 s 23.8421 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.3053 s 16.4840 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+43.3053 s 8.2030 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+43.3053 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+43.3053 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+MST weight: 1.21449e+08 (121448569)
+Num trees: 53489
+Tree edges: 16723727
+STATTYPE,LOOP,CATEGORY,n,sum,T0,T1
+STAT,(NULL),InitializeSortTime,2,17257,17257,0
+STAT,(NULL),InitializeTime,2,128561,128561,0
+STAT,(NULL),LoopTime,2,60550,60550,0
+STAT,(NULL),MeminfoPost,2,511,252,259
+STAT,(NULL),MeminfoPre,2,0,0,0
+STAT,(NULL),Rounds,2,21,21,0
+STAT,(NULL),Threads,2,2,2,0
+STAT,(NULL),Time,2,43305,43305,0
+STAT,map_reduce,LoopTime,2,244,244,0
+Galois Benchmark Suite v2.2.1 (r0)
+Copyright (C) 2014 The University of Texas at Austin
+http://iss.ices.utexas.edu/galois/
+
+application: Boruvka's Minimum Spanning Tree Algorithm
+Computes the minimum spanning forest of a graph
+http://iss.ices.utexas.edu/?p=projects/galois/benchmarks/mst
+
+INFO: CommandLine /home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/Galois-2.2.1/build/power/apps/boruvka/boruvka -t=2 /home/users/norris/research/easy-parallel-graph/experiment/datasets/rmat2416_G_75i_1000000.gr
+INFO: Hostname arya
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Nodes: 16777216 edges: 1074505156 heaviest edge: 99
+43.3234 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+43.3234 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+43.3234 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+43.3234 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+43.3234 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+43.3234 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+43.3234 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+43.3234 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+43.3234 s 0.0009 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+43.3234 s 0.0004 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+43.3234 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+43.3234 s 0.0005 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+43.3234 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+43.3234 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+43.3234 s 107085374.8394 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+43.3234 s 107085374.8394 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+43.3234 s 106975736.9317 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+43.3234 s 106975736.9317 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+43.3234 s 107189327.8186 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+43.3234 s 107189327.8186 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+43.3234 s 105872860.7929 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+43.3234 s 105872860.7929 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+43.3234 s 2494.7803 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.3234 s 57.5850 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.3234 s 1017.9128 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.3234 s 23.4957 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.3234 s 16.4805 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+43.3234 s 8.0490 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+43.3234 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+43.3234 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+MST weight: 1.21449e+08 (121448569)
+Num trees: 53489
+Tree edges: 16723727
+STATTYPE,LOOP,CATEGORY,n,sum,T0,T1
+STAT,(NULL),InitializeSortTime,2,17256,17256,0
+STAT,(NULL),InitializeTime,2,128572,128572,0
+STAT,(NULL),LoopTime,2,60573,60573,0
+STAT,(NULL),MeminfoPost,2,511,252,259
+STAT,(NULL),MeminfoPre,2,0,0,0
+STAT,(NULL),Rounds,2,21,21,0
+STAT,(NULL),Threads,2,2,2,0
+STAT,(NULL),Time,2,43323,43323,0
+STAT,map_reduce,LoopTime,2,244,244,0
+Galois Benchmark Suite v2.2.1 (r0)
+Copyright (C) 2014 The University of Texas at Austin
+http://iss.ices.utexas.edu/galois/
+
+application: Boruvka's Minimum Spanning Tree Algorithm
+Computes the minimum spanning forest of a graph
+http://iss.ices.utexas.edu/?p=projects/galois/benchmarks/mst
+
+INFO: CommandLine /home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/Galois-2.2.1/build/power/apps/boruvka/boruvka -t=2 /home/users/norris/research/easy-parallel-graph/experiment/datasets/rmat2416_G_75i_1000000.gr
+INFO: Hostname arya
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Nodes: 16777216 edges: 1074505156 heaviest edge: 99
+43.2443 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+43.2443 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+43.2443 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+43.2443 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+43.2443 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+43.2443 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+43.2443 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+43.2443 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+43.2443 s 0.0009 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+43.2443 s 0.0004 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+43.2443 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+43.2443 s 0.0005 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+43.2443 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+43.2443 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+43.2443 s 107281291.4410 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+43.2443 s 107281291.4410 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+43.2443 s 107171452.9467 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+43.2443 s 107171452.9467 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+43.2443 s 107385434.6060 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+43.2443 s 107385434.6060 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+43.2443 s 106066559.0557 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+43.2443 s 106066559.0557 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+43.2443 s 2491.5992 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.2443 s 57.6168 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+43.2443 s 1016.4592 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.2443 s 23.5050 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+43.2443 s 16.4824 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+43.2443 s 8.1327 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+43.2443 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+43.2443 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+MST weight: 1.21449e+08 (121448569)
+Num trees: 53489
+Tree edges: 16723727
+STATTYPE,LOOP,CATEGORY,n,sum,T0,T1
+STAT,(NULL),InitializeSortTime,2,17253,17253,0
+STAT,(NULL),InitializeTime,2,129334,129334,0
+STAT,(NULL),LoopTime,2,60492,60492,0
+STAT,(NULL),MeminfoPost,2,511,252,259
+STAT,(NULL),MeminfoPre,2,0,0,0
+STAT,(NULL),Rounds,2,21,21,0
+STAT,(NULL),Threads,2,2,2,0
+STAT,(NULL),Time,2,43244,43244,0
+STAT,map_reduce,LoopTime,2,243,243,0
