@@ -65,7 +65,7 @@ run -serror run_logs/gen${S}.err -soutput run_logs/gen${S}.out ./gen-datasets.sh
 # Synthetic datasets
 echo -e '\n# Running Synthetic datasets'
 for T in $THREADS; do
-	run -serror run_logs/${S}-${T}t.err -soutput run_logs/${S}-${T}t.out -sjob epg${T}t-$S ./run-experiment.sh --num-roots=$NUM_ROOTS $COPY $S $T
+	run -serror run_logs/${S}-${T}t.err -soutput run_logs/${S}-${T}t.out -sjob epg${T}t-$S ./run-synthetic.sh --num-roots=$NUM_ROOTS $COPY $S $T
 done
 
 # Generating Graphalytics datasets
