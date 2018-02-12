@@ -37,7 +37,7 @@ dataset name
 feature web page
 URL to the graph
 ```
-Some examples are provided in the existing `datasets.txt`. Comments are lines starting with `#`.
+Some examples are provided in the existing `datasets.txt`. You can comment out datasets with `#` but please only add additional lines in multiples of 3. The datasets are read by taking every third line, so adding additional lines will mess things up. Yes, I realize this is a bit of a silly limitation.
 
 `unzipper.sh` This downloads and unzips the datasets. The usage is `unzipper.sh <dataset file> <dataset_dir>`. A sensible default is
 `./unzipper.sh datasets.txt ../datasets`

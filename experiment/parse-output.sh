@@ -1,5 +1,5 @@
 #!/bin/bash
-# Parse the output from run-experiment.sh or real-datasets.sh
+# Parse the output from run-synthetic.sh or run-realworld.sh
 # and save to <outdir>/parsed-<fn>.csv
 # If <fn> is provided then this script searches for the directory <fn>
 # without the filename extension, e.g. -f=datasets/data.out causes this to
