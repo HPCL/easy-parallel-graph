@@ -68,6 +68,20 @@ for T in $THREADS; do
 	run -serror run_logs/${S}-${T}t.err -soutput run_logs/${S}-${T}t.out -sjob epg${T}t-$S ./run-synthetic.sh --num-roots=$NUM_ROOTS $COPY $S $T
 done
 
+# Grid search of rmat parameters This is meant to be an unreasonable amount of jobs.
+echo "# RMAT grid search in increments of 0.01" > rmat_gridsearch.sh
+S=20
+for a in $(seq 0.01 0.01 0.99); do
+	rem=$(echo "0.99 - $a" | bc)
+	for b in $(seq 0.0 0.01 $rem); do
+		rem=$(echo "$rem - $b - 0.01" | bc)
+		for c in $(seq 0.0 0.01 $rem); do
+			run -serror run_logs/gen${S}_${a}_${b}_${c}.err -soutput run_logs/gen${S}_${a}_${b}_${c}.out ./gen-datasets.sh --rmat="$a $b $c" $S >> rmat_gridsearch.sh
+			run -serror run_logs/${S}_${a}_${b}_${c}-${T}t.err -soutput run_logs/${S}_${a}_${b}_${c}-${T}t.out -sjob epg${T}t-${S}_${a}_${b}_${c} ./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="$a $b $c" $COPY $S $T >> rmat_gridsearch.sh
+		done
+	done
+done
+
 # Generating Graphalytics datasets
 echo -e '\n# Generating Graphalytics datasets'
 GA_DATASETS="dota-league cit-Patents kgs com-friendster twitter_mpi wiki-Talk"
