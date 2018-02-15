@@ -95,16 +95,22 @@ GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
 OUTPUT_PREFIX="$(pwd)/output/${FILE_PREFIX}/${OMP_NUM_THREADS}t"
 mkdir -p "$(pwd)/output/${FILE_PREFIX}"
 
-# input: Exit code of the previously-run command
+# input: Exit code of the previously-run command and the executable to search for
 # output: prints the command if the exit code is nonzero
 set -o history
 check_status ()
 {
+	# Because of the stupid way Bash handles history, we need to preprocess
+	# this. You should provide the exit code as $1 and the binary as $2.
+	# for example, check_status $? bin/bfs. More of the path is better, since
+	# oftentimes you use string elsewhere in the same giant if block.
 	if [ "$1" -ne 0 ]; then
-		# Get the last command and remove all the loops and ifs
 		LASTCMD=$(history 1)
-		LASTCMD=${LASTCMD##*do }
-		LASTCMD=${LASTCMD%%;*}
+		echo Entire bash statement was: $LASTCMD
+		LASTCMD=$(echo $LASTCMD | grep -o -P "; .*?$2.*?;")
+		LASTCMD=${LASTCMD##;*do }
+		LASTCMD=${LASTCMD##;*then }
+		LASTCMD=${LASTCMD##;*else }
 		LASTCMD=${LASTCMD%%>*}
 		echo "There was a problem with $(eval echo $LASTCMD)"
 		exit 1

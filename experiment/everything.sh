@@ -16,7 +16,7 @@ DRYRUN=True # Echo commands instead of run them
 SLURM=True
 COPY='--copy-to=/tmp' # Leave blank for no copying of datasetes
 # Job scheduler commands
-JS_TIME=20:00:00
+JS_TIME=10:00:00
 JS_CPUS=28
 JS_PARTITION=short
 JS_MEMORY=128G
@@ -27,7 +27,7 @@ else
 	ANALYZE='' # We assume you can run analysis, installation, etc. interactively. It doesn't take long.
 fi
 
-# usage: run [-serror error_file] [-soutput output_file] [-sjob job_name] executable [args]...
+# usage: run [-serror error_file] [-soutput output_file] [-sjob job_name] [-S] executable [args]...
 run()
 {
 	local cmd
@@ -70,14 +70,32 @@ done
 
 # Grid search of rmat parameters This is meant to be an unreasonable amount of jobs.
 echo "# RMAT grid search in increments of 0.01" > rmat_gridsearch.sh
-S=20
+GS=20
+mkdir -p rmat_gridsearch
 for a in $(seq 0.01 0.01 0.99); do
 	rem=$(echo "0.99 - $a" | bc)
 	for b in $(seq 0.0 0.01 $rem); do
 		rem=$(echo "$rem - $b - 0.01" | bc)
 		for c in $(seq 0.0 0.01 $rem); do
-			run -serror run_logs/gen${S}_${a}_${b}_${c}.err -soutput run_logs/gen${S}_${a}_${b}_${c}.out ./gen-datasets.sh --rmat="$a $b $c" $S >> rmat_gridsearch.sh
-			run -serror run_logs/${S}_${a}_${b}_${c}-${T}t.err -soutput run_logs/${S}_${a}_${b}_${c}-${T}t.out -sjob epg${T}t-${S}_${a}_${b}_${c} ./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="$a $b $c" $COPY $S $T >> rmat_gridsearch.sh
+			echo "#!/bin/bash
+#SBATCH -e run_logs/gen${GS}_${a}_${b}_${c}.err
+#SBATCH -o run_logs/gen${GS}_${a}_${b}_${c}.out
+#SBATCH -J g_r${GS}_${a}_${b}_${c}
+#SBATCH --cpus-per-task=$JS_CPUS
+#SBATCH -t 18:00:00
+#SBATCH --partition=$JS_PARTITION
+#SBATCH --mem=$JS_MEMORY
+
+./gen-datasets.sh --rmat="\'"$a $b $c"\'" $GS
+" > rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+			for T in $THREADS; do
+				echo "./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS $COPY $GS $T" >> rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+			done
+			# DANGER: Be careful with this one bub
+			# sbatch rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+
+			#run -sjob gen${GS}_${a}_${b}_${c} -serror run_logs/gen${GS}_${a}_${b}_${c}.err -soutput run_logs/gen${GS}_${a}_${b}_${c}.out ./gen-datasets.sh --rmat="'$a $b $c'" $GS >> rmat_gridsearch.sh
+			#run -serror run_logs/${GS}_${a}_${b}_${c}-${T}t.err -soutput run_logs/${GS}_${a}_${b}_${c}-${T}t.out -sjob epg${T}t-${GS}_${a}_${b}_${c} ./run-synthetic.sh --rmat="'$a $b $c'" --num-roots=$NUM_ROOTS $COPY $GS $T >> rmat_gridsearch.sh
 		done
 	done
 done

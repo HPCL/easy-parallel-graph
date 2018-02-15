@@ -31,9 +31,9 @@ unset COPY # can copy to a faster, temporary filesystem
 RUN_GRAPH500=1
 RUN_GAP=1
 RUN_GALOIS=1
-RUN_GRAPHMAT=1
+RUN_GRAPHMAT=0
 RUN_GRAPHBIG=1
-RUN_POWERGRAPH=0
+RUN_POWERGRAPH=1
 
 for arg in "$@"; do
 	case $arg in
@@ -124,18 +124,23 @@ MAXITER=50 # Maximum iterations for PageRank
 TOL=0.00000006
 export SKIP_VALIDATION=1
 
+# input: Exit code of the previously-run command and the executable to search for
+# output: prints the command if the exit code is nonzero
 set -o history
 check_status ()
 {
+	# Because of the stupid way Bash handles history, we need to preprocess
+	# this. You should provide the exit code as $1 and the binary as $2.
+	# for example, check_status $? bin/bfs. More of the path is better, since
+	# oftentimes you use string elsewhere in the same giant if block.
 	if [ "$1" -ne 0 ]; then
-		# Get the last command and remove all the loops and ifs
-		# TODO: What if there is a BFS in the line before the one you want?
 		LASTCMD=$(history 1)
-		echo $LASTCMD
-		LASTCMD=${LASTCMD##*then }
-		LASTCMD=$(echo $LASTCMD | grep -o -P "do .*?$2.*?;")
-		LASTCMD=${LASTCMD##*do }
-		LASTCMD=${LASTCMD%%;*}
+		echo Entire bash statement was: $LASTCMD
+		LASTCMD=$(echo $LASTCMD | grep -o -P "; .*?$2.*?;")
+		LASTCMD=${LASTCMD##;*do }
+		LASTCMD=${LASTCMD##;*then }
+		LASTCMD=${LASTCMD##;*else }
+		LASTCMD=${LASTCMD##;*echo }
 		LASTCMD=${LASTCMD%%>*}
 		echo "There was a problem with $(eval echo $LASTCMD)"
 		exit 1
@@ -211,19 +216,19 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 	fi
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/$d.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
-		check_status $? sssp
+		check_status $? graph_analytics/sssp
 	done
 
 	echo "Running PowerGraph PageRank"
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$d/$d.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
-		check_status $? pagerank
+		check_status $? graph_analytics/pagerank
 	done
 
 	echo "Running PowerGraph TriangleCount"
 	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/$d/$d.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
-		check_status $? triangle_count
+		check_status $? undirected_triangle_count
 	done
 fi
 
@@ -241,7 +246,7 @@ if [ "$RUN_GRAPHMAT" = 1 ]; then
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
 		echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
 		"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
-		check_status $? SSSP
+		check_status $? bin/SSSP
 	done
 
 	echo "Running GraphMat PageRank"
@@ -249,14 +254,14 @@ if [ "$RUN_GRAPHMAT" = 1 ]; then
 	# GraphMat has been modified so alpha = 0.15
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
 		"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
-		check_status $? PageRank
+		check_status $? bin/PageRank
 	done
 
 	# TODO: Triangle Counting gives different answers on every platform
 	echo "Running GraphMat TriangleCount"
 	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
 		"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
-		check_status $? TriangleCounting
+		check_status $? bin/TriangleCounting
 	done
 fi
 
@@ -267,24 +272,24 @@ if [ "$RUN_GRAPHBIG" = 1 ]; then
 	# For this, one needs a vertex.csv file and and an edge.csv.
 	head -n $NRT "$DDIR/$d/$d-roots.v" > "$DDIR/$d/$d-${NRT}roots.v"
 	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
-	check_status $? bfs
+	check_status $? bench_BFS/bfs
 
 	echo "Running GraphBIG SSSP"
 	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
-	check_status $? sssp
+	check_status $? bench_shortestPath/sssp
 
 	echo "Running GraphBIG PageRank"
 	# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 	# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
-		check_status $? pagerank
+		check_status $? bench_pageRank/pagerank
 	done
 
 	echo "Running GraphBIG TriangleCount"
 	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
-		check_status $? triangleCount
+		check_status $? bench_triangleCount/tc
 	done
 fi
 
@@ -294,7 +299,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 	echo "Running Galois BFS"
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
-		check_status $? bfs
+		check_status $? bfs/bfs
 	done
 
 	echo "Running Galois SSSP"
@@ -302,7 +307,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 		# TODO: Adjust delta parameter -delta=<int>
 		# Currently, SSSP throws an error when you try to use sg and not wsg file format.
 		"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
-		check_status $? sssp
+		check_status $? sssp/sssp
 	done
 
 	echo "Running Galois PageRank"
@@ -310,7 +315,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 	# error = sum(|newPR - oldPR|)
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/$d/$d-t.gr" "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
-		check_status $? pagerank
+		check_status $? pagerank/pagerank
 	done
 
 	# No triangle count for Galois
