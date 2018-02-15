@@ -77,7 +77,7 @@ if [ "$FILE_PREFIX" = 'out' ]; then
 	FILE_PREFIX=${FILE_PREFIX#out.}
 fi
 
-# The reasoning behind these values are explained in run-experiment.sh
+# The reasoning behind these values are explained in run-synthetic.sh
 MAXITER=50 # Maximum iterations for PageRank
 TOL=0.00000006
 export SKIP_VALIDATION=1

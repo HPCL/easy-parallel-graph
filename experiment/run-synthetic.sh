@@ -5,31 +5,35 @@
 #   Breadth First Search, Single Source Shortest Paths, PageRank
 # Current platforms:
 #   GraphBIG, Graph500, GAP, GraphMat, PowerGraph (SSSP & PR only)
-# Recommended usage for bash
-#   ./run-experiment.sh $S $T > out${S}-${T}.log 2> out${S}-${T}.err &
-#   disown %<jobnum> # This can be found out using jobs
-USAGE="usage: run-experiment.sh [--libdir=<dir>] [--ddir=<dir>] [--num-roots=<n>] <scale> <num-threads>
+USAGE="usage: run-synthetic.sh [options] <scale> <num-threads>
 	scale: 2^scale = number of vertices
+	num-threads: number of threads, usually sets OMP_NUM_THREADS
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets
 	--outdir: output directory. Default: ./output
-	--num-roots: Number of roots to run search on or number of
-	             experiments to run. Default: 32
-	--copy-to=<tmpdir>: copy to <tmpdir>/kron-<scale>, delete after experiment
-	"
+	--num-roots: Number of roots to run search on or number of experiments
+		to run. Largely determines runtime. Default: 32
+	--copy-to=<tmpdir>: copy graphs to <tmpdir>, delete after experiment.
+		Default: do not copy
+	--rmat=<params>: Set a, b, c, d for RMAT parameters. These are
+		space-separated, so you'll have to quote them. You
+		can provide 3 or 4. For example, --rmat='0.5 0.2 0.2'.
+		Default: '0.57 0.19 0.19 0.05'. If the default, expects graphs
+		stored in kron-<scale>, otherwise kron-<scale>_<a>_<b>_<c>_<d>"
 
 # The edge factor (number of edges per vertex) is the default of 16.
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
 OUTDIR="$(pwd)/output"
 NRT=32 # Number of roots
+RMAT_PARAMS="0.57 0.19 0.19 0.05"
 unset COPY # can copy to a faster, temporary filesystem
 RUN_GRAPH500=1
 RUN_GAP=1
 RUN_GALOIS=1
 RUN_GRAPHMAT=1
 RUN_GRAPHBIG=1
-RUN_POWERGRAPH=1
+RUN_POWERGRAPH=0
 
 for arg in "$@"; do
 	case $arg in
@@ -70,6 +74,10 @@ for arg in "$@"; do
 		COPY=${arg#*=}
 		shift
 	;;
+	--rmat=*)
+		RMAT_PARAMS=${arg#*=}
+		shift
+	;;
 	-h|--help|-help)
 		echo "$USAGE"
 		exit 2
@@ -92,11 +100,17 @@ GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 POWERGRAPHDIR="$LIBDIR/PowerGraph"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
-OUTPUT_PREFIX="$OUTDIR/kron-$S/${OMP_NUM_THREADS}t"
-mkdir -p "$OUTDIR/kron-$S"
+FILE_PREFIX="kron-$S"
+if ! [ "$RMAT_PARAMS" = "0.57 0.19 0.19 0.05" ]; then
+	d="${FILE_PREFIX}_$(echo $RMAT_PARAMS | tr ' ' '_')"
+else
+	d="$FILE_PREFIX"
+fi
+OUTPUT_PREFIX="$OUTDIR/$d/${OMP_NUM_THREADS}t"
+mkdir -p "$OUTDIR/$d"
 if [ -n "$COPY" ]; then
-	mkdir -p "$COPY/kron-$S"
-	cp $DDIR/kron-$S/* "$COPY/kron-$S"
+	mkdir -p "$COPY/$d"
+	cp $DDIR/$d/* "$COPY/$d"
 	DDIR="$COPY"
 	echo "Copied data to $DDIR"
 fi
@@ -115,7 +129,11 @@ check_status ()
 {
 	if [ "$1" -ne 0 ]; then
 		# Get the last command and remove all the loops and ifs
+		# TODO: What if there is a BFS in the line before the one you want?
 		LASTCMD=$(history 1)
+		echo $LASTCMD
+		LASTCMD=${LASTCMD##*then }
+		LASTCMD=$(echo $LASTCMD | grep -o -P "do .*?$2.*?;")
 		LASTCMD=${LASTCMD##*do }
 		LASTCMD=${LASTCMD%%;*}
 		LASTCMD=${LASTCMD%%>*}
@@ -132,16 +150,16 @@ echo Starting experiment with $OMP_NUM_THREADS threads at $(date)
 
 if [ "$RUN_GRAPH500" = 1 ]; then 
 	echo -n "Running Graph500 BFS"
-	#omp-csr/omp-csr -s $S -o "$DDIR/kron-$S/kron-${S}.graph500" -r "$DDIR/kron-$S/kron-${S}.roots"
+	#omp-csr/omp-csr -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
 	# ^ This isn't working, so just regenerate the data ^
 	if [ "$OMP_NUM_THREADS" -gt 1 ]; then
 		echo " with OpenMP"
 		"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
-		check_status $?
+		check_status $? omp-csr
 	else
 		echo " with OpenMP"
 		"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
-		check_status $?
+		check_status $? omp-csr
 		# echo " sequentially"
 		# seq-csr is slower than omp-csr with one thread
 		# "$GRAPH500DIR/seq-csr/seq-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
@@ -154,29 +172,29 @@ if [ "$RUN_GAP" = 1 ]; then
 	echo "Running GAP BFS"
 	# It would be nice if you could read in a file for the roots
 	# Just do one trial to be the same as the rest of the experiments
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-$S/kron-${S}.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$GAPDIR"/bfs -r $ROOT -f "$DDIR/$d/$d.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
+		check_status $? bfs
 	done
 
 	echo "Running GAP SSSP"
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		# Currently, SSSP throws an error when you try to use sg and not wsg file format.
-		"$GAPDIR"/sssp -r $ROOT -f "$DDIR/kron-$S/kron-${S}.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
-		check_status $?
+		"$GAPDIR"/sssp -r $ROOT -f "$DDIR/$d/$d.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+		check_status $? sssp
 	done
 
 	echo "Running GAP PageRank"
 	# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 	# error = sum(|newPR - oldPR|)
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$GAPDIR"/pr -f "$DDIR/kron-$S/kron-${S}.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$GAPDIR"/pr -f "$DDIR/$d/$d.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
+		check_status $? pr
 	done
 
 	echo "Running GAP TriangleCount"
-	"$GAPDIR"/tc -f "$DDIR/kron-$S/kron-${S}.sg" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
-	check_status $?
+	"$GAPDIR"/tc -f "$DDIR/$d/$d.sg" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
+	check_status $? tc
 fi
 
 # PowerGraph
@@ -190,21 +208,21 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 	else
 		export GRAPHLAB_THREADS_PER_WORKER=$OMP_NUM_THREADS
 	fi
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/kron-$S/kron-${S}.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/$d.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
+		check_status $? sssp
 	done
 
 	echo "Running PowerGraph PageRank"
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/kron-$S/kron-${S}.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$d/$d.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
+		check_status $? pagerank
 	done
 
 	echo "Running PowerGraph TriangleCount"
-	for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/kron-$S/kron-${S}.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
-		check_status $?
+	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/$d/$d.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
+		check_status $? triangle_count
 	done
 fi
 
@@ -212,32 +230,32 @@ fi
 if [ "$RUN_GRAPHMAT" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-GraphMat-{BFS,SSSP,PR}.out
 	echo "Running GraphMat BFS"
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
 		echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
-		"$GRAPHMATDIR/bin/BFS" "$DDIR/kron-$S/kron-${S}.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
-		check_status $?
+		"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+		check_status $? 'bin/BFS'
 	done
 
 	echo "Running GraphMat SSSP"
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
 		echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
-		"$GRAPHMATDIR/bin/SSSP" "$DDIR/kron-$S/kron-${S}.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
-		check_status $?
+		"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+		check_status $? SSSP
 	done
 
 	echo "Running GraphMat PageRank"
 	# PageRank stops when none of the vertices change
 	# GraphMat has been modified so alpha = 0.15
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
-		"$GRAPHMATDIR/bin/PageRank" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+		"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
+		check_status $? PageRank
 	done
 
 	# TODO: Triangle Counting gives different answers on every platform
 	echo "Running GraphMat TriangleCount"
-	for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.1v"); do
-		"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/kron-$S/kron-${S}.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
-		check_status $?
+	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+		"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
+		check_status $? TriangleCounting
 	done
 fi
 
@@ -246,26 +264,26 @@ if [ "$RUN_GRAPHBIG" = 1 ]; then
 	rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR,TC}.out
 	echo "Running GraphBIG BFS"
 	# For this, one needs a vertex.csv file and and an edge.csv.
-	head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v" > "$DDIR/kron-$S/kron-${S}-${NRT}roots.v"
-	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
-	check_status $?
+	head -n $NRT "$DDIR/$d/$d-roots.v" > "$DDIR/$d/$d-${NRT}roots.v"
+	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
+	check_status $? bfs
 
 	echo "Running GraphBIG SSSP"
-	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/kron-$S" --rootfile "$DDIR/kron-$S/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
-	check_status $?
+	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
+	check_status $? sssp
 
 	echo "Running GraphBIG PageRank"
 	# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 	# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/kron-$S" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
+		check_status $? pagerank
 	done
 
 	echo "Running GraphBIG TriangleCount"
-	for dummy in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/kron-$S" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
-		check_status $?
+	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
+		check_status $? triangleCount
 	done
 fi
 
@@ -273,33 +291,33 @@ fi
 if [ "$RUN_GALOIS" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR}.out
 	echo "Running Galois BFS"
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/kron-$S/kron-$S.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
+		check_status $? bfs
 	done
 
 	echo "Running Galois SSSP"
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		# TODO: Adjust delta parameter -delta=<int>
 		# Currently, SSSP throws an error when you try to use sg and not wsg file format.
-		"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/kron-$S/kron-$S.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
-		check_status $?
+		"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
+		check_status $? sssp
 	done
 
 	echo "Running Galois PageRank"
 	# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 	# error = sum(|newPR - oldPR|)
-	for ROOT in $(head -n $NRT "$DDIR/kron-$S/kron-${S}-roots.v"); do
-		"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/kron-$S/kron-${S}-t.gr" "$DDIR/kron-$S/kron-${S}.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
-		check_status $?
+	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/$d/$d-t.gr" "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
+		check_status $? pagerank
 	done
 
 	# No triangle count for Galois
 fi
 
 if [ -n "$COPY" ]; then
-	rm $COPY/kron-$S/*
-	rmdir "$COPY/kron-$S"
+	rm $COPY/$d/*
+	rmdir "$COPY/$d"
 fi
 echo Finished experiment at $(date)
 

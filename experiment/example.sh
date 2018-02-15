@@ -6,7 +6,7 @@ THREADS="1 2 4"
 ./get-libraries.sh
 ./gen-datasets.sh $S
 for T in $THREADS; do
-	./run-experiment.sh $S $T
+	./run-synthetic.sh $S $T
 done
 ./parse-output.sh $S
 
