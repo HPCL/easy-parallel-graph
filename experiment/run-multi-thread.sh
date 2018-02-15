@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs run-experiment.sh for each thread number.
+# Runs run-synthetic for each thread number.
 # Must have called gen-datasets.sh beforehand
 USAGE="usage: run-multi-thread.sh <scale> <dataset_file>
 	(default dataset file: ../learn/datasets.txt)
@@ -44,7 +44,7 @@ done
 mkdir -p output/logs/kron-$S
 for T in $(echo $THREADS); do
 	echo "Running experiment on dataset kron-$S with $T threads"
-	./run-experiment.sh $S $T > output/logs/kron-${S}/${T}t.log 2> output/logs/kron-${S}/${T}t.err
+	./run-synthetic.sh $S $T > output/logs/kron-${S}/${T}t.log 2> output/logs/kron-${S}/${T}t.err
 done
 
 # Parse the output

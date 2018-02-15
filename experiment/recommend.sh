@@ -65,7 +65,7 @@ fi
 case $DSET in 
 kron-*)
 	S=${DSET#kron-}
-	./run-experiment.sh $S $NUM_THREADS
+	./run-synthetic.sh $S $NUM_THREADS
 	./parse-output.sh $S
 	;;
 *)

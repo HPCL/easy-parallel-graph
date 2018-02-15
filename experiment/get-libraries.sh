@@ -22,7 +22,7 @@ echo "Installing into $LIBDIR ..."
 echo 'Building SNAP feature calculator'
 cd "$LIBDIR"
 git clone https://github.com/sampollard/snap.git
-cd snap
+cd snap/examples/feature_csv
 make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED SNAP"; fi
 
@@ -81,10 +81,10 @@ cd default
 gcc --version | grep -q '4\.8'
 if [ $? -ne 0 ]; then
 	echo "Galois requires gcc 4.8. You can comment out this check and try a lower version,
-		but it doesn't seem to work at all with 4.9 or 5.*"
+		but it doesn't seem to work at all with 4.9 or 5.*. Export CC and CXX accordingly."
 	exit 2
 fi
-cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ../..
+cmake -DCMAKE_CXX_COMPILER=$CC -DCMAKE_C_COMPILER=$CXX ../..
 make
 cd "$LIBDIR/.."
 if [ "$?" -ne 0 ]; then FAILED="$FAILED Galois"; fi

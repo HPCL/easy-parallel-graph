@@ -10,6 +10,8 @@ USAGE="usage: gen-datasets.sh [--libdir=<dir>] [--ddir=<dir>] [--rmat=<params>] 
 	--ddir: dataset directory. Default: ./datasets
 	--rmat: Use <params> for the RMAT parameters. These are space-separated, so you'll
 		have to quote them. You can provide 3 or 4. For example, --rmat='0.5 0.2 0.2'.
+		Default: '0.57 0.19 0.19 0.05'. If the default, graph files are
+		stored in kron-<scale>, otherwise kron-<scale>_<a>_<b>_<c>_<d>
 		only use if with <scale> (not -f)"
 # Generate an unweighted, undirected Kronecker (RMAT) graph in the file formats
 # for graph500, GraphMat, GraphBIG, and GAP

@@ -8,8 +8,8 @@ The general workflow could consist of the following steps. You can find an examp
 1. Download the systems and build them with `./get-libraries.sh`. You may also supply a location where the libraries should be installed but the default is `./lib`.
 2. Generate some synthetic datasets with `./gen-datasets.sh 20`. The 20 here will generate an RMAT matrix to the Graph500 specifications with 2^20 = 1,048,576 vertices with an average of 16 edges per vertex.
     * Alternatively, you could run `./gen-datasets -f=<your_file>`. Currently, this only supports files of the `.el` and `.wel` forms. These are explained [here](https://gist.github.com/sampollard/f9169c4eb04669390a834884682c080d). It should accept any graph file you can find from [SNAP Database](https://snap.stanford.edu/data/index.html) or the [KONECT Database](http://konect.uni-koblenz.de/networks/).
-3. Select a scale and number of threads and run the experiment with `run-experiment.sh`, e.g.
-```./run-experiment.sh 20 4```
+3. Select a scale and number of threads and run the experiment with `run-synthetic.sh`, e.g.
+```./run-synthetic.sh 20 4```
 4. Parse the log files to get a .csv using `./parse-output.sh`
 	* Note: `run-power.sh` also parses the log files.
 5. Analyze the data. Some examples can be found in `papers/publication/plot_data.R` and`experiment/experiment_analysis.R`.
@@ -37,7 +37,7 @@ dataset name
 feature web page
 URL to the graph
 ```
-Some examples are provided in the existing `datasets.txt`. Comments are lines starting with `#`.
+Some examples are provided in the existing `datasets.txt`. You can comment out datasets with `#` but please only add additional lines in multiples of 3. The datasets are read by taking every third line, so adding additional lines will mess things up. Yes, I realize this is a bit of a silly limitation.
 
 `unzipper.sh` This downloads and unzips the datasets. The usage is `unzipper.sh <dataset file> <dataset_dir>`. A sensible default is
 `./unzipper.sh datasets.txt ../datasets`
@@ -63,7 +63,7 @@ The `combined.csv` file from the Analysis section can be passed into scripts her
 ## Dependencies
 ### The Scripts in the `experiment` Directory
 1. R and the ggplot2 library
-2. Graph500, GAP, Graphalytics, GraphBIG, PowerGraph dependencies
+2. Graph500, GAP, Graphalytics, GraphBIG, PowerGraph, Galois dependencies
 
 ### GraphBIG/OpenG
 1. gcc/g++ with c++0x support (>4.3)
