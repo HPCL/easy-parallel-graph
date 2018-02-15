@@ -22,7 +22,7 @@ echo "Installing into $LIBDIR ..."
 echo 'Building SNAP feature calculator'
 cd "$LIBDIR"
 git clone https://github.com/sampollard/snap.git
-cd snap
+cd snap/examples/feature_csv
 make
 if [ "$?" -ne 0 ]; then FAILED="$FAILED SNAP"; fi
 

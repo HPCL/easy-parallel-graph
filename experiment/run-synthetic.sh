@@ -154,11 +154,12 @@ if [ "$RUN_GRAPH500" = 1 ]; then
 	# ^ This isn't working, so just regenerate the data ^
 	if [ "$OMP_NUM_THREADS" -gt 1 ]; then
 		echo " with OpenMP"
-		"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
+		L=($RMAT_PARAMS)
+		"$GRAPH500DIR/omp-csr/omp-csr" -a ${L[0]} -b ${L[1]} -c ${L[2]} -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 		check_status $? omp-csr
 	else
 		echo " with OpenMP"
-		"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
+		"$GRAPH500DIR/omp-csr/omp-csr" -a ${L[0]} -b ${L[1]} -c ${L[2]} -s $S > "${OUTPUT_PREFIX}-Graph500-BFS.out"
 		check_status $? omp-csr
 		# echo " sequentially"
 		# seq-csr is slower than omp-csr with one thread
