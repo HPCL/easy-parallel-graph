@@ -78,13 +78,13 @@ cd "$LIBDIR/Galois-2.2.1"
 cd build
 mkdir -p default
 cd default
-gcc --version | grep -q '4\.8'
+$CC --version | grep -q '4\.8'
 if [ $? -ne 0 ]; then
 	echo "Galois requires gcc 4.8. You can comment out this check and try a lower version,
 		but it doesn't seem to work at all with 4.9 or 5.*"
 	exit 2
 fi
-cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ../..
+cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DCMAKE_C_COMPILER=gcc-4.8 ../..
 make
 cd "$LIBDIR/.."
 if [ "$?" -ne 0 ]; then FAILED="$FAILED Galois"; fi
