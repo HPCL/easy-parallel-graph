@@ -2,8 +2,8 @@
 # Runs mst experiments on Arya
 # This should be run in the easy-parallel-graph/autoperf/mst directory
 
-USAGE="usage: ./run [--power] [--real] [--epv <#edges per vertex>] [--logdir <path>] [--trials <# trials>] generate_data|experiment|parse|all
-	. run [--power] build <------ do this one first"
+USAGE="usage: ./run.bn [--power] [--real] [--epv <#edges per vertex>] [--logdir <path>] [--trials <# trials>] generate_data|experiment|parse|all
+	. run.bn [--power] build <------ do this one first"
 # source run build to get the environment variables to stick.
 
 
@@ -551,6 +551,7 @@ parse_one()
 		grep -A 32 "Starting Rooting Tree" "${MSTLOG}" | awk -v PKG=$PKG -v INFO="$INFO" '/Total Energy.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,rooting tree,%s,Total CPU Energy (J),%s\n",INFO,t+$3;t=0}else{t+=$3}}' >> "$PFN"
 		grep -A 32 "Starting Rooting Tree" "${MSTLOG}" | awk -v PKG=$PKG -v INFO="$INFO" '/Average.*PACKAGE_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){printf "MST,rooting tree,%s,Average CPU Power (W),%s\n",INFO,t+$3;t=0}else{t+=$3}}' >> "$PFN"
 		grep -A 32 "Starting Rooting Tree" "${MSTLOG}" | awk -v PKG=$PKG -v INFO="$INFO" '/^[0-9]+\.[0-9]+ s/{printf "MST,rooting tree,%s,RAPL Time (s),%s\n",INFO,$1;exit}' >> "$PFN"
+		#EXECUTION_PHASES=( "Starting Rooting Tree" "Starting Classify and Insert" "Starting process_deletions" )
 		EXECUTION_PHASES=( "Starting Classify and Insert" "Starting process_deletions" )
 		EXECUTION_NAMES=( "insertion" "deletion" )
 		for B in $(seq $NUM_BATCHES); do
