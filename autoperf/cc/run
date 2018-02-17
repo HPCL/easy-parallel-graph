@@ -41,7 +41,9 @@ export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't
 export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MST_CC"
+XPS_DIR="abcd"
 GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
+#GALOIS_DIR="abcd"
 OUTPUTDIR="$(pwd)/output"
 ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 
@@ -76,7 +78,6 @@ CHANGED_VERTICES="1000000"
 INS_PCTAGES="75 100"
 SCALES="24"
 RT_TYPES="ER G"
-
 
 # These will get overwritten; useful for one-off scripts
 export OMP_NUM_THREADS=64 # If any generator is multithreaded

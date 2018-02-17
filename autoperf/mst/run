@@ -38,10 +38,13 @@ fi
 LIB_DIR="$(pwd)/lib"
 module load tau # Also loads the PAPI environment variable
 export TAU_MAKEFILE="$TAU_DIR/x86_64/lib/Makefile.tau-papi-pdt-openmp" # I don't think this is needed when sampling
-export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
+#export DDIR=/home/users/spollard/graphalytics/all-datasets/PBBSInput
+export DDIR=/home/users/norris/research/easy-parallel-graph/experiment/datasets
 PBBS_DIR="$LIB_DIR/pbbs-msf/minSpanningForest"
 XPS_DIR="$LIB_DIR/xpscode/MST_CC"
+XPS_DIR="abcd"
 GALOIS_DIR="$LIB_DIR/Galois-2.2.1"
+#GALOIS_DIR="abcd"
 OUTPUTDIR="$(pwd)/output"
 ENSURE_CONNECTED='no' # yes if you want to run bfs.out
 
@@ -65,17 +68,18 @@ REAL_EDGES=( 34681189 )
 # RT_TYPES="ER B G" # Parameters are only known for these three
 
 # Example settings for experiments
-EPV=16 # Edges per vertex
+EPV=8 # Edges per vertex
 #THREADS="1 2 4 8 16 32 48 64 72"
 NUM_BATCHES=1
 NUM_TRIALS=8
 
 # For batches:
-THREADS="2 4 8 16 32 48 64 72"
+THREADS="1 2 4 8 16 32 48 64 72"
 CHANGED_VERTICES="1000000"
 INS_PCTAGES="75 100"
 SCALES="24"
 RT_TYPES="ER G"
+#RT_TYPES="ER"
 
 # These will get overwritten; useful for one-off scripts
 export OMP_NUM_THREADS=64 # If any generator is multithreaded
