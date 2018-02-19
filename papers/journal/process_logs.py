@@ -2,6 +2,7 @@
 import sys,os,glob
 import numpy as np
 import pandas as pd
+import pprint
 
 phases = {
     "Starting creation of rooted tree" : "MST-Rooted",
@@ -16,6 +17,7 @@ sleep_power={1:35.59980, 2:32.50874, 4:39.00752, 8:27.53429, 16:29.59654, 24:26.
     32:28.23629, 40:29.28156, 48:29.53099, 56:27.61415, 64:25.24939, 72:29.56577}
 sleep_energy={1:356.00497, 2:325.09772, 4:390.13837, 8:275.48913, 16:296.30119, 24:268.22497,
     32:283.00666, 40:293.51369, 48:296.04856, 56:276.91622, 64:253.14684, 72:296.29419}
+
 
 def usage():
     print("Usage: power_summarize.py <directory with log files>")
@@ -61,13 +63,44 @@ class Network:
         global phases,cpus
         self.id = paramstr
         self.experiments = []
+        self.summary = {}
 
     def extendData(self,experiment):
         self.experiments.append(experiment)
+    
+    def summarize(self,what):
+        # what is one of time, power, energy, memory
+        k = self.id
+        threads = k.split("_")[-1].strip('t')
+        ins = {}; dels = {}; mem = {}; galois = {};
+        ins[k] = []; dels[k] = []; mem[k] = []; galois[k] = [];
+
+        for e in self.experiments:
+            if what.lower() == 'time': data = e.time
+            if what.lower() == 'energy': data = e.energy
+            if what.lower() == 'power': data = e.power
+            if what.lower() == 'memory': data = e.memory
+            if data.get("Galois-all") and sum(list(data.get("Galois-all"))):
+                galois[k].append(data["Galois-all"]) # pairs of values (cpu0,cpu1)
+            if what.lower() == 'memory' and data.get("galois-Total memory"):
+                galois[k].append(data["galois-Total memory"]) # single value for both CPUs
+            if data.get("MST-Insert") and sum(list(data.get("MST-Insert"))):
+                ins[k].append(data["MST-Insert"]) # pairs of floats
+                dels[k].append(data["MST-Delete"]) # pairs of floats
+            if what.lower() == 'memory' and data.get("mst-Total memory"):
+                mem[k].append(data["mst-Total memory"]) # single value for both CPUs
+        self.summary[k] = {'what': what, 'threads':threads, 'insertion':ins,'deletion':dels, 'memory':mem, 'galois':galois}
+        return self.summary[k]
+
 
     def __repr__(self):
-        buf = "\n".join([str(exp) for exp in self.experiments]) + "\n"
+        buf = "\nNetwork %s: " % self.id
+        if self.experiments:
+            buf += "\n" +  "\n".join([str(exp) for exp in self.experiments]) + "\n"
+        else:
+            buf += "No successful experiments.\n"
         return buf
+        
     
     def dump(self):
         print(self.experiments)
@@ -86,7 +119,7 @@ def processLog(logpath,networks):
     # Examples of (which, params):
     # mst ['248', 'G', '100i', '1000000', '64t']
     # galois ['248', 'ER', '100i', '1000000', '4t']
-    phase = None; time = [None]*2; energy=[None]*2; power=[None]*2; memory=0
+    phase = None; time = [0]*2; energy=[0]*2; power=[0]*2; memory=0
     contents = open(logpath,'r').read()
     if contents.find("Command being timed:") < 0:
         phases["STAT,(NULL),Time"] = "DONE"
@@ -110,7 +143,7 @@ def processLog(logpath,networks):
             if line.startswith(p):
                 if phase: experiment.set(num,which,phase,time,energy,power,memory)
                 phase = phases[p]  # new phase
-                time = [None]*2; energy=[None]*2; power=[None]*2; memory=0
+                time = [0]*2; energy=[0]*2; power=[0]*2; memory=0
                 #print("New phase: ",phase)
                 break
 
@@ -121,7 +154,7 @@ def processLog(logpath,networks):
 
         if phase == "DONE":
             phase = None
-            if experiment.time['MST-Insert'] or experiment.time['Galois-All']:
+            if sum(list(experiment.time['MST-Insert'])) or sum(list(experiment.time['Galois-All'])):
                 networks[paramstr].extendData(experiment)
                 num += 1
             
@@ -160,12 +193,17 @@ def main():
         print("Error: invalid path %s" % logdir)
         usage()
         sys.exit(1)
+    pp = pprint.PrettyPrinter(indent=2)
 
     networks = processLogs(logdir)
+    data = []
     for n in networks.values():
-        print(n)
-        #n.dump()
-        pass
+        #print(n)
+        for what in ["Time","Energy","Power","Memory"]:
+            summary = n.summarize(what)
+            if not summary in data: data.append(summary)
+    pp.pprint(data)
+
 
 
 if __name__ == "__main__":
