@@ -18,6 +18,7 @@ sleep_power={1:35.59980, 2:32.50874, 4:39.00752, 8:27.53429, 16:29.59654, 24:26.
 sleep_energy={1:356.00497, 2:325.09772, 4:390.13837, 8:275.48913, 16:296.30119, 24:268.22497,
     32:283.00666, 40:293.51369, 48:296.04856, 56:276.91622, 64:253.14684, 72:296.29419}
 
+alldata = {}
 
 def usage():
     print("Usage: power_summarize.py <directory with log files>")
@@ -72,25 +73,24 @@ class Network:
         # what is one of time, power, energy, memory
         k = self.id
         threads = k.split("_")[-1].strip('t')
-        ins = {}; dels = {}; mem = {}; galois = {};
-        ins[k] = []; dels[k] = []; mem[k] = []; galois[k] = [];
-
+        ins = []; dels = []; mem = []; galois = [];
+        
         for e in self.experiments:
             if what.lower() == 'time': data = e.time
             if what.lower() == 'energy': data = e.energy
             if what.lower() == 'power': data = e.power
             if what.lower() == 'memory': data = e.memory
-            if data.get("Galois-all") and sum(list(data.get("Galois-all"))):
-                galois[k].append(data["Galois-all"]) # pairs of values (cpu0,cpu1)
+            if data.get("Galois-All"):
+                galois.append(data["Galois-All"]) # pairs of values (cpu0,cpu1)
             if what.lower() == 'memory' and data.get("galois-Total memory"):
-                galois[k].append(data["galois-Total memory"]) # single value for both CPUs
-            if data.get("MST-Insert") and sum(list(data.get("MST-Insert"))):
-                ins[k].append(data["MST-Insert"]) # pairs of floats
-                dels[k].append(data["MST-Delete"]) # pairs of floats
+                galois.append(data["galois-Total memory"]) # single value for both CPUs
+            if data.get("MST-Insert") and data.get("MST-Insert"):
+                ins.append(data["MST-Insert"]) # pairs of floats
+                dels.append(data["MST-Delete"]) # pairs of floats
             if what.lower() == 'memory' and data.get("mst-Total memory"):
-                mem[k].append(data["mst-Total memory"]) # single value for both CPUs
-        self.summary[k] = {'what': what, 'threads':threads, 'insertion':ins,'deletion':dels, 'memory':mem, 'galois':galois}
-        return self.summary[k]
+                mem.append(data["mst-Total memory"]) # single value for both CPUs
+        self.summary = {'what': what, 'threads':threads, 'insertion':ins,'deletion':dels, 'memory':mem, 'galois':galois, 'id':k}
+        return self.summary
 
 
     def __repr__(self):
@@ -181,10 +181,21 @@ def processLogs(logdir):
         processLog(logpath,networks)
     return networks
 
-def combine():
+def merge(summary):
+    global alldata
+    found = None
+    #summary[k] = {'what': what, 'threads':threads, 'insertion':ins,'deletion':dels, 'memory':mem, 'galois':galois}
+    skey = summary['id']
+    if skey+':'+summary['what'] not in list(alldata.keys()):
+        alldata[skey+':'+summary['what']] = summary
+        return
+    if summary['galois'][k]:
+        print("GALOIS",summary['galois'])
+        alldata[skey+':'+summary['what']]['galois'] = summary['galois']
     pass
 
 def main():
+    global alldata
     if len(sys.argv) < 2:
         usage()
         sys.exit(1)
@@ -196,13 +207,13 @@ def main():
     pp = pprint.PrettyPrinter(indent=2)
 
     networks = processLogs(logdir)
-    data = []
+    summaries = []
     for n in networks.values():
         #print(n)
         for what in ["Time","Energy","Power","Memory"]:
-            summary = n.summarize(what)
-            if not summary in data: data.append(summary)
-    pp.pprint(data)
+            summaries.append(n.summarize(what))
+    #for summary in summaries: merge(summary)
+    pp.pprint(summaries)
 
 
 
