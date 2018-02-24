@@ -15,6 +15,7 @@ phases = {
 
 sleep_power={1:35.59980, 2:32.50874, 4:39.00752, 8:27.53429, 16:29.59654, 24:26.78392,
     32:28.23629, 40:29.28156, 48:29.53099, 56:27.61415, 64:25.24939, 72:29.56577}
+baseline_power = min(sleep_power.values())
 sleep_energy={1:356.00497, 2:325.09772, 4:390.13837, 8:275.48913, 16:296.30119, 24:268.22497,
     32:283.00666, 40:293.51369, 48:296.04856, 56:276.91622, 64:253.14684, 72:296.29419}
 
@@ -58,6 +59,12 @@ class Experiment:
         buf += "\n%s;Memory(GB):" % self.name + str(self.memory)
         return buf
 
+# Helper function to separate values
+def plunk(lst,vals):
+    if isinstance(vals,list):
+        map(lambda x: lst.append(x), vals)
+    else:
+        lst.append(vals)
 
 class Network:
     def __init__(self,paramstr):
@@ -69,11 +76,13 @@ class Network:
     def extendData(self,experiment):
         self.experiments.append(experiment)
     
+
+
     def summarize(self,what):
         # what is one of time, power, energy, memory
         k = self.id
         threads = k.split("_")[-1].strip('t')
-        ins = []; dels = []; mem = []; galois = [];
+        ins0 = []; ins1 = []; dels0 =[]; dels1=[]; mem = []; galois0 = []; galois1=[]; galois_mem = []
         
         for e in self.experiments:
             if what.lower() == 'time': data = e.time
@@ -81,15 +90,23 @@ class Network:
             if what.lower() == 'power': data = e.power
             if what.lower() == 'memory': data = e.memory
             if data.get("Galois-All"):
-                galois.append(data["Galois-All"]) # pairs of values (cpu0,cpu1)
+                #galois.append(dict(zip(cores,data["Galois-All"]))) # pairs of values (cpu0,cpu1)
+                plunk(galois0,data["Galois-All"][0])
+                plunk(galois1,data["Galois-All"][1])
             if what.lower() == 'memory' and data.get("galois-Total memory"):
-                galois.append(data["galois-Total memory"]) # single value for both CPUs
+                galois_mem.append(data["galois-Total memory"]) # single value for both CPUs
             if data.get("MST-Insert") and data.get("MST-Insert"):
-                ins.append(data["MST-Insert"]) # pairs of floats
-                dels.append(data["MST-Delete"]) # pairs of floats
+                plunk(ins0,data["MST-Insert"][0]) # pairs of floats
+                plunk(ins1,data["MST-Insert"][1])
+                plunk(dels0,data["MST-Delete"][0]) # pairs of floats
+                plunk(dels1,data["MST-Delete"][1])
             if what.lower() == 'memory' and data.get("mst-Total memory"):
                 mem.append(data["mst-Total memory"]) # single value for both CPUs
-        self.summary = {'what': what, 'threads':threads, 'insertion':ins,'deletion':dels, 'memory':mem, 'galois':galois, 'id':k}
+        self.summary = {'Experiment': k, 'what': what, 'Threads':threads,
+                        'Insertion-pkg0':ins0,'Insertion-pkg1':ins1,
+                        'Deletion-pkg0':dels0,'Deletion-pkg1':dels1,
+                        'Galois-pkg0':galois0, 'Galois-pkg1': galois1,
+                        'Memory':mem,'Galois-mem':galois_mem}
         return self.summary
 
 
@@ -180,19 +197,6 @@ def processLogs(logdir):
     for logpath in logfiles:
         processLog(logpath,networks)
     return networks
-
-def merge(summary):
-    global alldata
-    found = None
-    #summary[k] = {'what': what, 'threads':threads, 'insertion':ins,'deletion':dels, 'memory':mem, 'galois':galois}
-    skey = summary['id']
-    if skey+':'+summary['what'] not in list(alldata.keys()):
-        alldata[skey+':'+summary['what']] = summary
-        return
-    if summary['galois'][k]:
-        print("GALOIS",summary['galois'])
-        alldata[skey+':'+summary['what']]['galois'] = summary['galois']
-    pass
 
 def main():
     global alldata
