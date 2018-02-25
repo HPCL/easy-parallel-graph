@@ -1,8 +1,8 @@
 Highest Edge Value 10 --
-Time Taken for Initializing Memory 0.037332 
-Total Time for Reading Remainder Edges 1.304546 
-Total Time for Reading Certificate Network 1.575044 
-Total Time for Reading Update List 0.438103 
+Time Taken for Initializing Memory 0.037183 
+Total Time for Reading Remainder Edges 1.304842 
+Total Time for Reading Certificate Network 1.509799 
+Total Time for Reading Update List 0.400751 
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -33,42 +33,42 @@ Found: rapl:::DRAM_ENERGY:PACKAGE1
 Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting creation of rooted tree
-0.0199 s 0.0001 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.0199 s 0.0001 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.0199 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.0199 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.0199 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.0199 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.0199 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.0199 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.0199 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.0199 s 0.0016 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.0199 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.0199 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.0199 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.0199 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.0199 s 232962179283.4458 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.0199 s 232962179283.4458 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.0199 s 232723664117.7491 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.0199 s 232723664117.7491 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.0199 s 233188326996.1063 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.0199 s 233188326996.1063 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.0199 s 230324378228.7411 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.0199 s 230324378228.7411 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.0199 s 1.3210 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0199 s 66.3330 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0199 s 1.9998 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0199 s 100.4206 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0199 s 15.3841 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.0199 s 17.8429 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.0199 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.0199 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Total Time for Obtaining Degrees of Vertices  0.019877 
+0.0360 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.0360 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.0360 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.0360 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.0360 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.0360 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.0360 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.0360 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.0360 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.0360 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.0360 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.0360 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.0360 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.0360 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.0360 s 128996608508.5861 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.0360 s 128996608508.5861 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.0360 s 128864537081.5958 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.0360 s 128864537081.5958 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.0360 s 129121831787.5102 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.0360 s 129121831787.5102 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.0360 s 127535996356.7601 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.0360 s 127535996356.7601 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.0360 s 2.3788 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0360 s 66.1442 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0360 s 2.8135 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0360 s 78.2308 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0360 s 14.6743 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.0360 s 15.6438 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.0360 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.0360 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Total Time for Obtaining Degrees of Vertices  0.035905 
 ==Update Starts =======
 root111=0
 root=35660
 Max height=110
-Total Time for Creating Initial Rooted Tree at iter 1 is 0.449232 with Type:1
+Total Time for Creating Initial Rooted Tree at iter 1 is 0.375851 with Type:1
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -100,41 +100,41 @@ Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting Classify and Insert
 Classify 999999 999999  
-Time for insertion Flag  1.970372
+Time for insertion Flag  2.008623
 Deleted Edges: 94827 
-Processed Inserts: 293962
- Unprocessed Inserts: 7239
- 1.9770 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-1.9770 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-1.9770 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-1.9770 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-1.9770 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-1.9770 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-1.9770 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-1.9770 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-1.9770 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-1.9770 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-1.9770 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-1.9770 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-1.9770 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-1.9770 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-1.9770 s 2346644451.4143 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-1.9770 s 2346644451.4143 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-1.9770 s 2344241871.3393 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-1.9770 s 2344241871.3393 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-1.9770 s 2348922453.2631 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-1.9770 s 2348922453.2631 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-1.9770 s 2320073695.4744 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-1.9770 s 2320073695.4744 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-1.9770 s 138.4389 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.9770 s 70.0249 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.9770 s 160.8193 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.9770 s 81.3453 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.9770 s 14.2718 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-1.9770 s 14.9956 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-1.9770 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-1.9770 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Classify and insert  1.976941 
+Processed Inserts: 294115
+ Unprocessed Inserts: 6698
+ 2.0153 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+2.0153 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+2.0153 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+2.0153 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+2.0153 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+2.0153 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+2.0153 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+2.0153 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+2.0153 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+2.0153 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+2.0153 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+2.0153 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+2.0153 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+2.0153 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+2.0153 s 2302080005.0917 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+2.0153 s 2302080005.0917 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+2.0153 s 2299723051.7203 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+2.0153 s 2299723051.7203 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+2.0153 s 2304314746.0660 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+2.0153 s 2304314746.0660 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+2.0153 s 2276013846.6958 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+2.0153 s 2276013846.6958 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+2.0153 s 144.0931 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+2.0153 s 71.5008 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+2.0153 s 166.1509 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+2.0153 s 82.4461 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+2.0153 s 14.3648 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+2.0153 s 14.9642 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+2.0153 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+2.0153 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Classify and insert  2.015193 
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -166,54 +166,279 @@ Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting process_deletions
 done updating maXE 
-0.1228 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.1228 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.1228 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.1228 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.1228 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.1228 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.1228 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.1228 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.1228 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.1228 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.1228 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.1228 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.1228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.1228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.1228 s 37769087321.4886 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.1228 s 37769087321.4886 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.1228 s 37730417954.0041 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.1228 s 37730417954.0041 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.1228 s 37805751610.6590 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.1228 s 37805751610.6590 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.1228 s 37341432761.0862 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.1228 s 37341432761.0862 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.1228 s 9.2379 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1228 s 75.2064 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1228 s 9.0846 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1228 s 73.9587 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1228 s 14.3536 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.1228 s 15.5876 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.1228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.1228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Deletion  0.122808 
-Total Time for Updating at Batch 1 is 2.100578 
+0.1363 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.1363 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.1363 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.1363 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.1363 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.1363 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.1363 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.1363 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.1363 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.1363 s 0.0015 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.1363 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.1363 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.1363 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.1363 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.1363 s 34046266718.9222 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.1363 s 34046266718.9222 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.1363 s 34011408910.7887 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.1363 s 34011408910.7887 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.1363 s 34079317085.1525 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.1363 s 34079317085.1525 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.1363 s 33660765181.5647 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.1363 s 33660765181.5647 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.1363 s 11.6457 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1363 s 85.4637 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1363 s 12.1637 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1363 s 89.2652 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1363 s 14.6916 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.1363 s 15.4960 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.1363 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.1363 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Deletion  0.136240 
+Total Time for Updating at Batch 1 is 2.152349 
 =======
-Total Time for Updating  2.585150 
+Total Time for Updating  2.560124 
 	Command being timed: "/home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/xpscode/MST_May5/a.out /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.diff /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.cert /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork_changed_75i_1000000S 100 1834890 1000000 32 100"
-	User time (seconds): 11.12
-	System time (seconds): 0.15
-	Percent of CPU this job got: 183%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.14
+	User time (seconds): 11.66
+	System time (seconds): 0.19
+	Percent of CPU this job got: 196%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.03
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 308684
+	Maximum resident set size (kbytes): 308116
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 28353
-	Voluntary context switches: 364
+	Minor (reclaiming a frame) page faults: 27257
+	Voluntary context switches: 352
+	Involuntary context switches: 42
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 24
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+Highest Edge Value 10 --
+Time Taken for Initializing Memory 0.036867 
+Total Time for Reading Remainder Edges 1.183775 
+Total Time for Reading Certificate Network 1.626763 
+Total Time for Reading Update List 0.407045 
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Starting creation of rooted tree
+0.0273 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.0273 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.0273 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.0273 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.0273 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.0273 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.0273 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.0273 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.0273 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.0273 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.0273 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.0273 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.0273 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.0273 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.0273 s 169859138627.3409 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.0273 s 169859138627.3409 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.0273 s 169685230653.4397 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.0273 s 169685230653.4397 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.0273 s 170024029150.7435 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.0273 s 170024029150.7435 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.0273 s 167935845256.7150 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.0273 s 167935845256.7150 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.0273 s 1.9147 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0273 s 70.1042 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0273 s 1.9307 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0273 s 70.6875 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0273 s 17.0484 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.0273 s 17.0590 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.0273 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.0273 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Total Time for Obtaining Degrees of Vertices  0.027276 
+==Update Starts =======
+root111=0
+root=35660
+Max height=110
+Total Time for Creating Initial Rooted Tree at iter 1 is 0.340977 with Type:1
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Starting Classify and Insert
+Classify 999999 999999  
+Time for insertion Flag  1.947733
+Deleted Edges: 94827 
+Processed Inserts: 293842
+ Unprocessed Inserts: 8428
+ 1.9536 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+1.9536 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+1.9536 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+1.9536 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+1.9536 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+1.9536 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+1.9536 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+1.9536 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+1.9536 s 0.0010 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+1.9536 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+1.9536 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+1.9536 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+1.9536 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+1.9536 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+1.9536 s 2374770837.3768 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+1.9536 s 2374770837.3768 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+1.9536 s 2372339460.4833 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+1.9536 s 2372339460.4833 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+1.9536 s 2377076142.8759 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+1.9536 s 2377076142.8759 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+1.9536 s 2347881609.9547 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+1.9536 s 2347881609.9547 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+1.9536 s 116.5956 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+1.9536 s 59.6831 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+1.9536 s 160.4836 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+1.9536 s 82.1484 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+1.9536 s 13.1570 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+1.9536 s 14.9159 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+1.9536 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+1.9536 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Classify and insert  1.953534 
+Found rapl component at cid 2
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
+Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
+Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
+Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
+Found: rapl:::THERMAL_SPEC:PACKAGE0
+Found: rapl:::THERMAL_SPEC:PACKAGE1
+Found: rapl:::MINIMUM_POWER:PACKAGE0
+Found: rapl:::MINIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_POWER:PACKAGE0
+Found: rapl:::MAXIMUM_POWER:PACKAGE1
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
+Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
+Found: rapl:::PACKAGE_ENERGY:PACKAGE0
+Found: rapl:::PACKAGE_ENERGY:PACKAGE1
+Found: rapl:::DRAM_ENERGY:PACKAGE0
+Found: rapl:::DRAM_ENERGY:PACKAGE1
+Found: rapl:::PP0_ENERGY:PACKAGE0
+Found: rapl:::PP0_ENERGY:PACKAGE1
+Starting process_deletions
+done updating maXE 
+0.1064 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.1064 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.1064 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.1064 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.1064 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.1064 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.1064 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.1064 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.1064 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.1064 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.1064 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.1064 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.1064 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.1064 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.1064 s 43621765848.3878 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.1064 s 43621765848.3878 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.1064 s 43577104295.4211 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.1064 s 43577104295.4211 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.1064 s 43664111617.1266 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.1064 s 43664111617.1266 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.1064 s 43127842155.2078 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.1064 s 43127842155.2078 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.1064 s 7.7827 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1064 s 73.1776 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1064 s 9.2731 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1064 s 87.1920 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1064 s 14.7804 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.1064 s 15.2168 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.1064 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.1064 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Deletion  0.106335 
+Total Time for Updating at Batch 1 is 2.060587 
+=======
+Total Time for Updating  2.428427 
+	Command being timed: "/home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/xpscode/MST_May5/a.out /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.diff /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.cert /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork_changed_75i_1000000S 100 1834890 1000000 32 100"
+	User time (seconds): 8.50
+	System time (seconds): 0.28
+	Percent of CPU this job got: 149%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.89
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 308344
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 28465
+	Voluntary context switches: 447
 	Involuntary context switches: 15
 	Swaps: 0
 	File system inputs: 0
@@ -224,10 +449,10 @@ Total Time for Updating  2.585150
 	Page size (bytes): 4096
 	Exit status: 0
 Highest Edge Value 10 --
-Time Taken for Initializing Memory 0.037213 
-Total Time for Reading Remainder Edges 1.303008 
-Total Time for Reading Certificate Network 1.611067 
-Total Time for Reading Update List 0.436673 
+Time Taken for Initializing Memory 0.037043 
+Total Time for Reading Remainder Edges 1.271667 
+Total Time for Reading Certificate Network 1.812368 
+Total Time for Reading Update List 0.509590 
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -258,42 +483,42 @@ Found: rapl:::DRAM_ENERGY:PACKAGE1
 Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting creation of rooted tree
-0.0601 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.0601 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.0601 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.0601 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.0601 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.0601 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.0601 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.0601 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.0601 s 0.0010 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.0601 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.0601 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.0601 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.0601 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.0601 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.0601 s 77175703630.7124 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.0601 s 77175703630.7124 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.0601 s 77096688333.9125 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.0601 s 77096688333.9125 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.0601 s 77250621838.0486 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.0601 s 77250621838.0486 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.0601 s 76301852977.9548 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.0601 s 76301852977.9548 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.0601 s 3.7115 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0601 s 61.7423 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0601 s 5.1068 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0601 s 84.9517 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0601 s 14.2068 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.0601 s 15.1612 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.0601 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.0601 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Total Time for Obtaining Degrees of Vertices  0.060057 
+0.0228 s 0.0001 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.0228 s 0.0001 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.0228 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.0228 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.0228 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.0228 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.0228 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.0228 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.0228 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.0228 s 0.0015 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.0228 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.0228 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.0228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.0228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.0228 s 203474449237.1119 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.0228 s 203474449237.1119 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.0228 s 203266124683.6410 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.0228 s 203266124683.6410 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.0228 s 203671971776.6991 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.0228 s 203671971776.6991 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.0228 s 201170533990.2080 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.0228 s 201170533990.2080 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.0228 s 1.7497 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0228 s 76.7395 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0228 s 2.1495 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0228 s 94.2734 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0228 s 16.3172 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.0228 s 17.3278 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.0228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.0228 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Total Time for Obtaining Degrees of Vertices  0.022763 
 ==Update Starts =======
 root111=0
 root=35660
 Max height=110
-Total Time for Creating Initial Rooted Tree at iter 1 is 0.345034 with Type:1
+Total Time for Creating Initial Rooted Tree at iter 1 is 0.393977 with Type:1
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -325,41 +550,41 @@ Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting Classify and Insert
 Classify 999999 999999  
-Time for insertion Flag  1.929277
+Time for insertion Flag  1.983168
 Deleted Edges: 94827 
-Processed Inserts: 294091
- Unprocessed Inserts: 6894
- 1.9358 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-1.9358 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-1.9358 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-1.9358 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-1.9358 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-1.9358 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-1.9358 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-1.9358 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-1.9358 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-1.9358 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-1.9358 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-1.9358 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-1.9358 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-1.9358 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-1.9358 s 2396622972.0116 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-1.9358 s 2396622972.0116 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-1.9358 s 2394169222.1066 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-1.9358 s 2394169222.1066 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-1.9358 s 2398949490.4400 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-1.9358 s 2398949490.4400 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-1.9358 s 2369486315.6549 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-1.9358 s 2369486315.6549 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-1.9358 s 134.9734 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.9358 s 69.7260 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.9358 s 144.2873 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.9358 s 74.5375 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.9358 s 14.3798 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-1.9358 s 14.9326 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-1.9358 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-1.9358 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Classify and insert  1.935681 
+Processed Inserts: 293963
+ Unprocessed Inserts: 7643
+ 1.9902 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+1.9902 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+1.9902 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+1.9902 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+1.9902 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+1.9902 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+1.9902 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+1.9902 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+1.9902 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+1.9902 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+1.9902 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+1.9902 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+1.9902 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+1.9902 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+1.9902 s 2331053578.1121 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+1.9902 s 2331053578.1121 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+1.9902 s 2328666960.5412 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+1.9902 s 2328666960.5412 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+1.9902 s 2333316445.1422 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+1.9902 s 2333316445.1422 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+1.9902 s 2304659355.6429 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+1.9902 s 2304659355.6429 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+1.9902 s 150.2300 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+1.9902 s 75.4842 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+1.9902 s 173.7841 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+1.9902 s 87.3191 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+1.9902 s 14.3730 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+1.9902 s 14.9610 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+1.9902 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+1.9902 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Classify and insert  1.990165 
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -391,68 +616,68 @@ Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting process_deletions
 done updating maXE 
-0.1170 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.1170 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.1170 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.1170 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.1170 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.1170 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.1170 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.1170 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.1170 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.1170 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.1170 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.1170 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.1170 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.1170 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.1170 s 39658790276.8109 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.1170 s 39658790276.8109 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.1170 s 39618186162.6010 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.1170 s 39618186162.6010 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.1170 s 39697288992.5062 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.1170 s 39697288992.5062 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.1170 s 39209738850.7715 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.1170 s 39209738850.7715 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.1170 s 8.9410 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1170 s 76.4319 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1170 s 8.3116 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1170 s 71.0515 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1170 s 14.7062 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.1170 s 15.4231 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.1170 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.1170 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Deletion  0.116963 
-Total Time for Updating at Batch 1 is 2.053375 
+0.1317 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.1317 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.1317 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.1317 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.1317 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.1317 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.1317 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.1317 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.1317 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.1317 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.1317 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.1317 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.1317 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.1317 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.1317 s 35235947990.5287 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.1317 s 35235947990.5287 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.1317 s 35199872143.3706 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.1317 s 35199872143.3706 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.1317 s 35270153238.2045 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.1317 s 35270153238.2045 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.1317 s 34836975843.8102 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.1317 s 34836975843.8102 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.1317 s 10.9666 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1317 s 83.2924 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1317 s 11.5176 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1317 s 87.4775 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1317 s 14.5296 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.1317 s 15.4056 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.1317 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.1317 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Deletion  0.131644 
+Total Time for Updating at Batch 1 is 2.122597 
 =======
-Total Time for Updating  2.423196 
+Total Time for Updating  2.541754 
 	Command being timed: "/home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/xpscode/MST_May5/a.out /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.diff /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.cert /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork_changed_75i_1000000S 100 1834890 1000000 32 100"
-	User time (seconds): 11.27
-	System time (seconds): 0.24
-	Percent of CPU this job got: 190%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.03
+	User time (seconds): 11.41
+	System time (seconds): 0.19
+	Percent of CPU this job got: 182%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.37
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 307876
+	Maximum resident set size (kbytes): 307848
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 27898
-	Voluntary context switches: 384
-	Involuntary context switches: 21
+	Minor (reclaiming a frame) page faults: 28447
+	Voluntary context switches: 330
+	Involuntary context switches: 47
 	Swaps: 0
 	File system inputs: 0
-	File system outputs: 32
+	File system outputs: 24
 	Socket messages sent: 0
 	Socket messages received: 0
 	Signals delivered: 0
 	Page size (bytes): 4096
 	Exit status: 0
 Highest Edge Value 10 --
-Time Taken for Initializing Memory 0.037181 
-Total Time for Reading Remainder Edges 1.260063 
-Total Time for Reading Certificate Network 1.595806 
-Total Time for Reading Update List 0.398212 
+Time Taken for Initializing Memory 0.036785 
+Total Time for Reading Remainder Edges 1.290223 
+Total Time for Reading Certificate Network 1.614195 
+Total Time for Reading Update List 0.436805 
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -483,42 +708,42 @@ Found: rapl:::DRAM_ENERGY:PACKAGE1
 Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting creation of rooted tree
-0.0288 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.0288 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.0288 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.0288 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.0288 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.0288 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.0288 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.0288 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.0288 s 0.0015 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.0288 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.0288 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.0288 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.0288 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.0288 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.0288 s 161214454208.6995 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.0288 s 161214454208.6995 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.0288 s 161049396977.6220 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.0288 s 161049396977.6220 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.0288 s 161370952916.6840 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.0288 s 161370952916.6840 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.0288 s 159389043497.5989 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.0288 s 159389043497.5989 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.0288 s 2.5710 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0288 s 89.3430 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0288 s 2.1320 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0288 s 74.0870 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0288 s 15.7958 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.0288 s 16.4878 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.0288 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.0288 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Total Time for Obtaining Degrees of Vertices  0.028724 
+0.0239 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.0239 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.0239 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.0239 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.0239 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.0239 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.0239 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.0239 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.0239 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.0239 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.0239 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.0239 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.0239 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.0239 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.0239 s 194100070987.5424 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.0239 s 194100070987.5424 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.0239 s 193901344264.0213 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.0239 s 193901344264.0213 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.0239 s 194288493362.4364 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.0239 s 194288493362.4364 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.0239 s 191902300630.3797 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.0239 s 191902300630.3797 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.0239 s 1.8818 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0239 s 78.7326 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.0239 s 2.0317 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0239 s 85.0017 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.0239 s 16.7574 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.0239 s 16.5237 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.0239 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.0239 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Total Time for Obtaining Degrees of Vertices  0.023865 
 ==Update Starts =======
 root111=0
 root=35660
 Max height=110
-Total Time for Creating Initial Rooted Tree at iter 1 is 0.341576 with Type:1
+Total Time for Creating Initial Rooted Tree at iter 1 is 0.368718 with Type:1
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -550,41 +775,41 @@ Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting Classify and Insert
 Classify 999999 999999  
-Time for insertion Flag  1.874441
+Time for insertion Flag  2.003145
 Deleted Edges: 94827 
-Processed Inserts: 294042
- Unprocessed Inserts: 6884
- 1.8807 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-1.8807 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-1.8807 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-1.8807 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-1.8807 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-1.8807 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-1.8807 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-1.8807 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-1.8807 s 0.0010 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-1.8807 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-1.8807 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-1.8807 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-1.8807 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-1.8807 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-1.8807 s 2466732358.2333 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-1.8807 s 2466732358.2333 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-1.8807 s 2464206827.7847 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-1.8807 s 2464206827.7847 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-1.8807 s 2469126935.2512 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-1.8807 s 2469126935.2512 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-1.8807 s 2438801862.2350 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-1.8807 s 2438801862.2350 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-1.8807 s 112.6094 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.8807 s 59.8747 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.8807 s 138.7990 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.8807 s 73.7998 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.8807 s 14.3448 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-1.8807 s 14.9465 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-1.8807 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-1.8807 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Classify and insert  1.880667 
+Processed Inserts: 294067
+ Unprocessed Inserts: 7011
+ 2.0098 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+2.0098 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+2.0098 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+2.0098 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+2.0098 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+2.0098 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+2.0098 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+2.0098 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+2.0098 s 0.0008 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+2.0098 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+2.0098 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+2.0098 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+2.0098 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+2.0098 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+2.0098 s 2308292425.9584 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+2.0098 s 2308292425.9584 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+2.0098 s 2305929112.0842 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+2.0098 s 2305929112.0842 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+2.0098 s 2310533197.6316 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+2.0098 s 2310533197.6316 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+2.0098 s 2282155925.1131 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+2.0098 s 2282155925.1131 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+2.0098 s 100.1312 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+2.0098 s 49.8204 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+2.0098 s 150.3751 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+2.0098 s 74.8193 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+2.0098 s 14.3590 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+2.0098 s 14.9538 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+2.0098 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+2.0098 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Classify and insert  2.009812 
 Found rapl component at cid 2
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
 Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
@@ -616,283 +841,58 @@ Found: rapl:::PP0_ENERGY:PACKAGE0
 Found: rapl:::PP0_ENERGY:PACKAGE1
 Starting process_deletions
 done updating maXE 
-0.1088 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.1088 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.1088 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.1088 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.1088 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.1088 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.1088 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.1088 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.1088 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.1088 s 0.0010 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.1088 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.1088 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.1088 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.1088 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.1088 s 42639956345.1975 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.1088 s 42639956345.1975 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.1088 s 42596300004.5664 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.1088 s 42596300004.5664 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.1088 s 42681349023.7219 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.1088 s 42681349023.7219 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.1088 s 42157149555.8471 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.1088 s 42157149555.8471 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.1088 s 7.7008 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1088 s 70.7783 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1088 s 6.8307 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1088 s 62.7810 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1088 s 14.7726 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.1088 s 15.5331 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.1088 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.1088 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Deletion  0.108784 
-Total Time for Updating at Batch 1 is 1.990168 
+0.1236 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
+0.1236 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
+0.1236 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
+0.1236 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
+0.1236 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
+0.1236 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
+0.1236 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
+0.1236 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
+0.1236 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
+0.1236 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
+0.1236 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
+0.1236 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
+0.1236 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
+0.1236 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
+0.1236 s 37520617797.9021 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
+0.1236 s 37520617797.9021 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
+0.1236 s 37482202822.5674 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
+0.1236 s 37482202822.5674 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
+0.1236 s 37557040885.6269 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
+0.1236 s 37557040885.6269 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
+0.1236 s 37095776626.2369 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
+0.1236 s 37095776626.2369 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
+0.1236 s 8.4269 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1236 s 68.1528 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
+0.1236 s 9.3931 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1236 s 75.9674 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
+0.1236 s 14.5149 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
+0.1236 s 15.3114 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
+0.1236 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
+0.1236 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
+Time for Deletion  0.123628 
+Total Time for Updating at Batch 1 is 2.134221 
 =======
-Total Time for Updating  2.356296 
+Total Time for Updating  2.527617 
 	Command being timed: "/home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/xpscode/MST_May5/a.out /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.diff /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.cert /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork_changed_75i_1000000S 100 1834890 1000000 32 100"
-	User time (seconds): 10.81
-	System time (seconds): 0.20
-	Percent of CPU this job got: 188%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.83
+	User time (seconds): 11.38
+	System time (seconds): 0.22
+	Percent of CPU this job got: 189%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.11
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 308704
+	Maximum resident set size (kbytes): 307860
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 28144
-	Voluntary context switches: 351
-	Involuntary context switches: 41
+	Minor (reclaiming a frame) page faults: 28115
+	Voluntary context switches: 435
+	Involuntary context switches: 49
 	Swaps: 0
 	File system inputs: 0
-	File system outputs: 32
-	Socket messages sent: 0
-	Socket messages received: 0
-	Signals delivered: 0
-	Page size (bytes): 4096
-	Exit status: 0
-Highest Edge Value 10 --
-Time Taken for Initializing Memory 0.037416 
-Total Time for Reading Remainder Edges 1.254316 
-Total Time for Reading Certificate Network 1.439853 
-Total Time for Reading Update List 0.400959 
-Found rapl component at cid 2
-Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
-Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
-Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
-Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
-Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
-Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
-Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
-Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
-Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
-Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
-Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
-Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
-Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
-Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
-Found: rapl:::THERMAL_SPEC:PACKAGE0
-Found: rapl:::THERMAL_SPEC:PACKAGE1
-Found: rapl:::MINIMUM_POWER:PACKAGE0
-Found: rapl:::MINIMUM_POWER:PACKAGE1
-Found: rapl:::MAXIMUM_POWER:PACKAGE0
-Found: rapl:::MAXIMUM_POWER:PACKAGE1
-Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
-Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
-Found: rapl:::PACKAGE_ENERGY:PACKAGE0
-Found: rapl:::PACKAGE_ENERGY:PACKAGE1
-Found: rapl:::DRAM_ENERGY:PACKAGE0
-Found: rapl:::DRAM_ENERGY:PACKAGE1
-Found: rapl:::PP0_ENERGY:PACKAGE0
-Found: rapl:::PP0_ENERGY:PACKAGE1
-Starting creation of rooted tree
-0.0307 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.0307 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.0307 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.0307 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.0307 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.0307 s 0.0001 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.0307 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.0307 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.0307 s 0.0008 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.0307 s 0.0015 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.0307 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.0307 s 0.0011 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.0307 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.0307 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.0307 s 151345208441.2739 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.0307 s 151345208441.2739 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.0307 s 151190255703.5385 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.0307 s 151190255703.5385 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.0307 s 151492126592.6082 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.0307 s 151492126592.6082 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.0307 s 149631545941.7265 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.0307 s 149631545941.7265 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.0307 s 1.5295 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0307 s 49.8973 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.0307 s 2.7782 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0307 s 90.6314 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.0307 s 13.9069 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.0307 s 17.0310 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.0307 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.0307 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Total Time for Obtaining Degrees of Vertices  0.030616 
-==Update Starts =======
-root111=0
-root=35660
-Max height=110
-Total Time for Creating Initial Rooted Tree at iter 1 is 0.421894 with Type:1
-Found rapl component at cid 2
-Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
-Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
-Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
-Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
-Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
-Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
-Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
-Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
-Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
-Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
-Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
-Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
-Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
-Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
-Found: rapl:::THERMAL_SPEC:PACKAGE0
-Found: rapl:::THERMAL_SPEC:PACKAGE1
-Found: rapl:::MINIMUM_POWER:PACKAGE0
-Found: rapl:::MINIMUM_POWER:PACKAGE1
-Found: rapl:::MAXIMUM_POWER:PACKAGE0
-Found: rapl:::MAXIMUM_POWER:PACKAGE1
-Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
-Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
-Found: rapl:::PACKAGE_ENERGY:PACKAGE0
-Found: rapl:::PACKAGE_ENERGY:PACKAGE1
-Found: rapl:::DRAM_ENERGY:PACKAGE0
-Found: rapl:::DRAM_ENERGY:PACKAGE1
-Found: rapl:::PP0_ENERGY:PACKAGE0
-Found: rapl:::PP0_ENERGY:PACKAGE1
-Starting Classify and Insert
-Classify 999999 999999  
-Time for insertion Flag  1.934337
-Deleted Edges: 94827 
-Processed Inserts: 293969
- Unprocessed Inserts: 7587
- 1.9408 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-1.9408 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-1.9408 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-1.9408 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-1.9408 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-1.9408 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-1.9408 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-1.9408 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-1.9408 s 0.0011 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-1.9408 s 0.0013 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-1.9408 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-1.9408 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-1.9408 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-1.9408 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-1.9408 s 2390419296.3101 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-1.9408 s 2390419296.3101 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-1.9408 s 2387971897.9543 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-1.9408 s 2387971897.9543 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-1.9408 s 2392739792.5290 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-1.9408 s 2392739792.5290 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-1.9408 s 2363352883.3826 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-1.9408 s 2363352883.3826 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-1.9408 s 134.5336 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.9408 s 69.3189 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-1.9408 s 159.4905 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.9408 s 82.1781 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-1.9408 s 14.0586 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-1.9408 s 14.9924 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-1.9408 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-1.9408 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Classify and insert  1.940735 
-Found rapl component at cid 2
-Found: rapl:::THERMAL_SPEC_CNT:PACKAGE0
-Found: rapl:::THERMAL_SPEC_CNT:PACKAGE1
-Found: rapl:::MINIMUM_POWER_CNT:PACKAGE0
-Found: rapl:::MINIMUM_POWER_CNT:PACKAGE1
-Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE0
-Found: rapl:::MAXIMUM_POWER_CNT:PACKAGE1
-Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0
-Found: rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1
-Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE0
-Found: rapl:::PACKAGE_ENERGY_CNT:PACKAGE1
-Found: rapl:::DRAM_ENERGY_CNT:PACKAGE0
-Found: rapl:::DRAM_ENERGY_CNT:PACKAGE1
-Found: rapl:::PP0_ENERGY_CNT:PACKAGE0
-Found: rapl:::PP0_ENERGY_CNT:PACKAGE1
-Found: rapl:::THERMAL_SPEC:PACKAGE0
-Found: rapl:::THERMAL_SPEC:PACKAGE1
-Found: rapl:::MINIMUM_POWER:PACKAGE0
-Found: rapl:::MINIMUM_POWER:PACKAGE1
-Found: rapl:::MAXIMUM_POWER:PACKAGE0
-Found: rapl:::MAXIMUM_POWER:PACKAGE1
-Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0
-Found: rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1
-Found: rapl:::PACKAGE_ENERGY:PACKAGE0
-Found: rapl:::PACKAGE_ENERGY:PACKAGE1
-Found: rapl:::DRAM_ENERGY:PACKAGE0
-Found: rapl:::DRAM_ENERGY:PACKAGE1
-Found: rapl:::PP0_ENERGY:PACKAGE0
-Found: rapl:::PP0_ENERGY:PACKAGE1
-Starting process_deletions
-done updating maXE 
-0.1133 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE0 *)
-0.1133 s 0.0000 (* Average Power for rapl:::THERMAL_SPEC_CNT:PACKAGE1 *)
-0.1133 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE0 *)
-0.1133 s 0.0000 (* Average Power for rapl:::MINIMUM_POWER_CNT:PACKAGE1 *)
-0.1133 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE0 *)
-0.1133 s 0.0000 (* Average Power for rapl:::MAXIMUM_POWER_CNT:PACKAGE1 *)
-0.1133 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0 *)
-0.1133 s 0.0000 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE1 *)
-0.1133 s 0.0012 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE0 *)
-0.1133 s 0.0014 (* Average Power for rapl:::PACKAGE_ENERGY_CNT:PACKAGE1 *)
-0.1133 s 0.0009 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE0 *)
-0.1133 s 0.0010 (* Average Power for rapl:::DRAM_ENERGY_CNT:PACKAGE1 *)
-0.1133 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE0 *)
-0.1133 s 0.0000 (* Average Power for rapl:::PP0_ENERGY_CNT:PACKAGE1 *)
-0.1133 s 40962209166.4426 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE0 *)
-0.1133 s 40962209166.4426 (* Average Power for rapl:::THERMAL_SPEC:PACKAGE1 *)
-0.1133 s 40920270564.4915 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE0 *)
-0.1133 s 40920270564.4915 (* Average Power for rapl:::MINIMUM_POWER:PACKAGE1 *)
-0.1133 s 41001973174.2185 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE0 *)
-0.1133 s 41001973174.2185 (* Average Power for rapl:::MAXIMUM_POWER:PACKAGE1 *)
-0.1133 s 40498399294.4943 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0 *)
-0.1133 s 40498399294.4943 (* Average Power for rapl:::MAXIMUM_TIME_WINDOW:PACKAGE1 *)
-0.1133 s 8.4755 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1133 s 74.8337 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE0 *)
-0.1133 s 9.7491 (* Total Energy for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1133 s 86.0789 (* Average Power for rapl:::PACKAGE_ENERGY:PACKAGE1 *)
-0.1133 s 14.3564 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE0 *)
-0.1133 s 15.7533 (* Average Power for rapl:::DRAM_ENERGY:PACKAGE1 *)
-0.1133 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE0 *)
-0.1133 s 0.0000 (* Average Power for rapl:::PP0_ENERGY:PACKAGE1 *)
-Time for Deletion  0.113231 
-Total Time for Updating at Batch 1 is 2.054812 
-=======
-Total Time for Updating  2.505956 
-	Command being timed: "/home/users/norris/research/easy-parallel-graph/autoperf/mst/lib/xpscode/MST_May5/a.out /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.diff /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork.cert /home/users/norris/research/easy-parallel-graph/experiment/datasets/youtubeNetwork_changed_75i_1000000S 100 1834890 1000000 32 100"
-	User time (seconds): 9.27
-	System time (seconds): 0.17
-	Percent of CPU this job got: 161%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.84
-	Average shared text size (kbytes): 0
-	Average unshared data size (kbytes): 0
-	Average stack size (kbytes): 0
-	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 307456
-	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 28287
-	Voluntary context switches: 419
-	Involuntary context switches: 14
-	Swaps: 0
-	File system inputs: 0
-	File system outputs: 32
+	File system outputs: 24
 	Socket messages sent: 0
 	Socket messages received: 0
 	Signals delivered: 0
