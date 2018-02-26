@@ -82,7 +82,8 @@ class Network:
         # what is one of time, power, energy, memory
         k = self.id
         threads = k.split("_")[-1].strip('t')
-        ins0 = []; ins1 = []; dels0 =[]; dels1=[]; mem = []; galois0 = []; galois1=[]; galois_mem = []
+        ins0 = []; ins1 = []; dels0 =[]; dels1=[]; mem = []; root0=[]; root1=[]
+        galois0 = []; galois1=[]; galois_mem = []
         
         for e in self.experiments:
             if what.lower() in ['time','speedup'] : data = e.time
@@ -95,16 +96,19 @@ class Network:
                 plunk(galois1,data["Galois-All"][1])
             if what.lower() == 'memory' and data.get("galois-Total memory"):
                 galois_mem.append(data["galois-Total memory"]) # single value for both CPUs
-            if data.get("MST-Insert") and data.get("MST-Insert"):
+            if data.get("MST-Insert") and data.get("MST-Delete") and data.get("MST-Rooted"):
                 plunk(ins0,data["MST-Insert"][0]) # pairs of floats
                 plunk(ins1,data["MST-Insert"][1])
                 plunk(dels0,data["MST-Delete"][0]) # pairs of floats
                 plunk(dels1,data["MST-Delete"][1])
+                plunk(root0,data["MST-Rooted"][0])
+                plunk(root1,data["MST-Rooted"][1])
             if what.lower() == 'memory' and data.get("mst-Total memory"):
                 mem.append(data["mst-Total memory"]) # single value for both CPUs
         self.summary = {'Experiment': k, 'what': what, 'Threads':threads,
                         'Insertion-pkg0':ins0,'Insertion-pkg1':ins1,
                         'Deletion-pkg0':dels0,'Deletion-pkg1':dels1,
+                        'BuildRootedTree-pkg0':root0,'BuildRootedTree-pkg1':root1,
                         'Galois-pkg0':galois0, 'Galois-pkg1': galois1,
                         'Memory':mem,'Galois-mem':galois_mem}
         return self.summary
