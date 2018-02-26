@@ -85,7 +85,7 @@ class Network:
         ins0 = []; ins1 = []; dels0 =[]; dels1=[]; mem = []; galois0 = []; galois1=[]; galois_mem = []
         
         for e in self.experiments:
-            if what.lower() == 'time': data = e.time
+            if what.lower() in ['time','speedup'] : data = e.time
             if what.lower() == 'energy': data = e.energy
             if what.lower() == 'power': data = e.power
             if what.lower() == 'memory': data = e.memory
