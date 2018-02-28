@@ -77,25 +77,24 @@ for a in $(seq 0.01 0.01 0.99); do
 	for b in $(seq 0.0 0.01 $rem); do
 		rem=$(echo "$rem - $b - 0.01" | bc)
 		for c in $(seq 0.0 0.01 $rem); do
+			# Unincluded
+			#SBATCH --mem=$JS_MEMORY
 			echo "#!/bin/bash
-#SBATCH -e run_logs/gen${GS}_${a}_${b}_${c}.err
-#SBATCH -o run_logs/gen${GS}_${a}_${b}_${c}.out
+#SBATCH -e run_logs/g_${GS}_${a}_${b}_${c}.err
+#SBATCH -o run_logs/g_${GS}_${a}_${b}_${c}.out
 #SBATCH -J g_r${GS}_${a}_${b}_${c}
 #SBATCH --cpus-per-task=$JS_CPUS
 #SBATCH -t 18:00:00
 #SBATCH --partition=$JS_PARTITION
-#SBATCH --mem=$JS_MEMORY
 
-./gen-datasets.sh --rmat="\'"$a $b $c"\'" $GS
+./gen-datasets.sh --rmat="\'"$a $b $c"\'" --ddir=/tmp $GS
 " > rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
 			for T in $THREADS; do
-				echo "./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS $COPY $GS $T" >> rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+				echo "./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS --ddir=/tmp $GS $T" >> rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
 			done
-			# DANGER: Be careful with this one bub
-			# sbatch rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
-
-			#run -sjob gen${GS}_${a}_${b}_${c} -serror run_logs/gen${GS}_${a}_${b}_${c}.err -soutput run_logs/gen${GS}_${a}_${b}_${c}.out ./gen-datasets.sh --rmat="'$a $b $c'" $GS >> rmat_gridsearch.sh
-			#run -serror run_logs/${GS}_${a}_${b}_${c}-${T}t.err -soutput run_logs/${GS}_${a}_${b}_${c}-${T}t.out -sjob epg${T}t-${GS}_${a}_${b}_${c} ./run-synthetic.sh --rmat="'$a $b $c'" --num-roots=$NUM_ROOTS $COPY $GS $T >> rmat_gridsearch.sh
+			FILE_PREFIX=kron-${GS}_${a}_${b}_${c}
+			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+			echo "sbatch rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch.sh
 		done
 	done
 done
