@@ -21,6 +21,9 @@ JS_CPUS=28
 JS_PARTITION=short
 JS_MEMORY=128G
 
+# Grid search parameters
+GS=20
+
 if [ "$DRYRUN" = 'True' ]; then
 	ANALYZE='echo '
 else
@@ -32,7 +35,9 @@ run()
 {
 	local cmd
 	if [ $SLURM = 'True' ]; then
-		cmd="sbatch -t $JS_TIME --cpus-per-task=$JS_CPUS --partition=$JS_PARTITION --mem=$JS_MEMORY"
+		# XXX: Memory seems to mess things up; just grab every core and you'll get all the memory
+		#cmd="sbatch -t $JS_TIME --cpus-per-task=$JS_CPUS --partition=$JS_PARTITION --mem=$JS_MEMORY"
+		cmd="sbatch -t $JS_TIME --cpus-per-task=$JS_CPUS --partition=$JS_PARTITION"
 	fi
 	if [ "$DRYRUN" = 'True' ]; then
 		cmd="echo $cmd"
@@ -70,7 +75,6 @@ done
 
 # Grid search of rmat parameters This is meant to be an unreasonable amount of jobs.
 echo "# RMAT grid search in increments of 0.01" > rmat_gridsearch.sh
-GS=20
 mkdir -p rmat_gridsearch
 for a in $(seq 0.01 0.01 0.99); do
 	rem=$(echo "0.99 - $a" | bc)
