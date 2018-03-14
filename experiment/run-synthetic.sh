@@ -29,7 +29,7 @@ NRT=32 # Number of roots
 RMAT_PARAMS="0.57 0.19 0.19 0.05"
 unset COPY # can copy to a faster, temporary filesystem
 RUN_GRAPH500=1
-RUN_GAP=0
+RUN_GAP=1
 RUN_GALOIS=1
 RUN_GRAPHBIG=1
 RUN_POWERGRAPH=1
@@ -199,7 +199,7 @@ if [ "$RUN_GAP" = 1 ]; then
 	done
 
 	echo "Running GAP TriangleCount"
-	"$GAPDIR"/tc -f "$DDIR/$d/$d.sg" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
+	"$GAPDIR"/tc -s -f "$DDIR/$d/$d.el" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
 	check_status $? tc
 fi
 

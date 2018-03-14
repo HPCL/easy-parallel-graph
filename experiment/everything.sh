@@ -74,13 +74,14 @@ for T in $THREADS; do
 done
 
 # Grid search of rmat parameters This is meant to be an unreasonable amount of jobs.
-echo "# RMAT grid search in increments of 0.01" > rmat_gridsearch.sh
-mkdir -p rmat_gridsearch
-for a in $(seq 0.01 0.01 0.99); do
+GRID=0.1
+echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GRID}.sh
+mkdir -p rmat_gridsearch_$GRID
+for a in $(seq $GRID $GRID 0.99); do
 	rem=$(echo "0.99 - $a" | bc)
-	for b in $(seq 0.0 0.01 $rem); do
-		rem=$(echo "$rem - $b - 0.01" | bc)
-		for c in $(seq 0.0 0.01 $rem); do
+	for b in $(seq 0.0 $GRID $rem); do
+		rem=$(echo "$rem - $b - $GRID" | bc)
+		for c in $(seq 0.0 $GRID $rem); do
 			# Unincluded
 			#SBATCH --mem=$JS_MEMORY
 			echo "#!/bin/bash
@@ -92,13 +93,13 @@ for a in $(seq 0.01 0.01 0.99); do
 #SBATCH --partition=$JS_PARTITION
 
 ./gen-datasets.sh --rmat="\'"$a $b $c"\'" --ddir=/tmp $GS
-" > rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+" > rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			for T in $THREADS; do
-				echo "./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS --ddir=/tmp $GS $T" >> rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
+				echo "./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS --ddir=/tmp $GS $T" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			done
 			FILE_PREFIX=kron-${GS}_${a}_${b}_${c}
-			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh
-			echo "sbatch rmat_gridsearch/g_r${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch.sh
+			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
+			echo "sbatch rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch_${GRID}.sh
 		done
 	done
 done
