@@ -29,11 +29,11 @@ NRT=32 # Number of roots
 RMAT_PARAMS="0.57 0.19 0.19 0.05"
 unset COPY # can copy to a faster, temporary filesystem
 RUN_GRAPH500=1
-RUN_GAP=1
+RUN_GAP=0
 RUN_GALOIS=1
-RUN_GRAPHMAT=0
 RUN_GRAPHBIG=1
 RUN_POWERGRAPH=1
+RUN_GRAPHMAT=1
 
 for arg in "$@"; do
 	case $arg in
@@ -214,13 +214,14 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 	else
 		export GRAPHLAB_THREADS_PER_WORKER=$OMP_NUM_THREADS
 	fi
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	CNT=0
+	for ROOT in $(cat "$DDIR/$d/$d-roots.v"); do
 		"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/$d.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
 		check_status $? graph_analytics/sssp
 	done
 
 	echo "Running PowerGraph PageRank"
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	for dummy in $(cat "$DDIR/$d/$d-roots.v"); do
 		"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$d/$d.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
 		check_status $? graph_analytics/pagerank
 	done
@@ -281,7 +282,7 @@ if [ "$RUN_GRAPHBIG" = 1 ]; then
 	echo "Running GraphBIG PageRank"
 	# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 	# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
 		"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
 		check_status $? bench_pageRank/pagerank
 	done

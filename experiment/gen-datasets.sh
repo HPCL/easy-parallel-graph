@@ -92,7 +92,7 @@ done
 if [ -z "$FILE" ]; then
 	if [ "$#" -lt 1 ]; then
 		echo 'Please provide <scale> or -f=<filename>'
-		echo $USAGE
+		echo "$USAGE"
 		exit 2
 	fi
 	case $1 in
@@ -135,33 +135,39 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		mv "$FILE.bak" "$FILE"
 		awk '!/^#/ && !/^%/{print}' "$FILE" > "$DDIR/$d/$d.e"
 	fi
+	# Add 1 to ensure it's at least 1-indexed.
+	ln "$d.e" "$d.el"
+	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.1el"
 	OLDPWD=$(pwd)
 	cd "$DDIR/$d"
 	if [ ! -f "$d.v" ] || [ "$(wc -l < $d.v)" -eq 0 ]; then
 		echo "Creating $d.v..."
-		cat  "$d.e" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
+		cat  "$d.el" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
 	fi
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$d.v" | tail -n 1) + 1))
-	echo -n  "Checking whether $d.e is weighted or unweighted..."
-	if [ $(awk '{print NF; exit}' "$d.e") -eq 2 ]; then
+	echo -n  "Checking whether $d.el is weighted or unweighted..."
+	if [ $(awk '{print NF; exit}' "$d.el") -eq 2 ]; then
 		echo " unweighted."
 		echo "SRC,DEST" > "edge.csv"
-		# Add 1 to ensure it's at least 1-indexed. It won't hurt.
-		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.el"
+
+		# We write a serialized graph to speed up GAP
+		"$GAPDIR/converter" -s -f "$d.el" -b "$d.sg"
 		# Get the roots by running SSSP and making sure you can visit a good
 		# number of vertices GAP output is e.g. "took 382 iterations".
 		# We don't want it to take 1 iteration.
+		# Sort the roots (mitigate that weird issue with GraphBIG not working for root > # vertices read)
 		echo "Getting roots."
-		"$GAPDIR/sssp" -f "$d.el" -n $(($NRT*2)) > tmp.log
-		# We write a serialized graph to speed up GAP
-		"$GAPDIR/converter" -s -f "$d.el" -b "$d.sg"
+		"$GAPDIR/roots" -f "$d.sg" -n $(($NRT*2 + 4)) > tmp.txt
+		tail -n +1 tmp.txt | sort -n | tail -n +4 > "$DDIR/$d/$d-roots.v"
+		awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
+		rm tmp.txt
 
 		echo Writing the graph transpose to "${d}-t.el"
 		awk '{print $2 " " $1}' "$d.el" > "${d}-t.el"
 
 		# GraphMat doesn't write out an unweighted graph. So we have output unit edge weights.
-		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d.el" "$d.graphmat"
+		"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$d.1el" "$d.graphmat"
 		# Convert to Galois format
 		echo "Converting to Galois format. Adding unit weights"
 		awk '{print $1 " " $2 " " 1}' "$d.el" > "$d.wel"
@@ -172,11 +178,15 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	elif [ $(awk '{print NF; exit}' "$d.e") -eq 3 ]; then
 		echo " weighted."
 		echo "SRC,DEST,WEIGHT" > "edge.csv"
-		awk '{printf "%d %d %s\n", ($1+1), ($2+1), $3}' "$d.e" > "$d.wel"
-		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.el" # For GraphMat
+		ln "$d.e" "$d.wel"
+		awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.1el" # For GraphMat
 
 		echo "Getting roots."
-		"$GAPDIR/sssp" -f "$d.el" -n $(( $NRT * 2 )) > tmp.log
+		"$GAPDIR/roots" -f "$d.1el" -n $(($NRT*2 + 4)) > tmp.txt
+		tail -n +1 tmp.txt | sort -n | tail -n +4 > "$DDIR/$d/$d-roots.1v"
+		awk '{printf "%d\n", ($1-1)}' "$DDIR/$d/${d}-roots.1v" > "$DDIR/$d/${d}-roots.v"
+		rm tmp.txt
+
 		# TODO: Use this in real-datasets, change WeightT to float if need be and recompile GAPBS
 		"$GAPDIR/converter" -s -f "$d.wel" -wb "$d.wsg"
 		# We make no assumptions so we output double precision edge weights
@@ -189,9 +199,6 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		cd "$OLDPWD"
 		exit 1
 	fi
-	awk -v NRT=$NRT '/Source/{src=$2}/took [0-9]+ iterations/{if($2>1 && cnt<NRT){printf "%d\n", src; cnt++}}' tmp.log > "$DDIR/$d/$d-roots.v"
-	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
-	rm tmp.log
 	sed 's/[:space:]+/,/' "$DDIR/$d/$d.e" >> "$DDIR/$d/edge.csv"
 	echo "ID" > "$DDIR/$d/vertex.csv"
 	sed 's/[:space:]+/,/' "$DDIR/$d/$d.v" >> "$DDIR/$d/vertex.csv"
@@ -210,6 +217,7 @@ else
 		d="$FILE_PREFIX"
 	fi
 	mkdir -p "$DDIR/$d"
+	echo "Generating for Synthetic Graphs at $d"
 	# Various ways to generate RMAT
 	../RMAT/driverForRmat $S -1 16 $RMAT_PARAMS "$DDIR/$d/$d.el"
 	#"$GRAPH500DIR/graph5002el" "$DDIR/$d/$d.graph500" "$DDIR/$d/$d.roots" "$DDIR/$d/$d.el" "$DDIR/$d/${d}-roots.v" # TODO
@@ -218,21 +226,18 @@ else
 	# Symmetrize (make undirected)
 	# Making the graph undirected results in identical output for all but TC.
 	# TODO: Investigate if the same holds for TC. If you want it directed, use below instead:
-	#EL_FILE="$DDIR/$d/${d}.el"
-	EL_FILE="$DDIR/$d/${d}-undir.el"
+	EL_FILE="$DDIR/$d/${d}.el"
+	#EL_FILE="$DDIR/$d/${d}-undir.el"
 	"$GAPDIR/converter" -g $S -s -e "$EL_FILE"
 
 	# Convert to GAP serialized format
-	"$GAPDIR/converter" -g $S -s -b "$DDIR/$d/$d.sg"
+	"$GAPDIR/converter" -f "$EL_FILE" -b "$DDIR/$d/$d.sg"
 
-	# Generate roots (usually graph500 does this but it doesn't work for scale > 22)
-	"$GAPDIR/bfs" -n $NRT -f "$DDIR/$d/$d.sg" | awk '/Source/{print $2}' > "$DDIR/$d/${d}-roots.v"
-
-	# Sort the roots (mitigate that weird issue with GraphBIG not working for root > # vertices read)
-	cat "$DDIR/$d/${d}-roots.v" | sort -n > tmp.txt
-	cp tmp.txt "$DDIR/$d/${d}-roots.v"
-	rm tmp.txt
+	# Generate roots
+	"$GAPDIR/roots" -f "$DDIR/$d/$d.sg" -n $(($NRT*2 + 4)) > tmp.txt
+	tail -n +1 tmp.txt | sort -n | tail -n +4 > "$DDIR/$d/$d-roots.v"
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
+	rm tmp.txt
 
 	# Convert to GraphBIG format
 	awk 'BEGIN{print "SRC,DEST"} {printf "%d,%d\n", $1, $2}' "$EL_FILE" > "$DDIR/$d/edge.csv"
@@ -246,7 +251,7 @@ else
 	awk '{printf "%d\n", ($1+1)}' "$DDIR/$d/${d}-roots.v" > "$DDIR/$d/${d}-roots.1v"
 	# nvertices is a bit of a misnomer; it should actually be "max vertex id"
 	nvertices=$(( $(sort -n "$DDIR/$d/vertex.csv" | tail -n 1) + 1 ))
-	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$EL_FILE" "$DDIR/$d/$d.graphmat"
+	"$GRAPHMATDIR/bin/graph_converter" --selfloops 1 --duplicatededges 0 --bidirectional --inputformat 1 --outputformat 0 --inputheader 0 --outputheader 1 --inputedgeweights 0 --outputedgeweights 2 --nvertices $nvertices "$DDIR/$d/$d.1el" "$DDIR/$d/$d.graphmat"
 
 	# Convert to Galois format.
 	# Currently, their unweighted graph format (vgr) doesn't work so we add 1s as weights.
