@@ -7,8 +7,13 @@
 USAGE="usage: parse-output.sh [--outdir=<dir>] -f=<fn>|<scale>
 	<fn> is a filename or prefix which real-datasets.sh has been run.
 	<scale> may be an integer between 1 and 99 inclusive.
-	--outdir: directory where the data is stored. default: ./output"
-
+	--outdir: directory where the data is stored. default: ./output
+	--rmat=<params>: Set a, b, c, d for RMAT parameters. These are
+		space-separated, so you'll have to quote them. You
+		can provide 3 or 4. For example, --rmat='0.5 0.2 0.2'.
+		Default: '0.57 0.19 0.19 0.05'. If the default, expects graphs
+		stored in kron-<scale>, otherwise kron-<scale>_<a>_<b>_<c>_<d>"
+RMAT_PARAMS="0.57 0.19 0.19 0.05"
 OUTDIR="$(pwd)/output"
 for arg in "$@"; do
 	case $arg in
@@ -17,6 +22,10 @@ for arg in "$@"; do
 		if [ ${OUTDIR:0:1} != '/' ]; then # Relative
 			OUTDIR="$(pwd)/$OUTDIR"
 		fi
+		shift
+	;;
+	--rmat=*)
+		RMAT_PARAMS=${arg#*=}
 		shift
 	;;
 	-f=*)
@@ -41,7 +50,11 @@ if [ -z "$FILE" ]; then
 	case $1 in
 	[1-9]|[1-9][0-9]*) # scale between 1--99 is robust enough
 		S=$1
-		FILE_PREFIX="kron-$S"
+		if ! [ "$RMAT_PARAMS" = "0.57 0.19 0.19 0.05" ]; then
+			FILE_PREFIX="kron-${S}_$(echo $RMAT_PARAMS | tr ' ' '_')"
+		else
+			FILE_PREFIX="kron-$S"
+		fi
 	;;
 	*) # Default
 		echo "<scale> must be between 1--99"

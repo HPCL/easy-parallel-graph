@@ -76,6 +76,7 @@ done
 # Grid search of rmat parameters This is meant to be an unreasonable amount of jobs.
 GRID=0.1
 echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GRID}.sh
+echo "mkdir -p output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_${GRID}.sh
 mkdir -p rmat_gridsearch_$GRID
 for a in $(seq $GRID $GRID 0.99); do
 	rem=$(echo "0.99 - $a" | bc)
@@ -100,6 +101,8 @@ for a in $(seq $GRID $GRID 0.99); do
 			FILE_PREFIX=kron-${GS}_${a}_${b}_${c}
 			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			echo "sbatch rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch_${GRID}.sh
+			echo "./parse-output.sh --rmat="\'"$a $b $c"\'" $GS" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
+			echo "mv output/parsed-kron-${GS}_${a}_${b}_${c}-*.csv output/parsed_rmat_gridsearch_$GRID"
 		done
 	done
 done
