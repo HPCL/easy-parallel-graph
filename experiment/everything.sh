@@ -10,7 +10,7 @@ mkdir -p run_logs
 mkdir -p output
 THREADS="1 2 4 8 16 24 32 40 48 56"
 S=21
-NUM_ROOTS=16
+NUM_ROOTS=5
 
 DRYRUN=True # Echo commands instead of run them
 SLURM=True
@@ -73,8 +73,12 @@ for T in $THREADS; do
 	run -serror run_logs/${S}-${T}t.err -soutput run_logs/${S}-${T}t.out -sjob epg${T}t-$S ./run-synthetic.sh --num-roots=$NUM_ROOTS $COPY $S $T
 done
 
-# Grid search of rmat parameters This is meant to be an unreasonable amount of jobs.
+# Grid search of rmat parameters. This is a lot of jobs.
 GRID=0.1
+NUM_THREADS=0
+for T in $THREADS; do NUM_THREADS=$(($NUM_THREADS + 1)); done
+TIME_FORMULA_MIN="26.25 * 2^($GS-20) * $NUM_THREADS * $NUM_ROOTS + 26 * 2^($GS-20)"
+TIMELIMIT=$(echo "1.05 * ($TIME_FORMULA_MIN) / 60 + 1" | bc):00:00
 echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GRID}.sh
 echo "mkdir -p output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_${GRID}.sh
 mkdir -p rmat_gridsearch_$GRID
@@ -90,7 +94,7 @@ for a in $(seq $GRID $GRID 0.99); do
 #SBATCH -o run_logs/g_${GS}_${a}_${b}_${c}.out
 #SBATCH -J g_r${GS}_${a}_${b}_${c}
 #SBATCH --cpus-per-task=$JS_CPUS
-#SBATCH -t 18:00:00
+#SBATCH -t $TIMELIMIT
 #SBATCH --partition=$JS_PARTITION
 
 ./gen-datasets.sh --rmat="\'"$a $b $c"\'" --ddir=/tmp $GS
@@ -102,7 +106,7 @@ for a in $(seq $GRID $GRID 0.99); do
 			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			echo "sbatch rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch_${GRID}.sh
 			echo "./parse-output.sh --rmat="\'"$a $b $c"\'" $GS" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
-			echo "mv output/parsed-kron-${GS}_${a}_${b}_${c}-*.csv output/parsed_rmat_gridsearch_$GRID"
+			echo "mv output/parsed-kron-${GS}_${a}_${b}_${c}-*.csv output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 		done
 	done
 done
