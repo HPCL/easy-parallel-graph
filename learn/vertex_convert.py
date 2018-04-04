@@ -1,26 +1,10 @@
-import pandas
 import numpy as np
-
-import matplotlib.pylab as plt
 import networkx as nx
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import classification_report
-from sklearn import metrics
-from sklearn import datasets
-from sklearn.tree import export_graphviz
-from sklearn.metrics import confusion_matrix
-import six
-from sklearn import tree
-from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.metrics import recall_score
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
-import time
 import sys
 
 #----------------------------------
 if len(sys.argv) != 2:
-    print("usage: python {} datafile.csv".format(sys.argv[0]))
+    print("usage: python {} <edgelist file>".format(sys.argv[0]))
     sys.exit(2)
 datafile = sys.argv[1]
 #---------------------------------------
@@ -44,10 +28,4 @@ for i in range(0,len(g)):
 
 G=nx.from_edgelist(g)			#convert to networkx
 nx.write_edgelist(G, "new_graph.txt" ,data = False) #write to file
-
-
-
-
-
-
 
