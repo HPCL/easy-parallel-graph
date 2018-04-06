@@ -18,7 +18,7 @@ COPY='--copy-to=/tmp' # Leave blank for no copying of datasetes
 # Job scheduler commands
 JS_TIME=10:00:00
 JS_CPUS=28
-JS_PARTITION=short
+JS_PARTITION=long
 JS_MEMORY=128G
 
 # Grid search parameters
@@ -77,7 +77,7 @@ done
 GRID=0.1
 NUM_THREADS=0
 for T in $THREADS; do NUM_THREADS=$(($NUM_THREADS + 1)); done
-TIME_FORMULA_MIN="26.25 * 2^($GS-20) * $NUM_THREADS * $NUM_ROOTS + 26 * 2^($GS-20)"
+TIME_FORMULA_MIN="40 * 2^($GS-20) * $NUM_THREADS * $NUM_ROOTS + 26 * 2^($GS-20)"
 TIMELIMIT=$(echo "1.05 * ($TIME_FORMULA_MIN) / 60 + 1" | bc):00:00
 echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GRID}.sh
 echo "mkdir -p output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_${GRID}.sh
@@ -100,7 +100,7 @@ for a in $(seq $GRID $GRID 0.99); do
 ./gen-datasets.sh --rmat="\'"$a $b $c"\'" --ddir=/tmp $GS
 " > rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			for T in $THREADS; do
-				echo "./run-synthetic.sh --num-roots=$NUM_ROOTS --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS --ddir=/tmp $GS $T" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
+				echo "./run-synthetic.sh --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS --ddir=/tmp $GS $T" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			done
 			FILE_PREFIX=kron-${GS}_${a}_${b}_${c}
 			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
@@ -110,6 +110,9 @@ for a in $(seq $GRID $GRID 0.99); do
 		done
 	done
 done
+echo "# Once all the experiments have completed, run this" >> rmat_gridsearch_${GRID}.sh
+echo "Rscript experiment_analysis.R rmat_gridsearch_${GRID}.R" >> rmat_gridsearch_${GRID}.sh
+
 
 # Generating Graphalytics datasets
 echo -e '\n# Generating Graphalytics datasets'
