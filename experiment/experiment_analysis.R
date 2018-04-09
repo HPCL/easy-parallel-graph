@@ -1,5 +1,4 @@
 # Given the results from parse-output.sh, generate some plots of the data
-# TODO: Change 16 to nvertices
 library(plyr)
 usage <- "usage: Rscript experiment_analysis.R <config_file>"
 args <- commandArgs(trailingOnly = TRUE)
@@ -10,12 +9,16 @@ if (length(args) != 1) {
 prefix <- "./output/" # The default.
 coalesce <- FALSE
 ignore_extra_features <- FALSE
+nvertices <- 16
 
 # source sets scale and threads
 source(args[1]) # This is a security vulnerability... just be careful
 
-# Assuming default edgefactor of 16
+# Assuming default edgefactor of nvertices
 stopifnot(length(scale) == 1) # Multiple scales in one go not supported yet
+if (!exists("rmat_params")) {
+	rmat_params <- ""
+}
 
 ###
 # Define some functions
@@ -28,7 +31,7 @@ time_boxplot <- function(scale, thr, algo, timing_metric = "Time") {
 	out_fn <- paste0("graphics/", algo, "_", gsub(" ", "_", timing_metric),
 			"_", scale, "-", thr, "t.pdf")
 	message("Writing to ", out_fn)
-	nedges <- 16 * 2^scale
+	nedges <- nvertices * 2^scale
 	in_fn <- paste0(prefix,"parsed-","kron-",scale,"-",thr,".csv")
 	x <- read.csv(in_fn, header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
@@ -112,7 +115,7 @@ plot_strong_scaling <- function(scaling_data, scale, threadcnts, algo) {
 			box.lwd = 1, lwd = c(2, rep(3,length(systems))),
 			col = c("#000000FF", colors),
 			bg = "white")
-	mtext(paste0("Scale = ",scale," nedges = ",16 * 2^scale), side = 3)
+	mtext(paste0("Scale = ",scale," nedges = ",nvertices * 2^scale), side = 3)
 	mtext(expression(italic(over(T[1],n*T[n]))),
 				  side = 2, las = 1, xpd = NA, outer = TRUE, adj = -0.2)
 	dev.off()
@@ -195,13 +198,25 @@ algorithm_mappings = data.frame(matrix(ncol = 2, nrow = 0))
 
 perf_df <- data.frame(matrix(ncol = length(synth_header), nrow = 0))
 colnames(perf_df) <- synth_header
-if (coalesce == TRUE) {
-	if (exists("kron_scales")) {
-		for (scl in kron_scales) {
-			for (thr in threads) {
-				# nedges \approx 16 * 2^scl
-				perf_fn <- paste0(prefix,"parsed-","kron-",scl,"-",thr,".csv")
+if (coalesce == TRUE && exists("kron_scales") ) {
+	for (scl in kron_scales) {
+		for (thr in threads) {
+			# Select the right RMAT parameters depending on the options
+			# e.g. parsed-kron-20_0.1_0.0_0.3-40.csv
+			if (length(rmat_params) == 1) {
+				if (rmat_params == "*") {
+					rmat_params <- ".*"
+				} else {
+					rmat_params <- paste0("_",gsub(" ", "_", rmat_params))
+				}
+				files <- dir(path=prefix, full.names=TRUE,
+						pattern=paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
+			} else {
+				files <- paste0(prefix,"parsed-kron-",scl,rmat_params,"-",thr,".csv")
+			}
+			for (perf_fn in files) {
 				if (!file.exists(perf_fn)) {
+					message("Could not find ",perf_fn)
 					next
 				}
 				x <- read.csv(perf_fn, header = FALSE)
@@ -218,7 +233,7 @@ if (coalesce == TRUE) {
 						data.frame(as.character(combo$package), as.numeric(combo$package)))
 				algorithm_mappings <- rbind(algorithm_mappings,
 						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
-				combo <- cbind(combo, 2^scl, 16 * 2^scl, thr)
+				combo <- cbind(combo, 2^scl, nvertices * 2^scl, thr)
 				# This is the actual order of the parsed data
 				colnames(combo) <- synth_colnames
 				combo <- combo[ ,synth_header] # it must be reordered

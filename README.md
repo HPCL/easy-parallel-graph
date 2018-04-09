@@ -26,7 +26,7 @@ Run the experiments and monitor power using `experiment/run-power.sh`. Requires 
 `build-power.sh` downloads and compiles the various projects for power measurement. Installs to `./powerlib` by default.
 
 ## Analysis
-`experiment_analysis.R:` This script takes in a config file. You can see an example in `config_template.R`. Notice here there are both synthetic and realworld experiments that can be analyzed at once. If you just want to do one or the other, uncomment out `focus_scale` and `focus_thread` for synthetic and `realworld_datasets` for realworld datasets. If you want to do performance prediction (see the `learn` directory) you must set `coalesce <- TRUE` so the experimental data gets compressed to a format amenable to machine learning.
+`experiment_analysis.R:` This script takes in a config file. You can see an example in `config_template.R`, and the variables are explained in the comments. Notice here there are both synthetic and realworld experiments that can be analyzed at once. If you just want to do one or the other, uncomment out `focus_scale` and `focus_thread` for synthetic and `realworld_datasets` for realworld datasets. If you want to do performance prediction (see the `learn` directory) you must set `coalesce <- TRUE` so the experimental data gets compressed to a format amenable to machine learning.
 
 ## Learning
 Here you can download datasets, extract features, and use performance data to train a model to predict runtime performance of the various algorithms to recommend a highly performing package for your problem.
