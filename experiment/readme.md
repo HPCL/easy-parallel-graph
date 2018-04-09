@@ -4,7 +4,7 @@ run-realworld.sh
 
 USAGE: ./run-workflow.sh [filename] [config] [num_threads]
 
-1) [filename]: Should be same of dataset name
+1) [filename]: Should be same as dataset name
 
 2) [config]:Has the following three-line pattern:
        1)dataset name 2)dataset homepage 3)dataset url
