@@ -8,7 +8,7 @@ if len(sys.argv) != 2:
 datafile = sys.argv[1]
 #---------------------------------------
 
-g = np.loadtxt(datafile, dtype=int)	#read graph
+g = np.loadtxt(datafile, dtype=str)	#read graph
 
 rename={}
 new=0
