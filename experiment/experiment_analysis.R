@@ -7,18 +7,18 @@ if (length(args) != 1) {
 }
 # Default arguments. See config_template.R for an explanation
 prefix <- "./output/" # The default.
+feature_dir <- "datasets"
 coalesce <- FALSE
 ignore_extra_features <- FALSE
 nvertices <- 16
+data_dir <- "datasets"
+rmat_params <- ""
 
 # source sets scale and threads
 source(args[1]) # This is a security vulnerability... just be careful
 
 # Assuming default edgefactor of nvertices
 stopifnot(length(scale) == 1) # Multiple scales in one go not supported yet
-if (!exists("rmat_params")) {
-	rmat_params <- ""
-}
 
 ###
 # Define some functions
@@ -198,47 +198,73 @@ algorithm_mappings = data.frame(matrix(ncol = 2, nrow = 0))
 
 perf_df <- data.frame(matrix(ncol = length(synth_header), nrow = 0))
 colnames(perf_df) <- synth_header
-if (coalesce == TRUE && exists("kron_scales") ) {
-	for (scl in kron_scales) {
-		for (thr in threads) {
-			# Select the right RMAT parameters depending on the options
-			# e.g. parsed-kron-20_0.1_0.0_0.3-40.csv
-			if (length(rmat_params) == 1) {
-				if (rmat_params == "*") {
-					rmat_params <- ".*"
+if (coalesce == TRUE) {
+	if (exists("kron_scales")) {
+		for (scl in kron_scales) {
+			for (thr in threads) {
+				# Select the right RMAT parameters depending on the options
+				# e.g. parsed-kron-20_0.1_0.0_0.3-40.csv
+				if (length(rmat_params) == 1) {
+					if (rmat_params == "*") {
+						rmat_params <- ".*"
+					} else {
+						rmat_params <- paste0("_",gsub(" ", "_", rmat_params))
+					}
+					files <- dir(path=prefix, full.names=TRUE,
+							pattern=paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
 				} else {
-					rmat_params <- paste0("_",gsub(" ", "_", rmat_params))
+					files <- paste0(prefix,"parsed-kron-",scl,rmat_params,"-",thr,".csv")
 				}
-				files <- dir(path=prefix, full.names=TRUE,
-						pattern=paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
-			} else {
-				files <- paste0(prefix,"parsed-kron-",scl,rmat_params,"-",thr,".csv")
-			}
-			for (perf_fn in files) {
-				if (!file.exists(perf_fn)) {
-					message("Could not find ",perf_fn)
-					next
+				for (perf_fn in files) {
+					if (!file.exists(perf_fn)) {
+						message("Could not find ",perf_fn)
+						next
+					}
+					feature_fn <- file.path(
+							data_dir,
+							gsub("(parsed-)|(-[0-9]+\\.csv)", "", basename(perf_fn)),
+							"features.csv")
+					if (file.exists(feature_fn)) {
+						feature_df <- read.csv(feature_fn)
+					} else {
+						error("Could not find feature file ", feature_fn)
+					}
+					x <- read.csv(perf_fn, header = FALSE)
+					# TODO: Get the actual number of edges and vertices
+					# We collect just the mean runtime from the parsed results
+					avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
+					if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
+						message(perf_fn, " with ", scl, " scale and ", thr,
+								" threads has NA for time. This is probably because an experiment failed")
+						next
+					}
+					combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
+					# This is the actual order of the parsed data
+					combo <- cbind(combo, 2^scl, nvertices * 2^scl, thr)
+					if (!ignore_extra_features) {
+						combo <- cbind(combo, feature_df)
+						colnames(combo) <- c(synth_colnames, colnames(feature_df))
+						# it must be reordered to have time at the end
+						last <- length(synth_header)
+						combo <- combo[ ,c(
+								synth_header[1:last-1],
+								colnames(feature_df),
+								synth_header[last])]
+					} else {
+						colnames(combo) <- synth_colnames
+						combo <- combo[ ,synth_header] # it must be reordered
+					}
+					combo <- cbind(
+							packagename = as.character(combo$package),
+							algorithmname = as.character(combo$algorithm),
+							combo)
+					package_mappings <- rbind(package_mappings,
+							data.frame(as.character(combo$package), as.numeric(combo$package)))
+					algorithm_mappings <- rbind(algorithm_mappings,
+							data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
+					# Note: This converts factors to integers.
+					perf_df <- rbind.fill(perf_df, combo)
 				}
-				x <- read.csv(perf_fn, header = FALSE)
-				# TODO: Get the actual number of edges and vertices
-				# We collect just the mean runtime from the parsed results
-				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
-				if (any(is.na(avg_x[[4]]))) { # Column 4 is Runtime
-					message(perf_fn, " with ", scl, " scale and ", thr,
-							" threads has NA for time. This is probably because an experiment failed")
-					next
-				}
-				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
-				package_mappings <- rbind(package_mappings,
-						data.frame(as.character(combo$package), as.numeric(combo$package)))
-				algorithm_mappings <- rbind(algorithm_mappings,
-						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
-				combo <- cbind(combo, 2^scl, nvertices * 2^scl, thr)
-				# This is the actual order of the parsed data
-				colnames(combo) <- synth_colnames
-				combo <- combo[ ,synth_header] # it must be reordered
-				# Note: This converts factors to integers.
-				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}
 	}
@@ -280,8 +306,6 @@ if (coalesce == TRUE && exists("kron_scales") ) {
 				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}
-	} else {
-		message("realworld_datasets not found. Not coalescing")
 	}
 	time_col <- which(colnames(perf_df) == "runtime")
 	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
