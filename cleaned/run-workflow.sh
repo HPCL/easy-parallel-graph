@@ -1,5 +1,5 @@
 #!/bin/bash
-# example: ./run-workflow.sh email-Enron datasets.txt
+#exmple: ./run-workflow.sh email-Enron datasets.txt
 set -e
 echo "usage: $0 <dset> <dset_config> <threads>"
 DSET="$1"
@@ -37,4 +37,3 @@ cd ../experiment
 ./gen-datasets.sh -f=datasets/$DSET/${DSET}.txt
 ./run-realworld.sh datasets/$DSET/${DSET}.txt ${no_of_threads}
 ./parse-output.sh -f=${DSET}
-
