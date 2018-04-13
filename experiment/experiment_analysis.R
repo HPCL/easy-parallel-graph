@@ -225,9 +225,11 @@ if (coalesce == TRUE) {
 							gsub("(parsed-)|(-[0-9]+\\.csv)", "", basename(perf_fn)),
 							"features.csv")
 					if (file.exists(feature_fn)) {
+						message("Reading ", feature_fn)
 						feature_df <- read.csv(feature_fn)
 					} else {
-						error("Could not find feature file ", feature_fn)
+						message("Could not find feature file ", feature_fn)
+						feature_df <- data.frame()
 					}
 					x <- read.csv(perf_fn, header = FALSE)
 					# TODO: Get the actual number of edges and vertices
@@ -241,7 +243,7 @@ if (coalesce == TRUE) {
 					combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
 					# This is the actual order of the parsed data
 					combo <- cbind(combo, 2^scl, nvertices * 2^scl, thr)
-					if (!ignore_extra_features) {
+					if (!ignore_extra_features && length(feature_df) > 0) {
 						combo <- cbind(combo, feature_df)
 						colnames(combo) <- c(synth_colnames, colnames(feature_df))
 						# it must be reordered to have time at the end
@@ -257,6 +259,7 @@ if (coalesce == TRUE) {
 					combo <- cbind(
 							packagename = as.character(combo$package),
 							algorithmname = as.character(combo$algorithm),
+							datasetname = basename(perf_fn),
 							combo)
 					package_mappings <- rbind(package_mappings,
 							data.frame(as.character(combo$package), as.numeric(combo$package)))
@@ -273,6 +276,7 @@ if (coalesce == TRUE) {
 			message("Collecting data for ", rw)
 			# Also want to include the features downloaded from SNAP
 			feature_fn <- file.path(data_dir, rw, "features.csv")
+			message("Reading ", feature_fn)
 			feature_df <- read.csv(feature_fn)
 			for (nthreads in threads) {
 				perf_fn <- paste0(prefix, "parsed-", rw, "-", nthreads, ".csv")
@@ -301,7 +305,12 @@ if (coalesce == TRUE) {
 				} else {
 					combo <- cbind(combo, nthreads, feature_df)
 				}
-				colnames(combo)[colnames(combo) == "Nodes"] <- "nvertices"
+				combo <- cbind(
+						packagename = as.character(combo$package),
+						algorithmname = as.character(combo$algorithm),
+						datasetname = basename(perf_fn),
+						combo)
+				colnames(combo)[colnames(combo) == "nodes"] <- "nvertices"
 				colnames(combo)[colnames(combo) == "Edges"] <- "nedges"
 				perf_df <- rbind.fill(perf_df, combo)
 			}
@@ -309,6 +318,10 @@ if (coalesce == TRUE) {
 	}
 	time_col <- which(colnames(perf_df) == "runtime")
 	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
+	perf_df <- perf_df[,c(
+			"packagename", "algorithmname", "datasetname",
+			setdiff(names(perf_df),c("packagename", "algorithmname", "datasetname", "runtime")),
+			"runtime")]
 	message("Writing all experimental data to ", coalesce_filename)
 	write.csv(perf_df, file = coalesce_filename,
 	          quote = FALSE, row.names = FALSE)
