@@ -243,7 +243,7 @@ if (coalesce == TRUE) {
 					combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
 					# This is the actual order of the parsed data
 					combo <- cbind(combo, 2^scl, nvertices * 2^scl, thr)
-					if (!ignore_extra_features && length(feature_df) > 0) {
+					if (!ignore_extra_features && nrow(feature_df) > 0) {
 						combo <- cbind(combo, feature_df)
 						colnames(combo) <- c(synth_colnames, colnames(feature_df))
 						# it must be reordered to have time at the end
@@ -253,6 +253,7 @@ if (coalesce == TRUE) {
 								colnames(feature_df),
 								synth_header[last])]
 					} else {
+						message("Ignoring extra features for ", perf_fn)
 						colnames(combo) <- synth_colnames
 						combo <- combo[ ,synth_header] # it must be reordered
 					}
