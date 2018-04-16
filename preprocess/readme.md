@@ -1,4 +1,3 @@
-#Markdown Preview
 
 run-realworld.sh
 
