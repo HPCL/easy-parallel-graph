@@ -12,7 +12,7 @@ algos <- c("BFS","SSSP","PageRank")        # Which algorithms you ran experiment
 # Any variables following coalesce are only used if coalesce is TRUE.
 coalesce <- TRUE
 ignore_extra_features <- FALSE # Whether to use features.csv for realworld datasets. Default: FALSE
-coalesce_filename <- paste0(prefix,'combined.csv') # Where to save the combination of all the files
+coalesce_filename <- file.path(prefix,'combined.csv') # Where to save the combination of all the files
 data_dir <- "datasets"     # The directory where the datasets (and features) are stored
 kron_scales <- c(13)       # Select whichever scales on which you ran the synthetic datasets
 rmat_params <- c("*")      # Which rmat parameters to use. Same format as in gen-datasets.sh, e.g. "0.5 0.2 0.2". Use "*" for all or comment out for default

@@ -32,7 +32,7 @@ time_boxplot <- function(scale, thr, algo, timing_metric = "Time") {
 			"_", scale, "-", thr, "t.pdf")
 	message("Writing to ", out_fn)
 	nedges <- nvertices * 2^scale
-	in_fn <- paste0(prefix,"parsed-","kron-",scale,"-",thr,".csv")
+	in_fn <- file.path(prefix,paste0("parsed-","kron-",scale,"-",thr,".csv"))
 	x <- read.csv(in_fn, header = FALSE)
 	colnames(x) <- c("Sys","Algo","Metric","Time")
 	# Generate a figure
@@ -59,7 +59,7 @@ time_boxplot <- function(scale, thr, algo, timing_metric = "Time") {
 measure_scale <- function(scale, threads, algo) {
     # Read in and average the data for BFS for each thread
     # It is wasteful to reread the parsed*-1t.csv but it simplifies the code
-	in_fn <- paste0(prefix,"parsed-","kron-",scale,"-1.csv")
+	in_fn <- file.path(prefix,paste0("parsed-","kron-",scale,"-1.csv"))
     x <- read.csv(in_fn, header = FALSE)
     colnames(x) <- c("Sys","Algo","Metric","Time")
     x$Sys <- factor(x$Sys, ordered = TRUE)
@@ -71,7 +71,7 @@ measure_scale <- function(scale, threads, algo) {
     for (ti in seq(length(threads))) {
 		# V1 -> Sys, V4 -> Time
         thr <- threads[ti]
-		in_fn <- paste0(prefix,"parsed-kron-",scale,"-",thr,".csv")
+		in_fn <- file.path(prefix,paste0("parsed-kron-",scale,"-",thr,".csv"))
         Y <- read.csv(in_fn, header = FALSE)
         ti_time <- subset(Y, Y[[2]] == algo & Y[[3]] == "Time",
                 c(V1,V4))
@@ -188,13 +188,27 @@ synth_header <- c("package", "algorithm", "nvertices", "nedges", "nthreads",
 synth_colnames <- c("package", "algorithm", "runtime", "nvertices", "nedges",
                      "nthreads") # How it appears in the parsed output. CHANGE THIS WITH CAUTION
 realworld_colnames <- c("package","algorithm","runtime") # CHANGE THIS WITH CAUTION
+
+read_and_check <- function(fn, header=TRUE) {
+	message("Reading ", fn)
+	if (!file.exists(fn)) {
+		message("Could not find ", fn)
+		return(data.frame())
+	}
+	df <- read.csv(fn, header=header)
+	colnames(df)[colnames(df)=="Nodes"] <- "nvertices"
+	colnames(df)[colnames(df)=="Edges"] <- "nedges"
+	if (nrow(df) == 0) {
+		message("No data inside csv ", fn)
+		return(data.frame())
+	}
+	return(df)
+}
+
 # XXX: perf_df isn't big enough so it's not preallocated, but it's not too slow.
 # perf_df <- data.frame(
 # 		matrix(nrow = length(threads) * length(algos) * length(kron_scales),
 # 		       ncol = length(synth_header)))
-
-package_mappings = data.frame(matrix(ncol = 2, nrow = 0))
-algorithm_mappings = data.frame(matrix(ncol = 2, nrow = 0))
 
 perf_df <- data.frame(matrix(ncol = length(synth_header), nrow = 0))
 colnames(perf_df) <- synth_header
@@ -213,25 +227,19 @@ if (coalesce == TRUE) {
 					files <- dir(path=prefix, full.names=TRUE,
 							pattern=paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
 				} else {
-					files <- paste0(prefix,"parsed-kron-",scl,rmat_params,"-",thr,".csv")
+					files <- file.path(prefix,paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
 				}
 				for (perf_fn in files) {
-					if (!file.exists(perf_fn)) {
-						message("Could not find ",perf_fn)
+					x <- read_and_check(perf_fn, header=FALSE)
+					if (nrow(x) == 0) {
+						message("Could not find ", perf_fn)
 						next
 					}
 					feature_fn <- file.path(
 							data_dir,
 							gsub("(parsed-)|(-[0-9]+\\.csv)", "", basename(perf_fn)),
 							"features.csv")
-					if (file.exists(feature_fn)) {
-						message("Reading ", feature_fn)
-						feature_df <- read.csv(feature_fn)
-					} else {
-						message("Could not find feature file ", feature_fn)
-						feature_df <- data.frame()
-					}
-					x <- read.csv(perf_fn, header = FALSE)
+					feature_df <- read_and_check(feature_fn)
 					# TODO: Get the actual number of edges and vertices
 					# We collect just the mean runtime from the parsed results
 					avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
@@ -244,13 +252,14 @@ if (coalesce == TRUE) {
 					# This is the actual order of the parsed data
 					combo <- cbind(combo, 2^scl, nvertices * 2^scl, thr)
 					if (!ignore_extra_features && nrow(feature_df) > 0) {
-						combo <- cbind(combo, feature_df)
-						colnames(combo) <- c(synth_colnames, colnames(feature_df))
+						salient_cols <- setdiff(colnames(feature_df), synth_colnames)
+						combo <- cbind(combo, feature_df[ ,salient_cols])
+						colnames(combo) <- c(synth_colnames, salient_cols)
 						# it must be reordered to have time at the end
 						last <- length(synth_header)
 						combo <- combo[ ,c(
 								synth_header[1:last-1],
-								colnames(feature_df),
+								salient_cols,
 								synth_header[last])]
 					} else {
 						message("Ignoring extra features for ", perf_fn)
@@ -258,15 +267,12 @@ if (coalesce == TRUE) {
 						combo <- combo[ ,synth_header] # it must be reordered
 					}
 					combo <- cbind(
-							packagename = as.character(combo$package),
-							algorithmname = as.character(combo$algorithm),
-							datasetname = basename(perf_fn),
-							combo)
-					package_mappings <- rbind(package_mappings,
-							data.frame(as.character(combo$package), as.numeric(combo$package)))
-					algorithm_mappings <- rbind(algorithm_mappings,
-							data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
-					# Note: This converts factors to integers.
+							dataset = basename(perf_fn),
+							package = as.character(combo$package),
+							algorithm = as.character(combo$algorithm),
+							combo[ , !(names(combo) %in% c('package','algorithm'))])
+					combo[] <- lapply(combo, as.character)
+					# Note: This next line converts factors to integers.
 					perf_df <- rbind.fill(perf_df, combo)
 				}
 			}
@@ -277,16 +283,14 @@ if (coalesce == TRUE) {
 			message("Collecting data for ", rw)
 			# Also want to include the features downloaded from SNAP
 			feature_fn <- file.path(data_dir, rw, "features.csv")
-			message("Reading ", feature_fn)
-			feature_df <- read.csv(feature_fn)
+			feature_df <- read_and_check(feature_fn)
 			for (nthreads in threads) {
-				perf_fn <- paste0(prefix, "parsed-", rw, "-", nthreads, ".csv")
-				if (!file.exists(perf_fn)) {
+				perf_fn <- file.path(prefix, paste0("parsed-", rw, "-", nthreads, ".csv"))
+				x <- read_and_check(perf_fn, header=FALSE)
+				if (nrow(x) == 0) {
+					message("Skipping ", perf_fn)
 					next
 				}
-				x <- read.csv(perf_fn, header = FALSE)
-				# XXX: We should get the actual number of edges and vertices
-
 				# We collect just the mean runtime from the parsed results
 				avg_x <- aggregate(x$V4, list(x$V1, x$V2, x$V3), FUN = mean)
 				combo <- avg_x[avg_x[[3]] == "Time", c(1,2,4) ]
@@ -297,22 +301,18 @@ if (coalesce == TRUE) {
 					next
 				}
 				colnames(combo) <- realworld_colnames
-				package_mappings <- rbind(package_mappings,
-						data.frame(as.character(combo$package), as.numeric(combo$package)))
-				algorithm_mappings <- rbind(algorithm_mappings,
-						data.frame(as.character(combo$algorithm), as.numeric(combo$algorithm)))
-				if (ignore_extra_features) {
-					combo <- cbind(combo, nthreads, feature_df[ ,c("Nodes", "Edges")])
-				} else {
+				if (!ignore_extra_features) {
 					combo <- cbind(combo, nthreads, feature_df)
+				} else {
+					combo <- cbind(combo, nthreads, feature_df[ ,c("nvertices", "nedges")])
 				}
 				combo <- cbind(
-						packagename = as.character(combo$package),
-						algorithmname = as.character(combo$algorithm),
-						datasetname = basename(perf_fn),
-						combo)
-				colnames(combo)[colnames(combo) == "nodes"] <- "nvertices"
-				colnames(combo)[colnames(combo) == "Edges"] <- "nedges"
+						dataset = basename(perf_fn),
+						package = as.character(combo$package),
+						algorithm = as.character(combo$algorithm),
+						combo[ , !(names(combo) %in% c('package','algorithm'))])
+				combo[] <- lapply(combo, as.character)
+				# Note: this next line converts factors to integers (e.g. BFS -> 1)
 				perf_df <- rbind.fill(perf_df, combo)
 			}
 		}
@@ -320,26 +320,10 @@ if (coalesce == TRUE) {
 	time_col <- which(colnames(perf_df) == "runtime")
 	perf_df <- perf_df[, c((1:ncol(perf_df))[-time_col], time_col)]
 	perf_df <- perf_df[,c(
-			"packagename", "algorithmname", "datasetname",
-			setdiff(names(perf_df),c("packagename", "algorithmname", "datasetname", "runtime")),
+			"dataset", "package", "algorithm",
+			setdiff(names(perf_df),c("dataset", "package", "algorithm", "runtime")),
 			"runtime")]
 	message("Writing all experimental data to ", coalesce_filename)
 	write.csv(perf_df, file = coalesce_filename,
 	          quote = FALSE, row.names = FALSE)
 }
-
-# Write the mappings from integer to package and integer to algorithm
-pkg_fn <- paste0(prefix, "package_mappings.csv")
-message("Writing package index mappings to ", pkg_fn)
-colnames(package_mappings) <- c("package", "index")
-package_mappings <- unique(package_mappings)
-write.csv(package_mappings,
-		file = pkg_fn, quote = FALSE, row.names = FALSE)
-
-algo_fn <- paste0(prefix, "algorithm_mappings.csv")
-message("Writing algorithm index mappings to ", algo_fn)
-colnames(algorithm_mappings) <- c("algorithm", "index")
-algorithm_mappings <- unique(algorithm_mappings)
-write.csv(algorithm_mappings,
-		file = algo_fn, quote = FALSE, row.names = FALSE)
-
