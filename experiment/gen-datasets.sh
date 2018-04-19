@@ -135,11 +135,11 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 		mv "$FILE.bak" "$FILE"
 		awk '!/^#/ && !/^%/{print}' "$FILE" > "$DDIR/$d/$d.e"
 	fi
+	cd "$DDIR/$d"
 	# Add 1 to ensure it's at least 1-indexed.
-	ln "$d.e" "$d.el"
+	ln "$DDIR/$d/$d.e" "$d.el"
 	awk '{printf "%d %d\n", ($1+1), ($2+1)}' "$d.e" > "$d.1el"
 	OLDPWD=$(pwd)
-	cd "$DDIR/$d"
 	if [ ! -f "$d.v" ] || [ "$(wc -l < $d.v)" -eq 0 ]; then
 		echo "Creating $d.v..."
 		cat  "$d.el" | tr '[:blank:]' '\n'| sort -n | uniq > $d.v
@@ -203,7 +203,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	echo "ID" > "$DDIR/$d/vertex.csv"
 	sed 's/[:space:]+/,/' "$DDIR/$d/$d.v" >> "$DDIR/$d/vertex.csv"
 	# Generate features
-	if ! [ -f "$DDIR/$d/features.csv" ]; then
+	if ! [ -f "$DDIR/$d/features.csv" ] || [ wc -l < "$DDIR/$d/features.csv" -eq 0 ]  ; then
 		$SNAPDIR/feature_csv "$DDIR/$d/$d.el" > "$DDIR/$d/features.csv"
 	fi
 ###

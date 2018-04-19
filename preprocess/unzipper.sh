@@ -6,8 +6,9 @@
 # facebook_combined
 # https://snap.stanford.edu/data/egonets-Facebook.html
 # https://snap.stanford.edu/data/facebook_combined.txt.gz
+# TODO: Add so you can specify only _some_ datasets
 
-USAGE='usage: unzipper.sh <dataset file> <dataset_dir>
+USAGE='usage: unzipper.sh <dataset file> <dataset_dir> [set of dataset names]
 		dataset_dir default: ../experiment/datasets>'
 DATA_DIR="../experiment/datasets"
 if [ -z "$1" ]; then
