@@ -2,13 +2,17 @@ import numpy as np
 import sys
 
 #----------------------------------
-if len(sys.argv) != 2:
-    print("usage: python {} <edgelist file>".format(sys.argv[0]))
-    sys.exit(2)
-datafile = sys.argv[1]
+commentstr = '#'
+if len(sys.argv) >= 2:
+    datafile = sys.argv[1]
+if len(sys.argv) == 3:
+    commentstr = sys.argv[2]
+else:
+    print("usage: python {} <edgelist file> [commentchar]".format(sys.argv[0]))
+    sys.exit(1)
 #---------------------------------------
 
-g = np.loadtxt(datafile, dtype=str)	#read graph
+g = np.loadtxt(datafile, dtype=str, comments=commentstr)	#read graph
 
 rename={}
 new=0
