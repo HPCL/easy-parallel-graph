@@ -1,3 +1,4 @@
+# Grabs features from the tables in SNAP and outputs them to a csv
 from bs4 import BeautifulSoup
 import urllib2
 import requests
@@ -29,6 +30,9 @@ def features(graph_url,g_name):
     soup = BeautifulSoup(html_page, "html.parser")
 
     table = soup.find("table", id = "datatab")
+    if table is None:
+        print("Unable to parse features URL for {} ({})".format(g_name, graph_url))
+        return
     rows = table.findAll('tr')
 
     hdr=[]
@@ -54,5 +58,7 @@ def features(graph_url,g_name):
         wr.writerow(hdr)
         wr.writerow(lst)
 
-for pages,names in zip(url,graph_name):
-    features(pages,names)
+if __name__ == '__main__':
+    for pages,names in zip(url,graph_name):
+        features(pages,names)
+

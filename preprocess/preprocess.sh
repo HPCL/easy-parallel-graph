@@ -1,5 +1,4 @@
 #!/bin/bash
-#exmple: ./run-workflow.sh email-Enron datasets.txt
 set -e
 echo "usage: $0 <dataset config txt file>"
 DSET_CONFIG="$1"
@@ -11,12 +10,13 @@ while read p; do
 		DSET=$p
 		mkdir -p ../experiment/datasets/${DSET}
 	elif [ $((i%3)) -eq 2 ] && [ "${p:0:1}" != '#' ]; then
-		: # Unused for now
+		: # Used in features.py
 	elif [ $((i%3)) -eq 0 ] && [ "${p:0:1}" != '#' ]; then
 		wget -nc $p -P ../experiment/datasets/$DSET
 	fi
 done < $DSET_CONFIG
 
+python features.py # Try to parse features (will only work for SNAP)
 ./unzipper.sh $DSET_CONFIG
 echo done unzipping..
 
@@ -38,6 +38,7 @@ while read p; do
 			echo "Unable to find graph file for $DSET. It probably has a weird filename"
 			continue
 		fi
+		# If in the first 50 lines you find a vertix > 1,000,000 then remap
 		VID=$(head -n 50 $DATASET_FILE | awk 'BEGIN{m=2^31} !/^#/ && !/^%/{if ($1<m) m=$1} END{print m}')
 		if [ "$VID" -gt 1000000 ]; then
 			echo "Remapping vertex ids"

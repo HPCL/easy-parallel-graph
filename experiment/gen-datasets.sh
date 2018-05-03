@@ -203,7 +203,7 @@ if [ "$FILE_PREFIX" != "kron-$S" ]; then
 	echo "ID" > "$DDIR/$d/vertex.csv"
 	sed 's/[:space:]+/,/' "$DDIR/$d/$d.v" >> "$DDIR/$d/vertex.csv"
 	# Generate features
-	if ! [ -f "$DDIR/$d/features.csv" ] || [ wc -l < "$DDIR/$d/features.csv" -eq 0 ]  ; then
+	if ! [ -f "$DDIR/$d/features.csv" ] || [ $(wc -l < "$DDIR/$d/features.csv") -eq 0 ]  ; then
 		$SNAPDIR/feature_csv "$DDIR/$d/$d.el" > "$DDIR/$d/features.csv"
 	fi
 ###

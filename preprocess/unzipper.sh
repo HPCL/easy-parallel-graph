@@ -33,23 +33,19 @@ while read -r line; do
 		data_url="$line"
 	fi
 	if [ "$(expr $cnt % 3 = 2)" -eq 1 ]; then
-		echo "Downloading and decompressing into $dir_name..."
-		mkdir -p $DATA_DIR/$dir_name
+		echo "Decompressing into $dir_name..."
 		zf="${data_url##*/}"
 		cd $DATA_DIR/$dir_name
-		if ! [ -f "$zf" ]; then
-			curl "$data_url" > "$zf"
-		fi
 		# TODO: The compressed files are currently deleted. -k option isn't on Talapas
 		case $zf in
-			*.tar.bz2) tar xvjf $zf   ;;
-			*.tar.gz)  tar xvzf $zf   ;;
-			*.bz2)     bunzip2 $zf    ;;
-			*.gz)      gunzip $zf     ;;
-			*.tar)     tar xvf $zf    ;;
-			*.tbz2)    tar xvjf $zf   ;;
-			*.tgz)     tar xvzf $zf   ;;
-			*.zip)     unzip $zf      ;;
+			*.tar.bz2) cp $zf $zf.bak && tar xvjf $zf && mv $zf.bak $zf  ;;
+			*.tar.gz)  cp $zf $zf.bak && tar xvzf $zf && mv $zf.bak $zf  ;;
+			*.bz2)     cp $zf $zf.bak && bunzip2 $zf  && mv $zf.bak $zf  ;;
+			*.gz)      cp $zf $zf.bak && gunzip $zf   && mv $zf.bak $zf  ;;
+			*.tar)     cp $zf $zf.bak && tar xvf $zf  && mv $zf.bak $zf  ;;
+			*.tbz2)    cp $zf $zf.bak && tar xvjf $zf && mv $zf.bak $zf  ;;
+			*.tgz)     cp $zf $zf.bak && tar xvzf $zf && mv $zf.bak $zf  ;;
+			*.zip)     cp $zf $zf.bak && unzip $zf    && mv $zf.bak $zf  ;;
 			*)         echo 'Unknown file extension' ;;
 		esac
 		if [ -d "$dir_name" ]; then
