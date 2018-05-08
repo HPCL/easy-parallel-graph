@@ -35,20 +35,28 @@ while read p; do
 			DATASET_FILE="../experiment/datasets/${DSET}/out.${DSET}"
 			COMMENT='%'
 		else
-			echo "Unable to find graph file for $DSET. It probably has a weird filename"
-			continue
+			echo "Unable to find graph file for $DSET. Assuming it's gzipped SNAP format"
 		fi
-		# If in the first 50 lines you find a vertix > 1,000,000 then remap
-		VID=$(head -n 50 $DATASET_FILE | awk 'BEGIN{m=2^31} !/^#/ && !/^%/{if ($1<m) m=$1} END{print m}')
-		if [ "$VID" -gt 1000000 ]; then
-			echo "Remapping vertex ids"
-			python vertex_convert.py $DATASET_FILE $COMMENT
-			mv new_graph.txt $DATASET_FILE
+	fi
+	if [ $((i%3)) -eq 0 ] && [ "${p:0:1}" != '#' ]; then	
+		ZIP_FN="../experiment/datasets/${DSET}/$(basename $p)"
+		if [ -f "$ZIP_FN" ]; then
+			# XXX This will not work for anything other than .gz
+			DATASET_FILE=${ZIP_FN%%.gz}
+			# If in the first 50 lines you find a vertix > 1,000,000 then remap
+			VID=$(head -n 50 $DATASET_FILE | awk 'BEGIN{m=2^31} !/^#/ && !/^%/{if ($1<m) m=$1} END{print m}')
+			if [ "$VID" -gt 1000000 ]; then
+				echo "Remapping vertex ids"
+				python vertex_convert.py $DATASET_FILE $COMMENT
+				mv new_graph.txt $DATASET_FILE
+			fi
+			echo "Generating dataset"
+			cd ../experiment
+			./gen-datasets.sh -f=datasets/$DSET/$(basename $DATASET_FILE)
+			cd -
+		else
+			echo Could not find file associated with $DSET
 		fi
-		echo "Generating dataset"
-		cd ../experiment
-		./gen-datasets.sh -f=datasets/$DSET/$(basename $DATASET_FILE)
-		cd -
 	fi
 done < $DSET_CONFIG
 
