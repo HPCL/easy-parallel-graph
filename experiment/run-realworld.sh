@@ -7,6 +7,7 @@ USAGE="usage: real-realworld.sh [--libdir=<dir>] [--ddir=<dir>] <filename> <num_
 	<filename> can be the whole file or the prefix. e.g. datasets/cit-Patents
 		or datasets/cit-Patents/cit-Patents.el
 	--libdir: repositories directory. Default: ./lib
+	--outdir: output directory. Default: ./output
 	--ddir: dataset directory. Default: ./datasets
 	--copy-to=<tmpdir>: copy to temporary storage, delete after experiment.
 		Default: Don't copy.
@@ -16,6 +17,7 @@ USAGE="usage: real-realworld.sh [--libdir=<dir>] [--ddir=<dir>] <filename> <num_
 
 DDIR="$(pwd)/datasets" # Dataset directory
 LIBDIR="$(pwd)/lib"
+OUTDIR="$(pwd)/output"
 NRT=32 # Number of roots
 RUN_GAP=1
 RUN_GALOIS=1
@@ -32,6 +34,13 @@ for arg in "$@"; do
 	;;
 	--ddir=*)
 		DDIR=${arg#*=}
+		shift
+	;;
+	--outdir=*)
+		OUTDIR=${arg#*=}
+		if [ ${OUTDIR:0:1} != '/' ]; then # Relative
+			OUTDIR="$(pwd)/$OUTDIR"
+		fi
 		shift
 	;;
 	--num-roots=*)
@@ -92,8 +101,8 @@ GRAPH500DIR="$LIBDIR/graph500"
 GRAPHMATDIR="$LIBDIR/GraphMat"
 POWERGRAPHDIR="$LIBDIR/PowerGraph"
 GALOISDIR="$LIBDIR/Galois-2.2.1/build/default"
-OUTPUT_PREFIX="$(pwd)/output/${FILE_PREFIX}/${OMP_NUM_THREADS}t"
-mkdir -p "$(pwd)/output/${FILE_PREFIX}"
+OUTPUT_PREFIX="$OUTDIR/${FILE_PREFIX}/${OMP_NUM_THREADS}t"
+mkdir -p "$OUTPUT_PREFIX/${FILE_PREFIX}"
 
 # input: Exit code of the previously-run command and the executable to search for
 # output: prints the command if the exit code is nonzero

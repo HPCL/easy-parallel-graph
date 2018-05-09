@@ -14,7 +14,7 @@ fi
 S="$1"
 dataset_file="$2"
 if [ -z "$dataset_file" ]; then
-	dataset_file="../learn/datasets.txt"
+	dataset_file="../preprocess/datasets.txt"
 fi
 
 if [ -z "$S" ] || [ "$S" = '--help' ] || [ "$S" = '-h' ]; then
