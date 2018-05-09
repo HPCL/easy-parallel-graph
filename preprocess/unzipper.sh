@@ -28,7 +28,7 @@ while read -r line; do
 	if [ "$(expr $cnt % 3 = 0)" -eq 1 ]; then
 		dir_name="$line"
 	elif [ "$(expr $cnt % 3 = 1)" -eq 1 ]; then
-		base_url="$line" # Unused
+		: # Unused
 	elif [ "$(expr $cnt % 3 = 2)" -eq 1 ]; then
 		data_url="$line"
 	fi

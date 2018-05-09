@@ -1,8 +1,13 @@
 #!/bin/bash
 set -e
-echo "usage: $0 <dataset config txt file>"
-DSET_CONFIG="$1"
+if [ -z "$1" ]; then
+	echo "usage: $0 <dataset config txt file>"
+	exit 2
+else
+	DSET_CONFIG="$1"
+fi
 
+echo "Started at $(date)"
 i=0
 while read p; do
 	let "i+=1"
@@ -35,28 +40,21 @@ while read p; do
 			DATASET_FILE="../experiment/datasets/${DSET}/out.${DSET}"
 			COMMENT='%'
 		else
-			echo "Unable to find graph file for $DSET. Assuming it's gzipped SNAP format"
+			echo "Unable to find graph file for $DSET. You need to program your own case in"
+			exit 1
 		fi
-	fi
-	if [ $((i%3)) -eq 0 ] && [ "${p:0:1}" != '#' ]; then	
-		ZIP_FN="../experiment/datasets/${DSET}/$(basename $p)"
-		if [ -f "$ZIP_FN" ]; then
-			# XXX This will not work for anything other than .gz
-			DATASET_FILE=${ZIP_FN%%.gz}
-			# If in the first 50 lines you find a vertix > 1,000,000 then remap
-			VID=$(head -n 50 $DATASET_FILE | awk 'BEGIN{m=2^31} !/^#/ && !/^%/{if ($1<m) m=$1} END{print m}')
-			if [ "$VID" -gt 1000000 ]; then
-				echo "Remapping vertex ids"
-				python vertex_convert.py $DATASET_FILE $COMMENT
-				mv new_graph.txt $DATASET_FILE
-			fi
-			echo "Generating dataset"
-			cd ../experiment
-			./gen-datasets.sh -f=datasets/$DSET/$(basename $DATASET_FILE)
-			cd -
-		else
-			echo Could not find file associated with $DSET
+		VID=$(head -n 50 $DATASET_FILE | awk 'BEGIN{m=2^31} !/^#/ && !/^%/{if ($1<m) m=$1} END{print m}')
+		if [ "$VID" -gt 1000000 ]; then
+			echo "Remapping vertex ids"
+			python vertex_convert.py $DATASET_FILE $COMMENT
+			mv new_graph.txt $DATASET_FILE
 		fi
+		echo "Generating dataset"
+		cd ../experiment
+		./gen-datasets.sh -f=datasets/$DSET/$(basename $DATASET_FILE)
+		cd -
 	fi
 done < $DSET_CONFIG
+
+echo "Completed at $(date)"
 
