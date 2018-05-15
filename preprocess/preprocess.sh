@@ -40,7 +40,9 @@ while read p; do
 			DATASET_FILE="../experiment/datasets/${DSET}/out.${DSET}"
 			COMMENT='%'
 		else
-			echo "Unable to find graph file for $DSET. You need to program your own case in"
+			echo "Unable to find graph file for $DSET. This is probably because the file"
+			echo "name is different from the dataset name. If dataset name is DSET, then"
+			echo "acceptable formats are DSET.txt (SNAP) and out.DSET (KONECT)"
 			exit 1
 		fi
 		VID=$(head -n 50 $DATASET_FILE | awk 'BEGIN{m=2^31} !/^#/ && !/^%/{if ($1<m) m=$1} END{print m}')

@@ -1,4 +1,7 @@
 # Given the results from parse-output.sh, generate some plots of the data
+# Suppose you have two files, d1/combined.csv and d2/combined.csv. If you
+# want to combine these into one. You would do
+# Rscript <( echo 'd1 <- read.csv("d1/combined.csv"); d2 <- read.csv("d2/combined.csv"); df <- merge(d1,d2,all=TRUE); write.csv(df, file="merged.csv", quote=FALSE)' )
 library(plyr)
 usage <- "usage: Rscript experiment_analysis.R <config_file>"
 args <- commandArgs(trailingOnly = TRUE)
