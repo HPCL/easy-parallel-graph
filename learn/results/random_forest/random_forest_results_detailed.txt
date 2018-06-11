@@ -1,0 +1,54 @@
+BFS(divide by 1000):
+             precision    recall  f1-score   support
+
+       good       0.98      1.00      0.99       124
+        bad       1.00      0.98      0.99       133
+
+avg / total       0.99      0.99      0.99       257
+
+Confusion Matrix:
+[[131   2]
+ [  0 124]]
+
+--------------------------------------------------------------
+2) TC(Divide by 1):
+
+             precision    recall  f1-score   support
+
+       good       0.99      1.00      1.00       116
+        bad       1.00      0.98      0.99        46
+
+avg / total       0.99      0.99      0.99       162
+
+Confusion Matrix:
+[[ 45   1]
+ [  0 116]]
+--------------------------------------------------------------
+3)PR (Divide by 10)
+
+             precision    recall  f1-score   support
+
+       good       1.00      0.99      0.99        93
+        bad       0.99      1.00      1.00       176
+
+avg / total       1.00      1.00      1.00       269
+
+Confusion Matrix:
+[[176   0]
+ [  1  92]]
+
+--------------------------------------------------------------
+4) SSSP (Divide by 1000)
+
+             precision    recall  f1-score   support
+
+       good       0.93      0.94      0.93       187
+        bad       0.86      0.83      0.84        82
+
+avg / total       0.91      0.91      0.91       269
+
+1.505562
+Confusion Matrix:
+[[ 68  14]
+ [ 11 176]]
+
