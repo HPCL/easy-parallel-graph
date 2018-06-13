@@ -93,7 +93,7 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphBIG-*.out'); do
 		grep -A 7 "Degree Centrality" "$FN" | awk -v T=0 '/time/{if(T%2==0){print $3} T++}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep 'iteration #' "$FN" | awk '{print "GraphBIG,PageRank,Iterations," $4}' >> "$OUTFN"
 		grep -A 11 "Degree Centrality" "$FN" | awk -v T=1 '/time/{if(T%2==0){print "GraphBIG,PageRank,Time," $3} T++}' >> "$OUTFN"
-	elif [ "$ALGO" = TC ]; then
+	elif [ "$ALGO" = TriangleCount ]; then
 		echo -n 'GraphBIG,TC,File reading,' >> "$OUTFN"
 		grep -A 4 "Benchmark: triangle count" "$FN" | awk '/time/{print $3}' | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		grep 'total triangle count' "$FN" | awk '{print "GraphBIG,TC,Triangles," $5}' >> "$OUTFN"
@@ -145,7 +145,7 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GraphMat-*.out'); do
 		grep -B 5 "PR Time" "$FN" | awk '/A from memory/{print "GraphMat,PageRank,Data structure build," $(NF-1)}' >> "$OUTFN"
 		grep -B 1 "PR Time" "$FN" | awk '/Completed/{print "GraphMat,PageRank,Iterations," $2}' >> "$OUTFN"
 		awk '/PR Time/{print "GraphMat,PageRank,Time," ($4/1000)}' "$FN" >> "$OUTFN"
-	elif [ "$ALGO" = TC ]; then
+	elif [ "$ALGO" = TriangleCount ]; then
 		echo -n 'GraphMat,TC,File reading,' >> "$OUTFN"
 		awk -F ':' '/Finished file read /{print $NF}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk '/A from memory/{print "GraphMat,TC,Data structure build," $(NF-1)}' "$FN" >> "$OUTFN"
@@ -179,10 +179,11 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-GAP-*.out'); do
 		awk -v NRT=$NRT '/Build Time:/{i++; if(i<=NRT)print "GAP,PageRank,Data structure build," $3}' "$FN" >> "$OUTFN"
 		grep -B 2 'Average Time:' "$FN" | awk '/^\s*[0-9]+/{print "GAP,PageRank,Iterations," $1}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,PageRank,Time," $3}' "$FN" >> "$OUTFN"
-	elif [ "$ALGO" = TC ]; then
+	elif [ "$ALGO" = TriangleCount ]; then
 		echo -n 'GAP,TC,File reading,' >> "$OUTFN"
 		awk -v NRT=$NRT '/Read Time:/{i++; if(i<=NRT)print $3}' "$FN" | awk '{s+=$1}END{print (NR>0 ? s/NR : "NA")}' >> "$OUTFN"
 		awk -v NRT=$NRT '/Average Time:/{i++; if(i<=NRT)print "GAP,TC,Time," $3}' "$FN" >> "$OUTFN"
+		awk -v NRT=$NRT '/Number of Triangles:/{i++; if(i<=NRT)print "GAP,TC,Triangles," $5}' "$FN" >> "$OUTFN"
 	fi
 done
 echo #\n
@@ -202,7 +203,7 @@ for FN in $(find "$LOG_DIR" -maxdepth 1 -name '*t-PowerGraph-*.out'); do
 	elif [ "$ALGO" = PR ]; then
 		awk -v NRT=$NRT '/Finished Running engine/{i++; if(i<=NRT)print "PowerGraph,PageRank,Time," $5}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/iterations completed/{i++; if(i<=NRT)print "PowerGraph,PageRank,Iterations," $(NF-2)}' "$ERRFN" >> "$OUTFN"
-	elif [ "$ALGO" = TC ]; then
+	elif [ "$ALGO" = TriangleCount ]; then
 		awk -v NRT=$NRT '/Counted in /{i++; if(i<=NRT)print "PowerGraph,TC,Time," $3}' "$FN" >> "$OUTFN"
 		awk -v NRT=$NRT '/[0-9]+ Triangles/{i++; if(i<=NRT)print "PowerGraph,TC,Triangles," $1}' "$FN" >> "$OUTFN"
 	fi

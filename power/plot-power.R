@@ -51,3 +51,13 @@ time_boxplot <- function(in_fn, scale, thr, algo, timing_metric = "Time", nverti
 }
 
 time_boxplot(fn, scale, thr, algo, timing_metric=timing_metric, main_title=main_title)
+x <- read.csv(fn, header = FALSE)
+algo_time <- subset(x, x$Algo == algo & x$Metric == timing_metric,
+		c("Sys","Time"))
+stopifnot(nrow(algo_time) > 0)
+algo_time$Time <- as.numeric(as.character(algo_time$Time))
+# Remove zero rows---they're invalid and don't work with the log plot
+# If some factors were coerced into NAs then there was some issue parsing
+algo_time <- algo_time[!algo_time$Time == 0.0, ]
+algo_time <- algo_time[!algo_time$Sys == "Baseline", ]
+algo_time <- droplevels(algo_time)

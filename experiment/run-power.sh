@@ -3,12 +3,11 @@
 # Just works for BFS on Graph500, GraphMat, and GAP
 # Requires root, PAPI, and the intel compiler.
 # NOTE: Before you run this, make sure the parameters are set corrrectly
-# usage: ./run-power.sh
 
 # Set some parameters and environment variables
 # CHECK THAT THESE ARE CORRECT ON YOUR OWN SYSTEM!
 # NOTE: on Arya, graph500, GraphBIG, and GAP must be recompiled.
-USAGE="usage: run-power.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
+USAGE="usage: sudo -E run-power.sh [--libdir=<dir>] [--ddir=<dir>] <scale> <num-threads>
 	--libdir: repositories directory. Default: ./powerlib
 	--ddir: dataset directory. Default: ./datasets" # 2^{<scale>} = Number of vertices.
 DDIR="$(pwd)/datasets" # Dataset directory
@@ -36,6 +35,11 @@ if [ "$#" -lt 2 ]; then
 	echo $USAGE
 	exit 2
 fi
+env | grep -q "PAPI"
+if [ "$?" -ne 0 ];
+	echo "Please ensure PAPI environment variable is set"
+	exit 1
+fi
 # Set parameters based on commmand line
 S=$1
 export OMP_NUM_THREADS=$2
@@ -48,38 +52,36 @@ POWERGRAPHDIR="$LIBDIR/PowerGraph"
 # Set other parameters and load computer-specific modules
 NRT=32 # Number of roots that we did BFS on. GraphBIG has issues with >32.
 PKG=2 # The number of physical chips
-module load intel/17
-module load papi/git
 
 # Set variables used by the script
 export SKIP_VALIDATION=1 # Graph500 by default verifies the BFS
 T=$OMP_NUM_THREADS
-FN="output/out${S}-${T}-power.log"
-ERRFN="output/out${S}-${T}-power.err"
-PFN="output/parsed${S}-${T}-power.csv"
+FN="powerout/out${S}-${T}-power.log"
+ERRFN="powerout/out${S}-${T}-power.err"
+PFN="powerout/parsed${S}-${T}-power.csv"
 
 # Run experiments
-# GAP BFS
-for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.v"); do
-	sudo "$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-${S}.el" -n 1 -s
-done > "$FN" 2> "$ERRFN"
 # Graph500 BFS
-sudo "$GRAPH500DIR/omp-csr/omp-csr" -s $S >> "$FN" 2>> "$ERRFN"
+"$GRAPH500DIR/omp-csr/omp-csr" -s $S > "$FN" 2> "$ERRFN"
+# GAP BFS
+for ROOT in $(head -n $NRT "$DDIR/kron-${S}/kron-${S}-roots.v"); do
+	sudo -E "$GAPDIR"/bfs -r $ROOT -f "$DDIR/kron-${S}/kron-${S}.el" -n 1 -s
+done >> "$FN" 2>> "$ERRFN"
 # GraphMat BFS
-for ROOT in $(head -n $NRT "$DDIR/kron-${S}-roots.1v"); do
+for ROOT in $(head -n $NRT "$DDIR/kron-${S}/kron-${S}-roots.1v"); do
 	echo "BFS root: $ROOT"
 	# WARNING: May not behave nicely if there are spaces in your DDIR, LD, or GRAPHMATDIR paths
-	sudo bash -c "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH; $GRAPHMATDIR/bin/BFS $DDIR/kron-${S}.graphmat $ROOT"
+	bash -c "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH; $GRAPHMATDIR/bin/BFS $DDIR/kron-${S}/kron-${S}.graphmat $ROOT"
 	#"$GRAPHMATDIR/bin/BFS" "$DDIR/kron-${S}.graphmat" "$ROOT"
 done >> "$FN" 2>> "$ERRFN"
 # GraphBIG BFS
-head -n $NRT "$DDIR/kron-${S}-roots.v" > "$DDIR/kron-${S}-${NRT}roots.v"
-sudo "$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "$FN" 2>> "$ERRFN"
+head -n $NRT "$DDIR/kron-${S}/kron-${S}-roots.v" > "$DDIR/kron-${S}/kron-${S}-${NRT}roots.v"
+"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/kron-${S}" --rootfile "$DDIR/kron-${S}/kron-${S}-${NRT}roots.v" --threadnum $OMP_NUM_THREADS >> "$FN" 2>> "$ERRFN"
 
 # Baseline (do nothing, just sleep)
-sudo "$GAPDIR"/sleep_baseline >> "$FN" 2>> "$ERRFN"
-sudo chown $USER "$FN"
-sudo chown $USER "$ERRFN"
+"$GAPDIR"/sleep_baseline >> "$FN" 2>> "$ERRFN"
+chown $USER "$FN"
+chown $USER "$ERRFN"
 
 # CPU
 # CPU Average Power and CPU Total Energy
@@ -127,5 +129,5 @@ grep -A 31 'RAPL on GraphBIG BFS' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY
 # Baseline
 grep -A 31 'baseline sleeping power' "$FN" | awk -v PKG=$PKG '/Average.*DRAM_ENERGY:PACKAGE[0-9]+ \*/{c++;if(c%PKG==0){print "Baseline,Sleep,RAPL Time (s)," t;t=0}else{t+=$1}}' >> "$PFN"
 
-sudo chown $USER "$PFN"
+chown $USER "$PFN"
 
