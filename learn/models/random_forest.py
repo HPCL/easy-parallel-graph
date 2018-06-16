@@ -81,6 +81,7 @@ data['dataset'] = data.dataset.astype('category')
 cat_columns = data.select_dtypes(['category']).columns
 data[cat_columns] = data[cat_columns].apply(lambda x: x.cat.codes)
 data=data.dropna()
+#data=data.drop(['runtime'], axis=1)
 #----------------------------------------------- Fit classifier
 
 
@@ -141,6 +142,22 @@ cm = confusion_matrix(Y_test, predictions)
 print cm
 #print Y_test
 print predictions
-data['classif'].to_csv('classif1.csv',na_rep='NA',index=False)
+
+#prepare for lm---------------------
+#new_test_set = pandas.DataFrame(columns=['dataset','package','algorithm','nvertices','nedges','nthreads','Nodes.in.largest.WCC','Edges.in.largest.WCC','Nodes.in.largest.SCC','Edges.in.largest.WCC','Average.clustering.coefficient','Number.of.triangles','Fraction.of.closed.triangles','Diameter..longest.shortest.path.','X90.percentile.effective.diameter','classif'])
+new_test_set = pandas.DataFrame(index=data.columns.copy())
+for index, row in data.iterrows():
+    if row['classif']== 'good':
+        new_test_set=new_test_set.append(row)
+
+
+
+#new_test_set.dropna(axis=1, how='any', inplace=True)
+new_test_set=new_test_set.dropna()
+        
+
+
+#new_test_set.to_csv('new_test.csv',na_rep='NA',index=False)
+new_test_set.to_csv('rf_trained.csv',na_rep='NA',index=False)
 
 

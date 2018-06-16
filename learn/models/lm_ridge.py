@@ -17,6 +17,7 @@ if len(sys.argv) != 2:
     sys.exit(2)
 datafile = sys.argv[1]
 data = pandas.read_csv(datafile)
+rf=pandas.read_csv("rf_trained.csv")
 
 #Convert nominal to numeric:
 data['package'] = data.package.astype('category')
@@ -26,8 +27,9 @@ cat_columns = data.select_dtypes(['category']).columns
 data[cat_columns] = data[cat_columns].apply(lambda x: x.cat.codes)
 data=data.dropna()
 
+
 #Train test split:
-data.dropna(axis=1, how='any', inplace=True)
+#data.dropna(axis=1, how='any', inplace=True)
 a = len(data.T) - 1 # The last column is the label
 X = data.iloc[:, range(0,a)]
 Y = data.iloc[:,a]
@@ -41,6 +43,26 @@ pred=model.predict(X_test)
 score_r = model.score(X_test, Y_test)
 print("Model = {}, R^2 = {}".format(model.get_params(), score_r))
 print score_r
+
+#rf_tresting--------------------------
+df1=rf
+df1.sort_values(by=['runtime'],ascending=True, inplace=True)
+df1['runtime'].to_csv("actual_runtime.csv")
+rf=rf.drop(['runtime'], axis=1)
+rf=rf.drop(['classif'], axis=1)
+rf=rf.drop(['dataset'], axis=1)
+pred_new=model.predict(rf)
+#print pred_new
+pred_new=np.sort(pred_new)
+
+df = pandas.DataFrame(pred_new)
+df.to_csv("pred_new.csv")
+
+#Get scores and analysis
+# score_rf_new = model.score(rf, Y_test)
+# print("Model = {}, R^2 = {}".format(model.get_params(), score_r))
+# print score_r
+
 
 # X_test1.to_csv('xtest.csv',na_rep='NA',index=False)
 # X_test1['dataset'].to_csv('ytest.csv',na_rep='NA',index=False)
