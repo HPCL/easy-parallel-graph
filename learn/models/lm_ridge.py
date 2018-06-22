@@ -45,6 +45,10 @@ print("Model = {}, R^2 = {}".format(model.get_params(), score_r))
 print score_r
 
 #rf_tresting--------------------------
+
+rf=rf[['dataset', 'package','algorithm', 'nvertices','nedges','nthreads','Nodes.in.largest.WCC','Edges.in.largest.WCC','Nodes.in.largest.SCC', 'Edges.in.largest.SCC', 'Average.clustering.coefficient', 'Number.of.triangles', 'Fraction.of.closed.triangles', 'Diameter..longest.shortest.path.', 'X90.percentile.effective.diameter',  'classif', 'runtime']]
+
+
 df1=rf
 df1.sort_values(by=['runtime'],ascending=True, inplace=True)
 df1['runtime'].to_csv("actual_runtime.csv")
