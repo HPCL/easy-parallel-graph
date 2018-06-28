@@ -38,7 +38,7 @@ compare_datasets <- function(all_avgs, dataset_list, algo, metric = "Time")
 			theme(axis.text.x = element_text(angle = 30, hjust = 1))
 	pdf(paste0("graphics/compare-",metric,".pdf"),
 		width = 5, height = 3)
-	p
+	print(p)
 	dev.off()
 }
 
