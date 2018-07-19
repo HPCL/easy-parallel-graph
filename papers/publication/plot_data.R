@@ -1,6 +1,9 @@
 # Generate some plots using the data parsed by ../../misc/parse-output.sh
 # Make this section be the results from the optimal number of threads
 library(ggplot2)
+library(gridExtra)
+library(scales)
+#library(cowplot) # Gives plot_grid
 prefix <- "results"
 outdir <- "graphics_new"
 
@@ -30,27 +33,37 @@ avgs <- tabulate_data <- function(thr, dataset)
 	return(avgs)
 }
 
+base_breaks <- function(n = 5){
+    function(x) {
+        axisTicks(log10(range(x, na.rm = TRUE)), log = TRUE, n = n)
+    }
+}
+
 compare_datasets <- function(all_avgs, dataset_list, metric = "Time")
 {
 	# If you just want a single algorithm, remove the "facet_wrap" line and use
 	# avgs.m.a <- subset(all_avgs, all_avgs$Metric==metric & all_avgs$Algo==algo)
 	avgs.m <- subset(all_avgs, all_avgs$Metric==metric)
-	p <- ggplot(avgs.m, aes(Dataset, Time, fill = Sys)) +
+	ylabel <- ifelse(metric == "Time", "Time (ms)", metric)
+	p <- ggplot(avgs.m, aes(Dataset, Time * 1000, fill = Sys)) +
 			geom_bar(stat = "identity", position = "dodge") +
 			facet_wrap(~Algo, scales = "free") +
 			scale_fill_brewer(palette="Accent") +
+			ylab(ylabel) +
+			# coord_trans(y="log10") + # Better than log(x*1000) but not supported
+			scale_y_continuous(trans = "log10", breaks = base_breaks()) +
 			# If your datasets are too long you can rename them
 			scale_x_discrete(labels = c("dota","Patents")) +
 			theme(axis.text.x = element_text(angle = 30, hjust = 1))
 	outfn <- paste0(outdir,"/","compare-",metric,".pdf")
-	message("Writing to", outfn)
+	message("Writing to ", outfn)
 	pdf(outfn, width = 5, height = 5)
 	print(p)
 	dev.off()
 }
 
 ###
-# Part 1: Realworld datasets
+# Realworld datasets
 ###
 dataset_list <- c("cit-Patents", "dota-league")
 thr <- 32 # Just start with one thread count
@@ -63,7 +76,73 @@ colnames(all_avgs) <- c("Dataset","Sys","Algo","Metric","Time")
 compare_datasets(all_avgs, dataset_list)
 
 ###
-# Part 2: Generate the plots for a single problem size and multiple algorithms
+# Power
+###
+# Just BFS for now.
+# Read in the data
+GRAPH500NRT <- 64 # Even though everyone else does 32.
+scale <- 23
+nedges <- nvertices * 2^scale
+filename <- paste0(prefix,"/","parsed",scale,"-32-power.csv")
+x <- read.csv(filename, header = FALSE)
+colnames(x) <- c("Sys","Algo","Metric","Value")
+bfs_cpu_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average CPU Power (W)",
+		c("Sys","Value"))
+bfs_cpu_nrg <- subset(x, x$Algo == "BFS" & x$Metric == "Total CPU Energy (J)",
+		c("Sys","Value"))
+cpu_pwr_sleep <- subset(x,
+		x$Sys == "Baseline" & x$Metric == "Average CPU Power (W)",
+		c("Sys","Value"))
+ram_pwr_sleep <- subset(x,
+		x$Sys == "Baseline" & x$Metric == "Average DRAM Power (W)",
+		c("Sys","Value"))
+bfs_cpu_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
+bfs_cpu_nrg$Sys <- factor(bfs_cpu_nrg$Sys)
+
+bfs_systems <- sort(unique(bfs_cpu_nrg$Sys))
+bfs_cpu_nrg_per_root <- numeric(length(bfs_systems))
+sleep_nrg_per_root <- numeric(length(bfs_systems))
+bfs_time_per_root <- numeric(length(bfs_systems))
+for (si in seq(length(bfs_systems))) {
+	sys <- as.character(bfs_systems[si])
+	one_sys <- subset(x,
+			x$Algo=="BFS" & x$Metric=="Average CPU Power (W)" & x$Sys==sys,
+			Value)
+	sys_time <- subset(x,
+			x$Algo=="BFS" & x$Metric=="RAPL Time (s)" & x$Sys == sys,
+			Value)
+	if (sys == "Graph500") {
+		bfs_time_per_root[si] <- mean(sys_time$Value) / GRAPH500NRT
+	} else {
+		bfs_time_per_root[si] <- mean(sys_time$Value)
+	}
+	bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value) * bfs_time_per_root[si]
+	sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) * bfs_time_per_root[si]
+}
+
+bfs_ram_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average DRAM Power (W)",
+		c("Sys","Value"))
+bfs_ram_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
+
+# Print some stuff for the table
+# We hope that sleeping uses less energy than running the BFS...
+stopifnot(all(sleep_nrg_per_root < bfs_cpu_nrg_per_root))
+intersperse <- function(vec, ele) { return(paste(vec, collapse = ele)) }
+print(paste0(" & ", intersperse(bfs_systems, " & ")))
+print(paste0("Time per Root (s) & ",
+		intersperse(bfs_time_per_root, " & ")))
+print(paste0("Average Power per Root (W) & ", intersperse(
+		aggregate(bfs_cpu_pwr$Value, list(bfs_cpu_pwr$Sys), mean)[[2]],
+		" & ")))
+print(paste0("Average Energy per Root (J) & ",
+		intersperse(bfs_cpu_nrg_per_root, " & ")))
+print(paste0("Sleeping Energy (J) & ",
+		intersperse(sleep_nrg_per_root, " & ")))
+print(paste0("Increase over sleep & ",
+		intersperse(bfs_cpu_nrg_per_root/sleep_nrg_per_root, " & ")))
+
+###
+# Generate the plots for a single problem size and multiple algorithms
 ###
 nvertices <- 16
 scale <- 22
@@ -167,7 +246,7 @@ dev.off()
 
 
 ###
-# Part 3: Generate the plots for a single algorithm and multiple problem sizes
+# Generate the plots for a single algorithm and multiple problem sizes
 ###
 threadcnts <- c(1,2,4,8,16,32,64,72)
 scale <- 22
@@ -248,72 +327,6 @@ legend(legend = c("Linear", rownames(bfs_spd)), x = "topleft", bg = "white",
 		lty = c(1:length(systems), 1), pch = c(NA_integer_, 1:length(systems)))
 dev.off()
 
-###
-# Part 4: Power
-###
-# Just BFS for now.
-# Read in the data
-GRAPH500NRT <- 64 # Even though everyone else does 32.
-scale <- 23
-nedges <- nvertices * 2^scale
-filename <- paste0(prefix,"/","parsed",scale,"-32-power.csv")
-x <- read.csv(filename, header = FALSE)
-colnames(x) <- c("Sys","Algo","Metric","Value")
-bfs_cpu_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average CPU Power (W)",
-		c("Sys","Value"))
-bfs_cpu_nrg <- subset(x, x$Algo == "BFS" & x$Metric == "Total CPU Energy (J)",
-		c("Sys","Value"))
-cpu_pwr_sleep <- subset(x,
-		x$Sys == "Baseline" & x$Metric == "Average CPU Power (W)",
-		c("Sys","Value"))
-ram_pwr_sleep <- subset(x,
-		x$Sys == "Baseline" & x$Metric == "Average DRAM Power (W)",
-		c("Sys","Value"))
-bfs_cpu_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
-bfs_cpu_nrg$Sys <- factor(bfs_cpu_nrg$Sys)
-
-bfs_systems <- sort(unique(bfs_cpu_nrg$Sys))
-bfs_cpu_nrg_per_root <- numeric(length(bfs_systems))
-sleep_nrg_per_root <- numeric(length(bfs_systems))
-bfs_time_per_root <- numeric(length(bfs_systems))
-for (si in seq(length(bfs_systems))) {
-	sys <- as.character(bfs_systems[si])
-	one_sys <- subset(x,
-			x$Algo=="BFS" & x$Metric=="Average CPU Power (W)" & x$Sys==sys,
-			Value)
-	sys_time <- subset(x,
-			x$Algo=="BFS" & x$Metric=="RAPL Time (s)" & x$Sys == sys,
-			Value)
-	if (sys == "Graph500") {
-		bfs_time_per_root[si] <- mean(sys_time$Value) / GRAPH500NRT
-	} else {
-		bfs_time_per_root[si] <- mean(sys_time$Value)
-	}
-	bfs_cpu_nrg_per_root[si] <- mean(one_sys$Value) * bfs_time_per_root[si]
-	sleep_nrg_per_root[si] <- mean(cpu_pwr_sleep$Value) * bfs_time_per_root[si]
-}
-
-bfs_ram_pwr <- subset(x, x$Algo == "BFS" & x$Metric == "Average DRAM Power (W)",
-		c("Sys","Value"))
-bfs_ram_pwr$Sys <- factor(bfs_cpu_pwr$Sys)
-
-# Print some stuff for the table
-# We hope that sleeping uses less energy than running the BFS...
-stopifnot(all(sleep_nrg_per_root < bfs_cpu_nrg_per_root))
-intersperse <- function(vec, ele) { return(paste(vec, collapse = ele)) }
-print(paste0(" & ", intersperse(bfs_systems, " & ")))
-print(paste0("Time per Root (s) & ",
-		intersperse(bfs_time_per_root, " & ")))
-print(paste0("Average Power per Root (W) & ", intersperse(
-		aggregate(bfs_cpu_pwr$Value, list(bfs_cpu_pwr$Sys), mean)[[2]],
-		" & ")))
-print(paste0("Average Energy per Root (J) & ",
-		intersperse(bfs_cpu_nrg_per_root, " & ")))
-print(paste0("Sleeping Energy (J) & ",
-		intersperse(sleep_nrg_per_root, " & ")))
-print(paste0("Increase over sleep & ",
-		intersperse(bfs_cpu_nrg_per_root/sleep_nrg_per_root, " & ")))
-
 # This plot doesn't convey the data quite right...
 # pdf(paste0(outdir,"/","bfs_cpu_energy.pdf"), width = 4.5, height = 4.5)
 # bfs_cpu_nrg_mat <- matrix(
@@ -352,16 +365,6 @@ legend(legend = c("sleep"), x = "bottomright", inset = c(0,0),
 dev.off()
 
 ###
-# Part 5: Dota-league dataset with easy-parallel-graph
-###
-dota <- read.csv(prefix,"/","parseddota-32-redo.csv", header = FALSE)
-colnames(dota) <- c("Sys","Algo","Metric","Time")
-dota$Sys <- factor(dota$Sys, ordered = TRUE)
-systems <- levels(subset(x$Sys, x$Algo == algo, c("Sys")))
-#dota_times <- subset(dota, dota$Metric == "Time", c("Sys","Algo","Time"))
-dota_means <- aggregate(dota$Time, list(dota$Sys, dota$Algo, dota$Metric), mean)
-
-###
 # Part 6: Supplementary statistics used in the paper's prose.
 ###
 sd(pr_time$Time[pr_time$Sys == "PowerGraph"]) /
@@ -392,3 +395,49 @@ sd(sssp_time$Time[sssp_time$Sys == "GraphMat"]) /
 #vioplot(bfs_t_gb, bfs_t_gm, bfs_t_gap,
 #		names=c("GraphBIG", "GraphMat", "GAP"),
 #		col="bislevels
+
+
+####
+# Plot Machine Learning Results
+###
+DATA <- "Method,Algorithm,Rsquared,RMSD,NRMSD
+R+N,SSSP,0.36,0.97,1.19
+R+N,BFS,0.15,0.36,2.08
+R+N,PR,0.19,48.72,1.59
+R+N,TC,0.08,34.71,0.50
+Ridge,SSSP,0.28,0.99,1.21
+Ridge,BFS,0.09,0.38,2.23 
+Ridge,PR,0.16,49.06,2.03 
+Ridge,TC,0.08,35.61,0.54 
+Norm,SSSP,0.36,0.98,1.36
+Norm,BFS,0.10,0.43,2.71
+Norm,PR,0.17,53.06,1.83
+Norm,TC,0.03,32.61,0.46
+None,SSSP,0.32,1.08,2.48
+None,BFS,0.08,0.53,2.92
+None,PR,0.14,55.02,2.05
+None,TC,0.02,34.82,0.68
+"
+df <- read.csv(text=DATA, sep=",", header=TRUE)
+p1 <- ggplot(df, aes(fill=Method, x=Algorithm, y=Rsquared)) +
+		geom_bar(position="dodge", stat="identity") +
+		ylab(bquote("R"^2)) +
+		theme(axis.text.x=element_text(angle = 30, hjust = 1),
+				axis.title.x=element_blank())
+		#guides(fill=FALSE) # Don't put this since just having 1 guide messes up width
+p2 <- ggplot(df, aes(fill=Method, x=Algorithm, y=RMSD)) +
+		geom_bar(position="dodge", stat="identity") +
+		theme(axis.text.x = element_text(angle = 30, hjust = 1),
+				axis.title.x=element_blank())
+p3 <- ggplot(df, aes(fill=Method, x=Algorithm, y=NRMSD)) +
+		geom_bar(position="dodge", stat="identity") +
+		theme(axis.text.x = element_text(angle = 30, hjust = 1),
+				axis.title.x=element_blank())
+outfn <- file.path(outdir, "lm.pdf")
+pdf(outfn, width = 8, height = 4)
+p <- grid.arrange(grobs = list(p1, p2, p3), nrow = 1, align = 'h',
+		top = "Linear Regression Results", bottom = "Algorithm") +
+	labs(title = "Linear Regression Results", x = "Algorithm")
+print(p)
+dev.off()
+
