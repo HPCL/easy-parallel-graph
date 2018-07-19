@@ -48,6 +48,7 @@ data = data[data.runtime != 0]
 
 #--------------------classify dataset as good or bad
 classification=[]
+teps=[]
 # m=data['runtime'].mean()
 # print m
 # for index, row in data.iterrows():
@@ -60,17 +61,26 @@ classification=[]
 
 #-------------------------------
 m = data['nedges'].divide(data['runtime']).mean()
-print m
+#print m
 #print data['runtime']
 for index, row in data.iterrows():
-    if row['nedges']/row['runtime'] < m/1000:
+    if row['nedges']/row['runtime'] > m/100:
+        row['teps']=row['nedges']/row['runtime']
         row['classification']='good'
         classification.append(row['classification'])
+        teps.append(row['teps'])
     else:
+        row['teps']=row['nedges']/row['runtime']
         row['classification']='bad'
         classification.append(row['classification'])
+        teps.append(row['teps'])
 #--------------------------------
-
+print np.std(teps)
+data['teps']=pandas.Series(teps)
+data['teps'].to_csv('teps.csv',na_rep='NA',index=False)
+sd=data['teps'].std()
+print sd
+data=data.drop('teps', axis=1)
 #print classification
 
 data['classif']=pandas.Series(classification)
@@ -104,6 +114,15 @@ print(results)
 #print(result)
 #print(mat)
 print(time.clock())
+
+# ranking=classifier.predict_proba(X_test)
+# print(classifier.predict(X_test))
+
+# good_rank= ranking[:,1]
+# rank_g=pandas.Series(good_rank)
+# print rank_g
+# X_test_df=pandas.DataFrame(X_test)
+# X_test_df['proba']=rank_g
 
 #---------------------------------- Analysis
 
@@ -146,18 +165,48 @@ print predictions
 #prepare for lm---------------------
 #new_test_set = pandas.DataFrame(columns=['dataset','package','algorithm','nvertices','nedges','nthreads','Nodes.in.largest.WCC','Edges.in.largest.WCC','Nodes.in.largest.SCC','Edges.in.largest.WCC','Average.clustering.coefficient','Number.of.triangles','Fraction.of.closed.triangles','Diameter..longest.shortest.path.','X90.percentile.effective.diameter','classif'])
 new_test_set = pandas.DataFrame(index=data.columns.copy())
+new_bad_set = pandas.DataFrame(index=data.columns.copy())
 for index, row in data.iterrows():
     if row['classif']== 'good':
         new_test_set=new_test_set.append(row)
+    if row['classif']== 'bad':
+        new_bad_set=new_bad_set.append(row) 
+
 
 
 
 #new_test_set.dropna(axis=1, how='any', inplace=True)
+
 new_test_set=new_test_set.dropna()
+new_bad_set=new_bad_set.dropna()
+
+#print new_bad_set['runtime'].min()
+
+#print new_test_set['runtime'].min()
         
+
+overall_nr = data['nedges'].divide(data['runtime']).min()
+print overall_nr
+
+overall_nr = data['nedges'].divide(data['runtime']).max()
+print overall_nr
+
+overall_nr = data['nedges'].divide(data['runtime']).mean()
+print overall_nr
+
+good_nr = new_test_set['nedges'].divide(new_test_set['runtime']).mean()
+print good_nr
+
+
+
 
 
 #new_test_set.to_csv('new_test.csv',na_rep='NA',index=False)
 new_test_set.to_csv('rf_trained.csv',na_rep='NA',index=False)
+new_bad_set.to_csv('rf_bad.csv',na_rep='NA',index=False)
+
+new_test_set.to_csv('rf_good_runtime.csv',na_rep='NA',index=False)
+new_bad_set.to_csv('rf_bad_runtime.csv',na_rep='NA',index=False)
+
 
 

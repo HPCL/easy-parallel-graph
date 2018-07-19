@@ -3,36 +3,44 @@ import matplotlib.pyplot as plt
 import pandas as pd 
 import numpy as np
 import re 
-file = r'combined-talapas.csv'
-df = pd.read_csv(file);
+import sys
 
-df1=df['package']
-df_algo=df['algorithm']
+if len(sys.argv) != 2:
+    print("usage: python {} datafile.csv".format(sys.argv[0]))
+    sys.exit(2)
+datafile = sys.argv[1]
+df = pd.read_csv(datafile)
 
-number_of_cols=np.max(df1)+1
-number_of_algos=np.max(df_algo)+1
+# file = r'combined-talapas.csv'
+# df = pd.read_csv(file);
 
-one_hot_package=np.eye(number_of_cols)[df1]
-one_hot_algo=np.eye(number_of_algos)[df_algo]
+# df1=df['package']
+# df_algo=df['algorithm']
 
-se = pd.DataFrame(one_hot_package)
-se_algo=pd.DataFrame(one_hot_algo)
+# number_of_cols=np.max(df1)+1
+# number_of_algos=np.max(df_algo)+1
 
+# one_hot_package=np.eye(number_of_cols)[df1]
+# one_hot_algo=np.eye(number_of_algos)[df_algo]
 
-merged =pd.concat([se_algo,df], axis=1)
-merged=merged.drop('algorithm',1)
-merged.columns = merged.columns.astype(str)
-merged.rename(columns={'0':'algorithm0','1':'algorithm1','2':'algorithm2','3':'algorithm3'}, inplace=True)
-
-merged =pd.concat([se,merged], axis=1)
-merged=merged.drop('package',1)
-merged.columns = merged.columns.astype(str)
-merged.rename(columns={'0':'package0','1':'package1','2':'package2','3':'package3','4':'package4'}, inplace=True)
+# se = pd.DataFrame(one_hot_package)
+# se_algo=pd.DataFrame(one_hot_algo)
 
 
+# merged =pd.concat([se_algo,df], axis=1)
+# merged=merged.drop('algorithm',1)
+# merged.columns = merged.columns.astype(str)
+# merged.rename(columns={'0':'algorithm0','1':'algorithm1','2':'algorithm2','3':'algorithm3'}, inplace=True)
 
-s = 'Name(something)'
-temp= re.search('\(([^)]+)', s).group(1)
+# merged =pd.concat([se,merged], axis=1)
+# merged=merged.drop('package',1)
+# merged.columns = merged.columns.astype(str)
+# merged.rename(columns={'0':'package0','1':'package1','2':'package2','3':'package3','4':'package4'}, inplace=True)
+
+merged=df
+
+# s = 'Name(something)'
+# temp= re.search('\(([^)]+)', s).group(1)
 #print temp
 #df = df.fillna('')
 
