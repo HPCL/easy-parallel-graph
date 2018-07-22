@@ -8,21 +8,22 @@
 # Talapas partitions: short, long, gpu, longgpu, fat, longfat, preempt, jhp, steck
 mkdir -p run_logs
 mkdir -p output
-THREADS="1 2 4 8 16 24 32 40 48 56"
-S=21
-NUM_ROOTS=5
+THREADS="1 2 4 8 16 24 27 28 32 40 48 54 56"
+S=22
+NUM_ROOTS=10
+REALWORLD_DATASET_FN=../preprocess/datasets2.txt
 
 DRYRUN=True # Echo commands instead of run them
 SLURM=True
 COPY='--copy-to=/tmp' # Leave blank for no copying of datasetes
 # Job scheduler commands
-JS_TIME=10:00:00
+JS_TIME=16:00:00
 JS_CPUS=28
 JS_PARTITION=long
-JS_MEMORY=128G
+JS_MEMORY=128G # UNUSED
 
 # Grid search parameters
-GS=20
+GS=22
 
 if [ "$DRYRUN" = 'True' ]; then
 	ANALYZE='echo '
@@ -74,11 +75,17 @@ for T in $THREADS; do
 done
 
 # Grid search of rmat parameters. This is a lot of jobs.
-GRID=0.1
+# Steps:
+# 1. Generate the RMAT
+# 2. Run experiment, copying to /tmp for speed
+# 3. Remove from tmp
+# 4. Once all experiments have run, parse and move the parsed files
+GRID=0.05
 NUM_THREADS=0
 for T in $THREADS; do NUM_THREADS=$(($NUM_THREADS + 1)); done
-TIME_FORMULA_MIN="40 * 2^($GS-20) * $NUM_THREADS * $NUM_ROOTS + 26 * 2^($GS-20)"
-TIMELIMIT=$(echo "1.05 * ($TIME_FORMULA_MIN) / 60 + 1" | bc):00:00
+TIME_FORMULA_MIN="40 * 2^($GS-20) * $NUM_ROOTS + 26 * 2^($GS-20)"
+TIMELIMIT=$(echo "1.1 * ($TIME_FORMULA_MIN) / 60 + 1" | bc):00:00
+TIMELIMIT_GEN=$(echo " 45 * 2^($GS-20) / 60" | bc):00:00
 echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GRID}.sh
 echo "mkdir -p output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_${GRID}.sh
 mkdir -p rmat_gridsearch_$GRID
@@ -87,6 +94,7 @@ for a in $(seq $GRID $GRID 0.99); do
 	for b in $(seq 0.0 $GRID $rem); do
 		rem=$(echo "$rem - $b - $GRID" | bc)
 		for c in $(seq 0.0 $GRID $rem); do
+			gf="rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh"
 			# Unincluded
 			#SBATCH --mem=$JS_MEMORY
 			echo "#!/bin/bash
@@ -94,22 +102,54 @@ for a in $(seq $GRID $GRID 0.99); do
 #SBATCH -o run_logs/g_${GS}_${a}_${b}_${c}.out
 #SBATCH -J g_r${GS}_${a}_${b}_${c}
 #SBATCH --cpus-per-task=$JS_CPUS
-#SBATCH -t $TIMELIMIT
+#SBATCH -t $TIMELIMIT_GEN
 #SBATCH --partition=$JS_PARTITION
 
-./gen-datasets.sh --rmat="\'"$a $b $c"\'" --ddir=/tmp $GS
-" > rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
+./gen-datasets.sh --rmat="\'"$a $b $c"\'" $GS
+" > "$gf"
 			for T in $THREADS; do
-				echo "./run-synthetic.sh --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS --ddir=/tmp $GS $T" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
+				rf="rmat_gridsearch_$GRID/r_t${T}_${GS}_${a}_${b}_${c}.sh"
+			echo "#!/bin/bash
+#SBATCH -e run_logs/r_t${T}_${GS}_${a}_${b}_${c}.err
+#SBATCH -o run_logs/r_t{$T}_${GS}_${a}_${b}_${c}.out
+#SBATCH -J g_r${GS}_${a}_${b}_${c}
+#SBATCH --cpus-per-task=$JS_CPUS
+#SBATCH -t $TIMELIMIT
+#SBATCH --partition=$JS_PARTITION
+" > "$rf"
+				echo "./run-synthetic.sh --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS $COPY $GS $T" >> "$rf"
+				# echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> "$rf" # --copy-to handles this
 			done
 			FILE_PREFIX=kron-${GS}_${a}_${b}_${c}
-			echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 			echo "sbatch rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch_${GRID}.sh
-			echo "./parse-output.sh --rmat="\'"$a $b $c"\'" $GS" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
-			echo "mv output/parsed-kron-${GS}_${a}_${b}_${c}-*.csv output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_$GRID/g_r${GS}_${a}_${b}_${c}.sh
 		done
 	done
 done
+
+for a in $(seq $GRID $GRID 0.99); do
+	rem=$(echo "0.99 - $a" | bc)
+	for b in $(seq 0.0 $GRID $rem); do
+		rem=$(echo "$rem - $b - $GRID" | bc)
+		for c in $(seq 0.0 $GRID $rem); do
+			for T in $THREADS; do
+				echo "sbatch rmat_gridsearch_$GRID/r_t${T}_${GS}_${a}_${b}_${c}.sh" >> rmat_gridsearch_${GRID}.sh
+			done
+		done
+	done
+done
+for a in $(seq $GRID $GRID 0.99); do
+	rem=$(echo "0.99 - $a" | bc)
+	for b in $(seq 0.0 $GRID $rem); do
+		rem=$(echo "$rem - $b - $GRID" | bc)
+		for c in $(seq 0.0 $GRID $rem); do
+			for T in $THREADS; do
+				echo "./parse-output.sh --rmat="\'"$a $b $c"\'" $GS" >> rmat_gridsearch_${GRID}.sh
+				echo "mv output/parsed-kron-${GS}_${a}_${b}_${c}-*.csv output/parsed_rmat_gridsearch_$GRID" >> rmat_gridsearch_${GRID}.sh
+			done
+		done
+	done
+done
+
 echo "# Once all the experiments have completed, run this" >> rmat_gridsearch_${GRID}.sh
 echo "Rscript experiment_analysis.R rmat_gridsearch_${GRID}.R" >> rmat_gridsearch_${GRID}.sh
 
@@ -125,8 +165,8 @@ for DSET in $GA_DATASETS; do
 done
 # Generating SNAP and KONECT datasets'
 echo -e '\n# Generating SNAP and KONECT datasets'
-${ANALYZE}../preprocess/unzipper.sh ../preprocess/datasets.txt datasets
-S_K_DATASETS=$(awk -v ORS=' ' 'FNR%3 == 1 && !/^#/ {print}' ../preprocess/datasets.txt )
+${ANALYZE}../preprocess/unzipper.sh $REALWORLD_DATASET_FN datasets
+S_K_DATASETS=$(awk -v ORS=' ' 'FNR%3 == 1 && !/^#/ {print}' $REALWORLD_DATASET_FN )
 for DSET in $S_K_DATASETS; do
 	if [ -f "datasets/$DSET/out.$DSET" ]; then # KONECT
 		run -serror run_logs/gen${DSET}.err -soutput run_logs/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/out.${DSET}
