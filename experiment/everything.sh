@@ -111,7 +111,7 @@ for a in $(seq $GRID $GRID 0.99); do
 				rf="rmat_gridsearch_$GRID/r_t${T}_${GS}_${a}_${b}_${c}.sh"
 			echo "#!/bin/bash
 #SBATCH -e run_logs/r_t${T}_${GS}_${a}_${b}_${c}.err
-#SBATCH -o run_logs/r_t{$T}_${GS}_${a}_${b}_${c}.out
+#SBATCH -o run_logs/r_t${T}_${GS}_${a}_${b}_${c}.out
 #SBATCH -J g_r${GS}_${a}_${b}_${c}
 #SBATCH --cpus-per-task=$JS_CPUS
 #SBATCH -t $TIMELIMIT

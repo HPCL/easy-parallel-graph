@@ -299,7 +299,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 	rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR}.out
 	echo "Running Galois BFS"
 	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" > "${OUTPUT_PREFIX}-Galois-BFS.out"
+		"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-BFS.out"
 		check_status $? bfs/bfs
 	done
 
