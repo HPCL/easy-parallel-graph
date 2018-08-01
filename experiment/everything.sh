@@ -112,7 +112,7 @@ for a in $(seq $GRID $GRID 0.99); do
 			echo "#!/bin/bash
 #SBATCH -e run_logs/r_t${T}_${GS}_${a}_${b}_${c}.err
 #SBATCH -o run_logs/r_t${T}_${GS}_${a}_${b}_${c}.out
-#SBATCH -J g_r${GS}_${a}_${b}_${c}
+#SBATCH -J r_t${T}_${GS}_${a}_${b}_${c}
 #SBATCH --cpus-per-task=$JS_CPUS
 #SBATCH -t $TIMELIMIT
 #SBATCH --partition=$JS_PARTITION
