@@ -14,15 +14,15 @@ coalesce <- TRUE
 ignore_extra_features <- FALSE # Whether to use features.csv for realworld datasets. Default: FALSE
 coalesce_filename <- file.path(prefix,'combined.csv') # Where to save the combination of all the files
 data_dir <- "datasets"     # The directory where the datasets (and features) are stored
-kron_scales <- c(13)       # Select whichever scales on which you ran the synthetic datasets
+kron_scales <- c(22)       # Select whichever scales on which you ran the synthetic datasets
 rmat_params <- c("*")      # Which rmat parameters to use. Same format as in gen-datasets.sh, e.g. "0.5 0.2 0.2". Use "*" for all or comment out for default
 
 # Selects the realworld datasets on which you ran experiments
 # These are expected to be inside data_dir
-realworld_datasets <- c('dota-league')
+# realworld_datasets <- c('dota-league')
 
 # Here is a more complex example, such as if you downloaded the datasets and automated that part.
 # From datasets.txt we want just the directory names, which are every 3rd line, ignoring comments
-#realworld_datasets <- read.csv('../preprocess/datasets.txt', header = FALSE, comment.char = "#")
-#realworld_datasets <- as.character(realworld_datasets[seq(1, nrow(realworld_datasets), 3), 1])
+realworld_datasets <- read.csv('../preprocess/datasets.txt', header = FALSE, comment.char = "#")
+realworld_datasets <- as.character(realworld_datasets[seq(1, nrow(realworld_datasets), 3), 1])
 

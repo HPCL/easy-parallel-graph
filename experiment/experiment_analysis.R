@@ -12,6 +12,7 @@ if (length(args) != 1) {
 prefix <- "./output/" # The default.
 feature_dir <- "datasets"
 coalesce <- FALSE
+coalesce_filename <- file.path(prefix,'combined.csv')
 ignore_extra_features <- FALSE
 nvertices <- 16
 data_dir <- "datasets"
@@ -222,8 +223,10 @@ if (coalesce == TRUE) {
 				# Select the right RMAT parameters depending on the options
 				# e.g. parsed-kron-20_0.1_0.0_0.3-40.csv
 				if (length(rmat_params) == 1) {
-					if (rmat_params == "*") {
+					if (rmat_params == "*" || rmat_params == ".*") {
 						rmat_params <- ".*"
+					} else if (rmat_params == "") {
+						# Leave as-is
 					} else {
 						rmat_params <- paste0("_",gsub(" ", "_", rmat_params))
 					}
@@ -231,6 +234,11 @@ if (coalesce == TRUE) {
 							pattern=paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
 				} else {
 					files <- file.path(prefix,paste0("parsed-kron-",scl,rmat_params,"-",thr,".csv"))
+				}
+				if (length(files) == 0) {
+					stop("Cannot find files looking like ",
+							file.path(prefix, paste0(
+							"parsed-kron-",scl,rmat_params,"-",thr,".csv")))
 				}
 				for (perf_fn in files) {
 					x <- read_and_check(perf_fn, header=FALSE)
