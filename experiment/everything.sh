@@ -23,7 +23,7 @@ JS_PARTITION=long
 JS_MEMORY=128G # UNUSED
 
 # Grid search parameters
-GS=23
+GS=25
 GRID=0.1
 
 if [ "$DRYRUN" = 'True' ]; then
@@ -85,9 +85,9 @@ NUM_THREADS=0
 for T in $THREADS; do
 	NUM_THREADS=$(($NUM_THREADS + 1));
 done
-TIME_FORMULA_MIN="40 * 2^($GS-20) * $NUM_ROOTS + 26 * 2^($GS-20)"
+TIME_FORMULA_MIN="20 * 2^($GS-19) * $NUM_ROOTS + 13 * 2^($GS-19)"
 TIMELIMIT=$(echo "1.1 * ($TIME_FORMULA_MIN) / 60 + 1" | bc):00:00
-TIMELIMIT_GEN=$(echo " 45 * 2^($GS-20) / 60" | bc):00:00
+TIMELIMIT_GEN=$(echo "1 + 4 * 2^($GS-15) / 60" | bc):00:00
 echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GS}_${GRID}.sh
 mkdir -p rmat_gridsearch_${GS}_${GRID}
 MAX_R=$(echo "1.0 - $GRID" | bc)
@@ -107,7 +107,7 @@ for a in $(seq $GRID $GRID $MAX_R); do
 				#SBATCH --cpus-per-task=$JS_CPUS
 				#SBATCH -t $TIMELIMIT_GEN
 				#SBATCH --partition=$JS_PARTITION
-				./gen-datasets.sh --rmat=\'$a $b $c\' $GS
+				./gen-datasets.sh --rmat='$a $b $c' $GS
 			EOM
 			echo "$BATCH" > "$gf"
 			for T in $THREADS; do
