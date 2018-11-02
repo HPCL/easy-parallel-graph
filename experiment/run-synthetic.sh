@@ -19,7 +19,9 @@ USAGE="usage: run-synthetic.sh [options] <scale> <num-threads>
 		space-separated, so you'll have to quote them. You
 		can provide 3 or 4. For example, --rmat='0.5 0.2 0.2'.
 		Default: '0.57 0.19 0.19 0.05'. If the default, expects graphs
-		stored in kron-<scale>, otherwise kron-<scale>_<a>_<b>_<c>_<d>"
+		stored in kron-<scale>, otherwise kron-<scale>_<a>_<b>_<c>_<d>
+	--no-bfs, --no-pr, --no-sssp, --no-tc: Whether to run the
+		algorithm or not. By default, will run all algorithms."
 
 # The edge factor (number of edges per vertex) is the default of 16.
 DDIR="$(pwd)/datasets" # Dataset directory
@@ -34,6 +36,10 @@ RUN_GALOIS=1
 RUN_GRAPHBIG=1
 RUN_POWERGRAPH=1
 RUN_GRAPHMAT=1
+RUN_BFS=1
+RUN_SSSP=1
+RUN_TC=1
+RUN_PR=1
 
 for arg in "$@"; do
 	case $arg in
@@ -76,6 +82,22 @@ for arg in "$@"; do
 	;;
 	--rmat=*)
 		RMAT_PARAMS=${arg#*=}
+		shift
+	;;
+	--no-bfs)
+		RUN_BFS=0
+		shift
+	;;
+	--no-pr)
+		RUN_PR=0
+		shift
+	;;
+	--no-sssp)
+		RUN_SSSP=0
+		shift
+	;;
+	--no-tc)
+		RUN_TC=0
 		shift
 	;;
 	-h|--help|-help)
@@ -153,7 +175,7 @@ echo get overwritten.
 
 echo Starting experiment with $OMP_NUM_THREADS threads at $(date)
 
-if [ "$RUN_GRAPH500" = 1 ]; then 
+if [ "$RUN_GRAPH500" = 1 ] && [ "$RUN_BFS" = 1 ]; then 
 	echo -n "Running Graph500 BFS"
 	#omp-csr/omp-csr -s $S -o "$DDIR/$d/$d.graph500" -r "$DDIR/$d/$d.roots"
 	# ^ This isn't working, so just regenerate the data ^
@@ -175,38 +197,45 @@ fi
 # GAP
 if [ "$RUN_GAP" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-GAP-{BFS,SSSP,PR,TC}.out
-	echo "Running GAP BFS"
 	# It would be nice if you could read in a file for the roots
 	# Just do one trial to be the same as the rest of the experiments
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GAPDIR"/bfs -r $ROOT -f "$DDIR/$d/$d.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
-		check_status $? bfs
-	done
+	if [ "$RUN_BFS" = 1 ]; then
+		echo "Running GAP BFS"
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GAPDIR"/bfs -r $ROOT -f "$DDIR/$d/$d.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
+			check_status $? bfs
+		done
+	fi
 
-	echo "Running GAP SSSP"
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		# Currently, SSSP throws an error when you try to use sg and not wsg file format.
-		"$GAPDIR"/sssp -r $ROOT -f "$DDIR/$d/$d.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
-		check_status $? sssp
-	done
+	if [ "$RUN_SSSP" = 1 ]; then
+		echo "Running GAP SSSP"
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			# Currently, SSSP throws an error when you try to use sg and not wsg file format.
+			"$GAPDIR"/sssp -r $ROOT -f "$DDIR/$d/$d.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
+			check_status $? sssp
+		done
+	fi
 
-	echo "Running GAP PageRank"
-	# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
-	# error = sum(|newPR - oldPR|)
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GAPDIR"/pr -f "$DDIR/$d/$d.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
-		check_status $? pr
-	done
+	if [ "$RUN_PR" = 1 ]; then
+		echo "Running GAP PageRank"
+		# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
+		# error = sum(|newPR - oldPR|)
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GAPDIR"/pr -f "$DDIR/$d/$d.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
+			check_status $? pr
+		done
+	fi
 
-	echo "Running GAP TriangleCount"
-	"$GAPDIR"/tc -s -f "$DDIR/$d/$d.el" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
-	check_status $? tc
+	if [ "$RUN_TC" = 1 ]; then
+		echo "Running GAP TriangleCount"
+		"$GAPDIR"/tc -s -f "$DDIR/$d/$d.el" -n $NRT >> "${OUTPUT_PREFIX}-GAP-TC.out"
+		check_status $? tc
+	fi
 fi
 
 # PowerGraph
 if [ "$RUN_POWERGRAPH" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-PowerGraph-{SSSP,PR,TC}.{out,err}
-	echo "Running PowerGraph SSSP"
 	# Note that PowerGraph also sends diagnostic output to stderr so we redirect that too.
 	if [ "$OMP_NUM_THREADS" -gt 128 ]; then
 		export GRAPHLAB_THREADS_PER_WORKER=128
@@ -214,110 +243,139 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 	else
 		export GRAPHLAB_THREADS_PER_WORKER=$OMP_NUM_THREADS
 	fi
-	CNT=0
-	for ROOT in $(cat "$DDIR/$d/$d-roots.v"); do
-		"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/$d.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
-		check_status $? graph_analytics/sssp
-	done
+	
+	if [ "$RUN_SSSP" = 1 ]; then
+		echo "Running PowerGraph SSSP"
+		for ROOT in $(cat "$DDIR/$d/$d-roots.v"); do
+			"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/$d.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
+			check_status $? graph_analytics/sssp
+		done
+	fi
 
-	echo "Running PowerGraph PageRank"
-	for dummy in $(cat "$DDIR/$d/$d-roots.v"); do
-		"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$d/$d.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
-		check_status $? graph_analytics/pagerank
-	done
+	if [ "$RUN_PR" = 1 ]; then
+		echo "Running PowerGraph PageRank"
+		for dummy in $(cat "$DDIR/$d/$d-roots.v"); do
+			"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$d/$d.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
+			check_status $? graph_analytics/pagerank
+		done
+	fi
 
-	echo "Running PowerGraph TriangleCount"
-	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/$d/$d.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
-		check_status $? undirected_triangle_count
-	done
+	if [ "$RUN_TC" = 1 ]; then
+		echo "Running PowerGraph TriangleCount"
+		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/$d/$d.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
+			check_status $? undirected_triangle_count
+		done
+	fi
 fi
 
 # GraphMat
 if [ "$RUN_GRAPHMAT" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-GraphMat-{BFS,SSSP,PR}.out
-	echo "Running GraphMat BFS"
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
-		echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
-		"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
-		check_status $? 'bin/BFS'
-	done
+	if [ "$RUN_BFS" = 1 ]; then
+		echo "Running GraphMat BFS"
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+			echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+			"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
+			check_status $? 'bin/BFS'
+		done
+	fi
 
-	echo "Running GraphMat SSSP"
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
-		echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
-		"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
-		check_status $? bin/SSSP
-	done
+	if [ "$RUN_SSSP" = 1 ]; then
+		echo "Running GraphMat SSSP"
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+			echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+			"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
+			check_status $? bin/SSSP
+		done
+	fi
 
-	echo "Running GraphMat PageRank"
-	# PageRank stops when none of the vertices change
-	# GraphMat has been modified so alpha = 0.15
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
-		"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
-		check_status $? bin/PageRank
-	done
+	if [ "$RUN_PR" = 1 ]; then
+		echo "Running GraphMat PageRank"
+		# PageRank stops when none of the vertices change
+		# GraphMat has been modified so alpha = 0.15
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+			"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
+			check_status $? bin/PageRank
+		done
+	fi
 
 	# TODO: Triangle Counting gives different answers on every platform
-	echo "Running GraphMat TriangleCount"
-	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
-		"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
-		check_status $? bin/TriangleCounting
-	done
+	if [ "$RUN_TC" = 1 ]; then
+		echo "Running GraphMat TriangleCount"
+		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+			"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
+			check_status $? bin/TriangleCounting
+		done
+	fi
 fi
 
 # GraphBIG
 if [ "$RUN_GRAPHBIG" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-GraphBIG-{BFS,SSSP,PR,TC}.out
-	echo "Running GraphBIG BFS"
-	# For this, one needs a vertex.csv file and and an edge.csv.
-	head -n $NRT "$DDIR/$d/$d-roots.v" > "$DDIR/$d/$d-${NRT}roots.v"
-	"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
-	check_status $? bench_BFS/bfs
+	if [ "$RUN_BFS" = 1 ]; then
+		echo "Running GraphBIG BFS"
+		# For this, one needs a vertex.csv file and and an edge.csv.
+		head -n $NRT "$DDIR/$d/$d-roots.v" > "$DDIR/$d/$d-${NRT}roots.v"
+		"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
+		check_status $? bench_BFS/bfs
+	fi
 
-	echo "Running GraphBIG SSSP"
-	"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
-	check_status $? bench_shortestPath/sssp
+	if [ "$RUN_SSSP" = 1 ]; then
+		echo "Running GraphBIG SSSP"
+		"$GRAPHBIGDIR/benchmark/bench_shortestPath/sssp" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-SSSP.out"
+		check_status $? bench_shortestPath/sssp
+	fi
 
-	echo "Running GraphBIG PageRank"
-	# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
-	# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
-		check_status $? bench_pageRank/pagerank
-	done
+	if [ "$RUN_PR" = 1 ]; then
+		echo "Running GraphBIG PageRank"
+		# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
+		# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
+		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
+			check_status $? bench_pageRank/pagerank
+		done
+	fi
 
-	echo "Running GraphBIG TriangleCount"
-	for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
-		check_status $? bench_triangleCount/tc
-	done
+	if [ "$RUN_TC" = 1 ]; then
+		echo "Running GraphBIG TriangleCount"
+		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
+			check_status $? bench_triangleCount/tc
+		done
+	fi
 fi
 
 # Galois
 if [ "$RUN_GALOIS" = 1 ]; then 
 	rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR}.out
-	echo "Running Galois BFS"
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-BFS.out"
-		check_status $? bfs/bfs
-	done
+	if [ "$RUN_BFS" = 1 ]; then
+		echo "Running Galois BFS"
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-BFS.out"
+			check_status $? bfs/bfs
+		done
+	fi
+	
+	if [ "$RUN_SSSP" = 1 ]; then
+		echo "Running Galois SSSP"
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			# TODO: Adjust delta parameter -delta=<int>
+			# Currently, SSSP throws an error when you try to use sg and not wsg file format.
+			"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
+			check_status $? sssp/sssp
+		done
+	fi
 
-	echo "Running Galois SSSP"
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		# TODO: Adjust delta parameter -delta=<int>
-		# Currently, SSSP throws an error when you try to use sg and not wsg file format.
-		"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
-		check_status $? sssp/sssp
-	done
-
-	echo "Running Galois PageRank"
-	# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
-	# error = sum(|newPR - oldPR|)
-	for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
-		"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/$d/$d-t.gr" "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
-		check_status $? pagerank/pagerank
-	done
+	if [ "$RUN_PR" = 1 ]; then
+		echo "Running Galois PageRank"
+		# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
+		# error = sum(|newPR - oldPR|)
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/$d/$d-t.gr" "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
+			check_status $? pagerank/pagerank
+		done
+	fi
 
 	# No triangle count for Galois
 fi
