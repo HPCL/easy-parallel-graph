@@ -11,6 +11,8 @@ USAGE="usage: run-synthetic.sh [options] <scale> <num-threads>
 	--libdir: repositories directory. Default: ./lib
 	--ddir: dataset directory. Default: ./datasets
 	--outdir: output directory. Default: ./output
+	--best-root: Use the same root for all experiments to decrease
+		runtime variance. Will pick random root with most reachable nodes.
 	--num-roots: Number of roots to run search on or number of experiments
 		to run. Largely determines runtime. Default: 32
 	--copy-to=<tmpdir>: copy graphs to <tmpdir>, delete after experiment.
@@ -21,7 +23,10 @@ USAGE="usage: run-synthetic.sh [options] <scale> <num-threads>
 		Default: '0.57 0.19 0.19 0.05'. If the default, expects graphs
 		stored in kron-<scale>, otherwise kron-<scale>_<a>_<b>_<c>_<d>
 	--no-bfs, --no-pr, --no-sssp, --no-tc: Whether to run the
-		algorithm or not. By default, will run all algorithms."
+		algorithm or not. By default, will run all algorithms.
+	--no-{gap,graph500,galois,graphbig,graphmat,powergraph}: Whether
+	    to run the package. By default, runs all packages. You specify
+	    one at a time, e.g. --no-graphbig --no-galois"
 
 # The edge factor (number of edges per vertex) is the default of 16.
 DDIR="$(pwd)/datasets" # Dataset directory
@@ -30,6 +35,7 @@ OUTDIR="$(pwd)/output"
 NRT=32 # Number of roots
 RMAT_PARAMS="0.57 0.19 0.19 0.05"
 unset COPY # can copy to a faster, temporary filesystem
+BEST_ROOT=no
 RUN_GRAPH500=1
 RUN_GAP=1
 RUN_GALOIS=1
@@ -76,6 +82,10 @@ for arg in "$@"; do
 		esac
 		shift
 	;;
+	--best-root)
+		BEST_ROOT=yes
+		shift
+	;;
 	--copy-to=*)
 		COPY=${arg#*=}
 		shift
@@ -98,6 +108,30 @@ for arg in "$@"; do
 	;;
 	--no-tc)
 		RUN_TC=0
+		shift
+	;;
+	--no-gap)
+		RUN_GAP=0
+		shift
+	;;
+	--no-graph500)
+		RUN_GRAPH500=0
+		shift
+	;;
+	--no-galois)
+		RUN_GALOIS=0
+		shift
+	;;
+	--no-graphbig)
+		RUN_GRAPHBIG=0
+		shift
+	;;
+	--no-graphmat)
+		RUN_GRAPHMAT=0
+		shift
+	;;
+	--no-powergraph)
+		RUN_POWERGRAPH=0
 		shift
 	;;
 	-h|--help|-help)
@@ -136,6 +170,24 @@ if [ -n "$COPY" ]; then
 	DDIR="$COPY"
 	echo "Copied data to $DDIR"
 fi
+if [ "$BEST_ROOT" = yes ]; then
+	ROOT_FILE="$DDIR/$d/$d-roots.v"
+else
+	ROOT_FILE="$DDIR/$d/$d-bestroot.v"
+	if ! [ -f "$ROOT_FILE" ]; then
+		rm -f tmp.txt
+		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+			"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> tmp.txt
+			tmp.txt
+		done
+		BESTROOT=$(grep -e 'Reachable' -e 'root' tmp.txt |\
+		awk '{if ( $1 ~ /Reachable/ ) {print $4} else {print $3}}' |\
+		awk 'BEGIN{n=0; r=0; pn=0} {if (FNR%2==0 && $1 > r) {r=$1; n=pn} else {pn=$1}} END{print n}')
+		for i in `seq 1 $NRT`; do echo "$ROOT" >> $ROOT_FILE; done
+		rm -f tmp.txt
+	fi
+fi
+head -n $NRT "$ROOT_FILE" > "$DDIR/$d/$d-${NRT}roots.v"
 
 # Set some other variables used throughout the experiment
 # PageRank is usually represented as a 32-bit float,
@@ -201,7 +253,7 @@ if [ "$RUN_GAP" = 1 ]; then
 	# Just do one trial to be the same as the rest of the experiments
 	if [ "$RUN_BFS" = 1 ]; then
 		echo "Running GAP BFS"
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			"$GAPDIR"/bfs -r $ROOT -f "$DDIR/$d/$d.sg" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-BFS.out"
 			check_status $? bfs
 		done
@@ -209,7 +261,7 @@ if [ "$RUN_GAP" = 1 ]; then
 
 	if [ "$RUN_SSSP" = 1 ]; then
 		echo "Running GAP SSSP"
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			# Currently, SSSP throws an error when you try to use sg and not wsg file format.
 			"$GAPDIR"/sssp -r $ROOT -f "$DDIR/$d/$d.el" -n 1 -s >> "${OUTPUT_PREFIX}-GAP-SSSP.out"
 			check_status $? sssp
@@ -220,7 +272,7 @@ if [ "$RUN_GAP" = 1 ]; then
 		echo "Running GAP PageRank"
 		# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 		# error = sum(|newPR - oldPR|)
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			"$GAPDIR"/pr -f "$DDIR/$d/$d.sg" -i $MAXITER -t $TOL -n 1 >> "${OUTPUT_PREFIX}-GAP-PR.out"
 			check_status $? pr
 		done
@@ -246,7 +298,7 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 	
 	if [ "$RUN_SSSP" = 1 ]; then
 		echo "Running PowerGraph SSSP"
-		for ROOT in $(cat "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			"$POWERGRAPHDIR/release/toolkits/graph_analytics/sssp" --graph "$DDIR/$d/$d.el" --format tsv --source $ROOT >> "${OUTPUT_PREFIX}-PowerGraph-SSSP.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-SSSP.err"
 			check_status $? graph_analytics/sssp
 		done
@@ -254,7 +306,7 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 
 	if [ "$RUN_PR" = 1 ]; then
 		echo "Running PowerGraph PageRank"
-		for dummy in $(cat "$DDIR/$d/$d-roots.v"); do
+		for dummy in $(head -n $NRT "$ROOT_FILE"); do
 			"$POWERGRAPHDIR/release/toolkits/graph_analytics/pagerank" --graph "$DDIR/$d/$d.el" --tol "$TOL" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-PR.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-PR.err"
 			check_status $? graph_analytics/pagerank
 		done
@@ -262,7 +314,7 @@ if [ "$RUN_POWERGRAPH" = 1 ]; then
 
 	if [ "$RUN_TC" = 1 ]; then
 		echo "Running PowerGraph TriangleCount"
-		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for dummy in $(head -n $NRT "$ROOT_FILE"); do
 			"$POWERGRAPHDIR"/release/toolkits/graph_analytics/undirected_triangle_count --graph "$DDIR/$d/$d.el" --format tsv >> "${OUTPUT_PREFIX}-PowerGraph-TC.out" 2>> "${OUTPUT_PREFIX}-PowerGraph-TC.err"
 			check_status $? undirected_triangle_count
 		done
@@ -274,7 +326,7 @@ if [ "$RUN_GRAPHMAT" = 1 ]; then
 	rm -f "${OUTPUT_PREFIX}"-GraphMat-{BFS,SSSP,PR}.out
 	if [ "$RUN_BFS" = 1 ]; then
 		echo "Running GraphMat BFS"
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+		for ROOT in $(head -n $NRT "${ROOT_FILE%.v}.1v"); do
 			echo "BFS root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
 			"$GRAPHMATDIR/bin/BFS" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-BFS.out"
 			check_status $? 'bin/BFS'
@@ -283,7 +335,7 @@ if [ "$RUN_GRAPHMAT" = 1 ]; then
 
 	if [ "$RUN_SSSP" = 1 ]; then
 		echo "Running GraphMat SSSP"
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+		for ROOT in $(head -n $NRT "${ROOT_FILE%.v}.1v"); do
 			echo "SSSP root: $ROOT" >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
 			"$GRAPHMATDIR/bin/SSSP" "$DDIR/$d/$d.graphmat" $ROOT >> "${OUTPUT_PREFIX}-GraphMat-SSSP.out"
 			check_status $? bin/SSSP
@@ -294,7 +346,7 @@ if [ "$RUN_GRAPHMAT" = 1 ]; then
 		echo "Running GraphMat PageRank"
 		# PageRank stops when none of the vertices change
 		# GraphMat has been modified so alpha = 0.15
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+		for ROOT in $(head -n $NRT "${ROOT_FILE%.v}.1v"); do
 			"$GRAPHMATDIR/bin/PageRank" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-PR.out"
 			check_status $? bin/PageRank
 		done
@@ -303,7 +355,7 @@ if [ "$RUN_GRAPHMAT" = 1 ]; then
 	# TODO: Triangle Counting gives different answers on every platform
 	if [ "$RUN_TC" = 1 ]; then
 		echo "Running GraphMat TriangleCount"
-		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.1v"); do
+		for dummy in $(head -n $NRT "${ROOT_FILE%.v}.1v"); do
 			"$GRAPHMATDIR/bin/TriangleCounting" "$DDIR/$d/$d.graphmat" >> "${OUTPUT_PREFIX}-GraphMat-TC.out"
 			check_status $? bin/TriangleCounting
 		done
@@ -316,7 +368,6 @@ if [ "$RUN_GRAPHBIG" = 1 ]; then
 	if [ "$RUN_BFS" = 1 ]; then
 		echo "Running GraphBIG BFS"
 		# For this, one needs a vertex.csv file and and an edge.csv.
-		head -n $NRT "$DDIR/$d/$d-roots.v" > "$DDIR/$d/$d-${NRT}roots.v"
 		"$GRAPHBIGDIR/benchmark/bench_BFS/bfs" --dataset "$DDIR/$d" --rootfile "$DDIR/$d/$d-${NRT}roots.v" --threadnum $OMP_NUM_THREADS > "${OUTPUT_PREFIX}-GraphBIG-BFS.out"
 		check_status $? bench_BFS/bfs
 	fi
@@ -331,7 +382,7 @@ if [ "$RUN_GRAPHBIG" = 1 ]; then
 		echo "Running GraphBIG PageRank"
 		# The original GraphBIG has --quad = sqrt(sum((newPR - oldPR)^2))
 		# GraphBIG error has been modified to now be sum(|newPR - oldPR|)
-		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for dummy in $(head -n $NRT "$ROOT_FILE"); do
 			"$GRAPHBIGDIR/benchmark/bench_pageRank/pagerank" --dataset "$DDIR/$d" --maxiter $MAXITER --quad $TOL --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-PR.out"
 			check_status $? bench_pageRank/pagerank
 		done
@@ -339,7 +390,7 @@ if [ "$RUN_GRAPHBIG" = 1 ]; then
 
 	if [ "$RUN_TC" = 1 ]; then
 		echo "Running GraphBIG TriangleCount"
-		for dummy in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for dummy in $(head -n $NRT "$ROOT_FILE"); do
 			"$GRAPHBIGDIR/benchmark/bench_triangleCount/tc" --dataset "$DDIR/$d" --threadnum $OMP_NUM_THREADS >> "${OUTPUT_PREFIX}-GraphBIG-TC.out"
 			check_status $? bench_triangleCount/tc
 		done
@@ -351,7 +402,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 	rm -f "${OUTPUT_PREFIX}"-Galois-{BFS,SSSP,PR}.out
 	if [ "$RUN_BFS" = 1 ]; then
 		echo "Running Galois BFS"
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			"$GALOISDIR/apps/bfs/bfs" -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-BFS.out"
 			check_status $? bfs/bfs
 		done
@@ -359,7 +410,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 	
 	if [ "$RUN_SSSP" = 1 ]; then
 		echo "Running Galois SSSP"
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			# TODO: Adjust delta parameter -delta=<int>
 			# Currently, SSSP throws an error when you try to use sg and not wsg file format.
 			"$GALOISDIR"/apps/sssp/sssp -noverify -startNode=$ROOT -t=$OMP_NUM_THREADS  "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-SSSP.out"
@@ -371,7 +422,7 @@ if [ "$RUN_GALOIS" = 1 ]; then
 		echo "Running Galois PageRank"
 		# PageRank Note: ROOT is a dummy variable to ensure the same # of trials
 		# error = sum(|newPR - oldPR|)
-		for ROOT in $(head -n $NRT "$DDIR/$d/$d-roots.v"); do
+		for ROOT in $(head -n $NRT "$ROOT_FILE"); do
 			"$GALOISDIR"/apps/pagerank/pagerank -symmetricGraph -noverify -graphTranspose="$DDIR/$d/$d-t.gr" "$DDIR/$d/$d.gr" >> "${OUTPUT_PREFIX}-Galois-PR.out"
 			check_status $? pagerank/pagerank
 		done

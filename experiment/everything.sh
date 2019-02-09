@@ -5,9 +5,16 @@
 # This goes from building the libraries to generating some figures.
 # If you want to see something simpler, try example.sh
 
+# Configuration
+if [ -z "$1" ]; then
+	echo "usage: ./everything.sh <experiment-output-prefix>"
+	exit 2
+else	
+	PREFIX=$1
+fi
+RUN_LOGS="$PREFIX/run_logs"
+OUTPUT="$PREFIX/output"
 # Talapas partitions: short, long, gpu, longgpu, fat, longfat, preempt, jhp, steck
-mkdir -p run_logs
-mkdir -p output
 THREADS="1 2 4 8 16 24 27 28 32 40 48 54 56"
 S=22
 NUM_ROOTS=10
@@ -16,6 +23,7 @@ REALWORLD_DATASET_FN=../preprocess/datasets2.txt
 DRYRUN=True # Echo commands instead of run them
 SLURM=True
 COPY='--copy-to=/tmp' # Leave blank for no copying of datasetes
+BEST_ROOT=--best-root # Leave blank to use 10 random roots
 # Job scheduler commands
 JS_TIME=16:00:00
 JS_CPUS=28
@@ -23,9 +31,11 @@ JS_PARTITION=long
 JS_MEMORY=128G # UNUSED
 
 # Grid search parameters
-GS=25
+GS=$S
 GRID=0.1
 
+mkdir -p "$RUN_LOGS"
+mkdir -p "$OUTPUT"
 if [ "$DRYRUN" = 'True' ]; then
 	ANALYZE='echo '
 else
@@ -67,12 +77,12 @@ run()
 }
 
 ${ANALYZE}./get-libraries.sh
-run -serror run_logs/gen${S}.err -soutput run_logs/gen${S}.out ./gen-datasets.sh $S
+run -serror $RUN_LOGS/gen${S}.err -soutput $RUN_LOGS/gen${S}.out ./gen-datasets.sh $S
 
 # Synthetic datasets
 echo -e '\n# Running Synthetic datasets'
 for T in $THREADS; do
-	run -serror run_logs/${S}-${T}t.err -soutput run_logs/${S}-${T}t.out -sjob epg${T}t-$S ./run-synthetic.sh --num-roots=$NUM_ROOTS $COPY $S $T
+	run -serror $RUN_LOGS/${S}-${T}t.err -soutput $RUN_LOGS/${S}-${T}t.out -sjob epg${T}t-$S ./run-synthetic.sh --num-roots=$NUM_ROOTS $COPY $BEST_ROOT $S $T
 done
 
 # Grid search of rmat parameters. This is a lot of jobs.
@@ -85,7 +95,7 @@ NUM_THREADS=0
 for T in $THREADS; do
 	NUM_THREADS=$(($NUM_THREADS + 1));
 done
-TIME_FORMULA_MIN="20 * 2^($GS-19) * $NUM_ROOTS + 13 * 2^($GS-19)"
+TIME_FORMULA_MIN="3 * 2^($GS-19) * $NUM_ROOTS + 13 * 2^($GS-19)"
 TIMELIMIT=$(echo "1.1 * ($TIME_FORMULA_MIN) / 60 + 1" | bc):00:00
 TIMELIMIT_GEN=$(echo "1 + 4 * 2^($GS-15) / 60" | bc):00:00
 echo "# RMAT grid search in increments of $GRID" > rmat_gridsearch_${GS}_${GRID}.sh
@@ -101,8 +111,8 @@ for a in $(seq $GRID $GRID $MAX_R); do
 			#SBATCH --mem=$JS_MEMORY
 			read -r -d '' BATCH <<- EOM
 				#!/bin/bash
-				#SBATCH -e run_logs/g_${GS}_${a}_${b}_${c}.err
-				#SBATCH -o run_logs/g_${GS}_${a}_${b}_${c}.out
+				#SBATCH -e $RUN_LOGS/g_${GS}_${a}_${b}_${c}.err
+				#SBATCH -o $RUN_LOGS/g_${GS}_${a}_${b}_${c}.out
 				#SBATCH -J g_r${GS}_${a}_${b}_${c}
 				#SBATCH --cpus-per-task=$JS_CPUS
 				#SBATCH -t $TIMELIMIT_GEN
@@ -114,15 +124,15 @@ for a in $(seq $GRID $GRID $MAX_R); do
 				rf="rmat_gridsearch_${GS}_${GRID}/r_t${T}_${GS}_${a}_${b}_${c}.sh"
 				read -r -d '' BATCH <<- EOM
 					#!/bin/bash
-					#SBATCH -e run_logs/r_t${T}_${GS}_${a}_${b}_${c}.err
-					#SBATCH -o run_logs/r_t${T}_${GS}_${a}_${b}_${c}.out
+					#SBATCH -e $RUN_LOGS/r_t${T}_${GS}_${a}_${b}_${c}.err
+					#SBATCH -o $RUN_LOGS/r_t${T}_${GS}_${a}_${b}_${c}.out
 					#SBATCH -J r_t${T}_${GS}_${a}_${b}_${c}
 					#SBATCH --cpus-per-task=$JS_CPUS
 					#SBATCH -t $TIMELIMIT
 					#SBATCH --partition=$JS_PARTITION
 				EOM
 				echo "$BATCH" > "$rf"
-				echo "./run-synthetic.sh --rmat="\'"$a $b $c"\'" --num-roots=$NUM_ROOTS $COPY $GS $T" >> "$rf"
+				echo "./run-synthetic.sh --rmat="\'"$a $b $c"\'" --no-tc --no-pr --no-graphbig --num-roots=$NUM_ROOTS $COPY $BEST_ROOT $GS $T" >> "$rf"
 				# echo "rm /tmp/$FILE_PREFIX/* && rmdir /tmp/$FILE_PREFIX" >> "$rf" # --copy-to handles this
 			done
 			FILE_PREFIX=kron-${GS}_${a}_${b}_${c}
@@ -137,7 +147,7 @@ for a in $(seq $GRID $GRID $MAX_R); do
 		rem=$(echo "$rem - $b - $GRID" | bc)
 		for c in $(seq 0.0 $GRID $rem); do
 			for T in $THREADS; do
-				echo "sbatch rmat_gridsearch_$GRID/r_t${T}_${GS}_${a}_${b}_${c}.sh && sleep 60" >> rmat_gridsearch_${GS}_${GRID}.sh
+				echo "sbatch rmat_gridsearch_${GS}_$GRID/r_t${T}_${GS}_${a}_${b}_${c}.sh && sleep 60" >> rmat_gridsearch_${GS}_${GRID}.sh
 			done
 		done
 	done
@@ -149,7 +159,7 @@ for a in $(seq $GRID $GRID $MAX_R); do
 		rem=$(echo "$rem - $b - $GRID" | bc)
 		for c in $(seq 0.0 $GRID $rem); do
 			for T in $THREADS; do
-				echo "./parse-output.sh --rmat="\'"$a $b $c"\'" --outdir=output/rmat_gridsearch_${GS}_${GRID} $GS" >> rmat_gridsearch_${GS}_${GRID}.sh
+				echo "./parse-output.sh --rmat="\'"$a $b $c"\'" --outdir=$OUTPUT/rmat_gridsearch_${GS}_${GRID} $GS" >> rmat_gridsearch_${GS}_${GRID}.sh
 			done
 		done
 	done
@@ -166,7 +176,7 @@ for DSET in $GA_DATASETS; do
 	${ANALYZE}curl -o datasets/$DSET.zip https://atlarge.ewi.tudelft.nl/graphalytics/zip/$DSET.zip
 	${ANALYZE}mkdir -p datasets
 	${ANALYZE}unzip -d datasets datasets/$DSET.zip
-	run -serror run_logs/gen${DSET}.err -soutput run_logs/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/$DSET.e
+	run -serror $RUN_LOGS/gen${DSET}.err -soutput $RUN_LOGS/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/$DSET.e
 done
 # Generating SNAP and KONECT datasets'
 echo -e '\n# Generating SNAP and KONECT datasets'
@@ -174,9 +184,9 @@ ${ANALYZE}../preprocess/unzipper.sh $REALWORLD_DATASET_FN datasets
 S_K_DATASETS=$(awk -v ORS=' ' 'FNR%3 == 1 && !/^#/ {print}' $REALWORLD_DATASET_FN )
 for DSET in $S_K_DATASETS; do
 	if [ -f "datasets/$DSET/out.$DSET" ]; then # KONECT
-		run -serror run_logs/gen${DSET}.err -soutput run_logs/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/out.${DSET}
+		run -serror $RUN_LOGS/gen${DSET}.err -soutput $RUN_LOGS/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/out.${DSET}
 	else # SNAP
-		run -serror run_logs/gen${DSET}.err -soutput run_logs/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/${DSET}.txt
+		run -serror $RUN_LOGS/gen${DSET}.err -soutput $RUN_LOGS/gen${DSET}.out -sjob epg-gen-${DSET} ./gen-datasets.sh -f=datasets/$DSET/${DSET}.txt
 	fi
 done
 
@@ -184,14 +194,14 @@ done
 echo -e '\n# Running Graphalytics datasets'
 for DSET in $GA_DATASETS; do
 	for T in $THREADS; do
-		run -serror run_logs/$DSET-${T}t.err -soutput run_logs/${DSET}-${T}t.out -sjob epg${T}t-${DSET} ./run-realworld.sh --num-roots=$NUM_ROOTS datasets/$DSET/$DSET $T
+		run -serror $RUN_LOGS/$DSET-${T}t.err -soutput $RUN_LOGS/${DSET}-${T}t.out -sjob epg${T}t-${DSET} ./run-realworld.sh --num-roots=$NUM_ROOTS $COPY $BEST_ROOT datasets/$DSET/$DSET $T
 	done
 done
 # Run SNAP and KONECT datasets
 echo -e '\n# Running SNAP and KONECT datasets\n'
 for DSET in $S_K_DATASETS; do
 	for T in $THREADS; do
-		run -serror run_logs/$DSET-${T}t.err -soutput run_logs/$DSET-${T}t.out -sjob epg${T}t-${DSET} ./run-realworld.sh --num-roots=$NUM_ROOTS $COPY datasets/$DSET/$DSET $T
+		run -serror $RUN_LOGS/$DSET-${T}t.err -soutput $RUN_LOGS/$DSET-${T}t.out -sjob epg${T}t-${DSET} ./run-realworld.sh --num-roots=$NUM_ROOTS $COPY $BEST_ROOT datasets/$DSET/$DSET $T
 	done
 done
 
@@ -200,11 +210,11 @@ echo -e '\n# Analyzing synthetic datasets'
 ${ANALYZE}./parse-output.sh $S
 THREAD_ARR=($THREADS)
 echo "# Config file for experiment_analysis.R. threads a vector, scale an int.
-prefix <- './output/rmat_gridsearch_${GS}_${GRID}/'
+prefix <- './$OUTPUT/rmat_gridsearch_${GS}_${GRID}/'
 threads <- c(${THREADS// /,})
 kron_scales <- c($GS)
 coalesce <- TRUE
-coalesce_filename <- './output/rmat_gridsearch_combined.csv'
+coalesce_filename <- './$OUTPUT/rmat_gridsearch_combined.csv'
 rmat_params <- '*'
 " > all_config.R # Warning: this file is sourced in experiment_analysis.R
 mkdir -p graphics
@@ -217,7 +227,7 @@ for DSET in $DATASETS; do
 	${ANALYZE}./parse-output.sh -f=$DSET
 done
 echo "# Config file for realworld_analysis.R. threads a vector, scale an int.
-prefix <- './output/'
+prefix <- './$OUTPUT/'
 threads <- ${THREAD_ARR[-2]} # Pick the second to last thread arbitrarily
 dataset_list <- c(${DATASETS// /,})
 " > realworld_config.R # Warning: this file is sourced in realworld_config.R
