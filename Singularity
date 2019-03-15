@@ -24,6 +24,8 @@ From: ubuntu:16.04
 
 	git clone https://github.com/HPCL/easy-parallel-graph
 	cd easy-parallel-graph/experiment
+	export CC=gcc
+	export CXX=g++
 	./get-libraries.sh
 	echo "Next I should install epg*"
 

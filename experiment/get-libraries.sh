@@ -78,7 +78,7 @@ cd "$LIBDIR/Galois-2.2.1"
 cd build
 mkdir -p default
 cd default
-$CC -v | grep -q '4\.8'
+which gcc-4.8
 if [ $? -ne 0 ]; then
 	echo "Galois requires gcc 4.8. You can comment out this check and try a lower version,
 		but it doesn't seem to work at all with 4.9 or 5.*. Export CC and CXX accordingly."
