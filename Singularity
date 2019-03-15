@@ -32,8 +32,8 @@ From: ubuntu:16.04
 %environment
 	export SPACK_ROOT=$(pwd)/spack
 	export PATH=$SPACK_ROOT/bin:$PATH
-	source /etc/profile.d/modules.sh
-	source $SPACK_ROOT/share/spack/setup-env.sh
+	. /etc/profile.d/modules.sh
+	. $SPACK_ROOT/share/spack/setup-env.sh
 
 %runscript
 	echo "Downloaded epg*, checking spack"
@@ -41,9 +41,9 @@ From: ubuntu:16.04
 
 %test
 	echo "Running test"
-	cd easy-parallel-graph/experiment
-	./gen-datasets.sh 12
-	./run-experiment.sh 2 12
+	cd /opt/easy-parallel-graph/experiment
+	./gen-datasets.sh 10
+	./run-synthetic.sh --no-graphmat 10 2
 
 %labels
 	MAINTAINER Samuel D. Pollard
